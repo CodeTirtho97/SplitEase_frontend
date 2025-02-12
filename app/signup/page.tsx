@@ -12,6 +12,7 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [gender, setGender] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [showToast, setShowToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -31,6 +32,8 @@ const Signup = () => {
 
     if (!email) newErrors.push({ field: "email", message: "Email is required" });
     else if (!validateEmail(email)) newErrors.push({ field: "email", message: "Invalid email format" });
+
+    if (!gender) newErrors.push({ field: "gender", message: "Gender is required" });
 
     if (!password) newErrors.push({ field: "password", message: "Password is required" });
     else if (!validatePassword(password)) newErrors.push({ field: "password", message: "Password must be 8+ chars with uppercase, number & symbol" });
@@ -114,6 +117,23 @@ const Signup = () => {
                 errors.some((err) => err.field === "email") ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-indigo-500"
               }`}
             />
+          </div>
+
+          {/* Gender Dropdown */}
+          <div>
+            <label className="text-sm font-semibold text-gray-700">Gender</label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.some((err) => err.field === "gender") ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-indigo-500"
+              }`}
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           {/* Password */}

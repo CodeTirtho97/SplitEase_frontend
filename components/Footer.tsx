@@ -3,8 +3,8 @@ import { faXTwitter, faLinkedin, faGithub } from "@fortawesome/free-brands-svg-i
 
 const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-6 border-t border-gray-500 shadow-xl">
-      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0">
+    <footer className="bg-gradient-to-r from-indigo-700 to-purple-700 text-white py-2 border-t border-gray-500 shadow-xl">
+      <div className="max-w-7xl mx-auto px-3 flex flex-col md:flex-row items-center justify-between space-y-2 md:space-y-0">
         
         {/* Left Section - Brand Name */}
         <div className="flex items-center space-x-3">
