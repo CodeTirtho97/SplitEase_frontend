@@ -24,7 +24,7 @@ const Sidebar = ({ activePage }: SidebarProps) => {
       {/* Back Button */}
       <Link href="/dashboard" className="flex items-center gap-3 py-4 px-6 text-xl font-semibold bg-white/20 hover:bg-white/40 transition">
         <FontAwesomeIcon icon={faArrowLeft} />
-        <span>Back</span>
+        <span>Dashboard</span>
       </Link>
 
       {/* Sidebar Menu */}
