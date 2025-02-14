@@ -14,20 +14,20 @@ const Footer = () => {
 
         {/* Center Section - Footer Links */}
         <div className="flex space-x-6 text-sm md:text-base">
-          <a href="#" className="text-gray-300 hover:text-white transition duration-300 font-medium">Privacy Policy</a>
-          <a href="#" className="text-gray-300 hover:text-white transition duration-300 font-medium">Terms of Service</a>
-          <a href="#" className="text-gray-300 hover:text-white transition duration-300 font-medium">Contact Us</a>
+          <a href="/legal?tab=privacy" className="text-gray-300 hover:text-white transition duration-300 font-medium">Privacy Policy</a>
+          <a href="/legal?tab=terms" className="text-gray-300 hover:text-white transition duration-300 font-medium">Terms of Service</a>
+          <a href="/legal?tab=contact" className="text-gray-300 hover:text-white transition duration-300 font-medium">Contact Us</a>
         </div>
 
         {/* Right Section - Social Media Icons */}
         <div className="flex space-x-5">
-          <a href="#" className="hover:scale-110 transition duration-300">
+          <a href="https://twitter.com/lucifer_7951" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition duration-300">
             <FontAwesomeIcon icon={faXTwitter} className="text-white text-2xl hover:text-gray-300" />
           </a>
-          <a href="#" className="hover:scale-110 transition duration-300">
+          <a href="https://linkedin.com/in/tirthoraj-bhattacharya/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition duration-300">
             <FontAwesomeIcon icon={faLinkedin} className="text-white text-2xl hover:text-gray-300" />
           </a>
-          <a href="#" className="hover:scale-110 transition duration-300">
+          <a href="https://github.com/CodeTirtho97" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition duration-300">
             <FontAwesomeIcon icon={faGithub} className="text-white text-2xl hover:text-gray-300" />
           </a>
         </div>

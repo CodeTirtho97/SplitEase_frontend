@@ -14,6 +14,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [gender, setGender] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [errors, setErrors] = useState<{ field: string; message: string }[]>([]);
   const [showToast, setShowToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
 
@@ -75,11 +76,17 @@ const Signup = () => {
         <h2 className="text-2xl font-bold text-center text-gray-900">Create an Account</h2>
         <p className="text-gray-600 text-center mb-4">Sign up to get started!</p>
 
-        {/* Google Sign-In Button */}
-        <button className="w-full flex items-center justify-center gap-3 border border-indigo-500 bg-white text-gray-700 font-semibold py-2.5 rounded-lg shadow-sm transition-all 
-          hover:bg-gray-100 hover:shadow-md hover:border-gray-400 active:scale-95">
-          <FontAwesomeIcon icon={faGoogle} className="text-indigo-900 text-2xl"/>
-          Sign Up with Google
+        {/* Google Sign-Up Button */}
+        <button className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
+          hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group">
+          
+          {/* Left Background Animation Effect */}
+          <span className="absolute left-0 w-0 h-full bg-indigo-500 transition-all duration-300 group-hover:w-full opacity-10"></span>
+
+          {/* Google Icon */}
+          <FontAwesomeIcon icon={faGoogle} className="text-indigo-900 group-hover:text-white text-2xl transition-all duration-300" />
+
+          <span className="relative">Sign Up with Google</span>
         </button>
 
         {/* OR Separator */}
@@ -165,7 +172,15 @@ const Signup = () => {
           {/* Terms & Conditions */}
           <div className="flex items-center">
             <input type="checkbox" id="terms" checked={agreeToTerms} onChange={() => setAgreeToTerms(!agreeToTerms)} />
-            <label htmlFor="terms" className="ml-2 text-gray-700 text-sm">I agree to the <a href="#" className="text-indigo-600 font-semibold">Terms & Conditions</a></label>
+            <label htmlFor="terms" className="ml-2 text-gray-700 text-sm">
+              I agree to the 
+              <span 
+                className="ml-1 text-indigo-600 font-semibold cursor-pointer underline decoration-transparent hover:decoration-indigo-600 transition-all duration-200" 
+                onClick={() => setIsTermsModalOpen(true)}
+              >
+                Terms & Conditions
+              </span>
+            </label>
           </div>
 
           {/* Signup Button */}
@@ -186,6 +201,83 @@ const Signup = () => {
             </div>
         </form>
       </div>
+
+      {/* Terms & Conditions Modal */}
+      {isTermsModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white w-[90%] max-w-3xl rounded-lg shadow-xl relative">
+            {/* Header with Title & Close Button */}
+            <div className="p-5 border-b flex justify-between items-center bg-gray-100 rounded-t-lg">
+              <h2 className="text-xl font-semibold text-gray-800">Terms & Conditions</h2>
+              <button
+                onClick={() => setIsTermsModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 transition text-lg"
+              >
+                ✖
+              </button>
+            </div>
+
+            {/* Scrollable Content Section */}
+            <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4 text-gray-700">
+              {/* 1️⃣ Introduction */}
+              <section>
+                <h3 className="font-semibold text-lg text-gray-800">1. Introduction</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Welcome to <strong>SplitEase</strong>. By using our platform, you agree to these Terms & Conditions. 
+                  Please read them carefully before proceeding. Your use of this application signifies acceptance of these terms.
+                </p>
+              </section>
+
+              {/* 2️⃣ User Responsibilities */}
+              <section>
+                <h3 className="font-semibold text-lg text-gray-800">2. User Responsibilities</h3>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1 mt-1">
+                  <li>Users must provide accurate and up-to-date information.</li>
+                  <li>Any fraudulent or misleading activity will lead to **account suspension**.</li>
+                  <li>Users are responsible for maintaining the security of their accounts.</li>
+                </ul>
+              </section>
+
+              {/* 3️⃣ Payment Terms */}
+              <section>
+                <h3 className="font-semibold text-lg text-gray-800">3. Payments & Transactions</h3>
+                <ul className="list-decimal list-inside text-sm text-gray-600 space-y-1 mt-1">
+                  <li><strong>SplitEase</strong> does not hold or manage funds directly.</li>
+                  <li>Users are responsible for handling disputes related to payments.</li>
+                  <li>Transaction records are stored for tracking but do not guarantee dispute resolution.</li>
+                </ul>
+              </section>
+
+              {/* 4️⃣ Privacy & Data Security */}
+              <section>
+                <h3 className="font-semibold text-lg text-gray-800">4. Privacy & Data Security</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  We value your privacy. All personal data is handled as per <strong>GDPR & industry standards</strong>. 
+                  We do not share user data with third parties unless required by law.
+                </p>
+              </section>
+
+              {/* 5️⃣ Limitation of Liability */}
+              <section>
+                <h3 className="font-semibold text-lg text-gray-800">5. Limitation of Liability</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                <strong>SplitEase</strong> is not responsible for incorrect transactions, disputes among users, or financial losses incurred while using the platform.
+                </p>
+              </section>
+            </div>
+
+            {/* Sticky Footer with OK Button */}
+            <div className="p-5 border-t bg-gray-100 rounded-b-lg flex justify-end">
+              <button
+                onClick={() => setIsTermsModalOpen(false)}
+                className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

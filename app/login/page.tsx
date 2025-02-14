@@ -47,6 +47,27 @@ const LoginPage = () => {
     }
   };
 
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [isEmailValid, setIsEmailValid] = useState(false);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const emailValue = e.target.value;
+    setResetEmail(emailValue);
+    setIsEmailValid(validateEmail(emailValue));
+  };
+
+  const handlePasswordReset = () => {
+    // Simulated API Check (Replace this with actual API call)
+    const registeredEmails = ["user@example.com", "test@splitapp.com"]; // Simulated DB
+    if (registeredEmails.includes(resetEmail)) {
+      setResetMessage("✅ Reset Link has been sent. Please check your registered email.");
+    } else {
+      setResetMessage("❌ Email Not Registered!");
+    }
+  };
+
   return (
     <div className="min-h-screen pt-16 flex items-center justify-center bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 px-8 relative">
       {/* Custom Toast Notification */}
@@ -69,11 +90,17 @@ const LoginPage = () => {
         <p className="text-gray-500 text-center mb-6">Login to continue with SplitEase.</p>
 
         {/* Google Sign-In */}
-        <button className="w-full flex items-center justify-center gap-3 border border-indigo-500 bg-white text-gray-700 font-semibold py-2.5 rounded-lg shadow-sm transition-all 
-        hover:bg-gray-100 hover:shadow-md hover:border-gray-200 active:scale-95">
-          <FontAwesomeIcon icon={faGoogle} className="text-indigo-900 text-2xl"/>
-          Sign in with Google
-        </button>
+        <button className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
+              hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group">
+                  
+              {/* Left Background Animation Effect */}
+              <span className="absolute left-0 w-0 h-full bg-indigo-500 transition-all duration-300 group-hover:w-full opacity-10"></span>
+        
+              {/* Google Icon */}
+              <FontAwesomeIcon icon={faGoogle} className="text-indigo-900 group-hover:text-white text-2xl transition-all duration-300" />
+        
+            <span className="relative">Sign In with Google</span>
+          </button>
 
         {/* Divider */}
         <div className="relative flex items-center my-6">
@@ -113,9 +140,16 @@ const LoginPage = () => {
               <input type="checkbox" className="form-checkbox h-4 w-4 text-indigo-600" />
               <span>Remember Me</span>
             </label>
-            <span className="text-indigo-600 font-semibold cursor-pointer hover:underline">
+            <button
+              type="button"  // This prevents triggering the form submission
+              className="text-indigo-600 font-semibold cursor-pointer hover:underline"
+              onClick={(e) => {
+                e.preventDefault(); // Prevents default form validation trigger
+                setIsForgotPasswordOpen(true);
+              }}
+            >
               Forgot Password?
-            </span>
+            </button>
           </div>
 
           <Button 
@@ -138,6 +172,56 @@ const LoginPage = () => {
             </span>
           </p>
         </div>
+
+        {/* Forgot Password Modal */}
+        {isForgotPasswordOpen && (
+          <div
+            className="fixed inset-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50"
+            onClick={() => setIsForgotPasswordOpen(false)} // Close modal when clicking outside
+          >
+            {/* Modal Container */}
+            <div
+              className="bg-white p-6 rounded-lg shadow-xl w-[90%] max-w-md"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+            >
+              <h2 className="text-xl font-semibold text-gray-800 text-center">Reset Password</h2>
+              <p className="text-gray-600 text-sm text-center mt-1">
+                Enter your registered email to receive a password reset link.
+              </p>
+
+              {/* Email Input */}
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={handleEmailChange}
+                className="w-full p-2 border rounded-lg mt-4 focus:ring-2 focus:ring-indigo-500"
+              />
+
+              {/* Reset Password Button */}
+              <button
+                onClick={handlePasswordReset}
+                disabled={!isEmailValid}
+                className={`w-full py-2 mt-3 rounded-lg font-semibold text-white transition-all ${
+                  isEmailValid ? "bg-indigo-600 hover:bg-indigo-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                Reset Password
+              </button>
+
+              {/* Response Message */}
+              {resetMessage && <p className="text-sm text-center mt-3">{resetMessage}</p>}
+
+              {/* Close Button */}
+              <button
+                onClick={() => setIsForgotPasswordOpen(false)}
+                className="mt-4 w-full text-center text-indigo-600 font-semibold hover:underline"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

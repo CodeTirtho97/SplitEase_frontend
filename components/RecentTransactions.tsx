@@ -1,52 +1,107 @@
+"use client";
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCheckCircle, faTimesCircle, faGlobe } from "@fortawesome/free-solid-svg-icons";
+import { faPaypal, faStripe, faGooglePay } from "@fortawesome/free-brands-svg-icons";
+
+// Define Type for Transactions
+interface Transaction {
+  payer: string;
+  receiver: string;
+  amount: number;
+  date: string;
+  mode: string;
+  status: "Pending" | "Settled";
+}
+
+// Dummy Data (Replace with Backend API Calls)
 export default function RecentTransactions() {
-    // Sample Transactions
-    const transactions = [
-      { id: 11, name: "Movie Tickets", amount: "₹800", date: "Feb 12" },
-      { id: 10, name: "Gym Membership", amount: "₹1,500", date: "Feb 11" },
-      { id: 9, name: "Dinner at The Taj", amount: "₹1,200", date: "Feb 10" },
-      { id: 8, name: "Uber Ride", amount: "₹320", date: "Feb 9" },
-      { id: 7, name: "Netflix Subscription", amount: "₹799", date: "Feb 5" },
-      { id: 6, name: "Grocery Shopping", amount: "₹2,000", date: "Feb 4" },
-      { id: 5, name: "Flight Ticket", amount: "₹4,500", date: "Feb 2" },
-      { id: 4, name: "Amazon Order", amount: "₹2,300", date: "Feb 1" },
-      { id: 3, name: "Electricity Bill", amount: "₹3,600", date: "Jan 30" },
-      { id: 2, name: "Spotify Premium", amount: "₹199", date: "Jan 28" },
-      { id: 1, name: "Weekend Brunch", amount: "₹1,100", date: "Jan 26" },
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const expenseTransactions: Transaction[] = [
+      { payer: "Alice", receiver: "Trip Group", amount: 1500, date: "2024-03-10", mode: "UPI", status: "Settled" },
+      { payer: "Bob", receiver: "Trip Group", amount: 1200, date: "2024-03-08", mode: "PayPal", status: "Settled" }
     ];
-  
-    // Show only the latest 10 transactions
-    const latestTransactions = transactions.slice(0, 10);
-  
-    return (
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Recent 10 Transactions</h3>
-  
-        {/* Transaction Table */}
+
+    const paymentTransactions: Transaction[] = [
+      { payer: "You", receiver: "David", amount: 500, date: "2024-03-09", mode: "Stripe", status: "Pending" },
+      { payer: "You", receiver: "Alice", amount: 1200, date: "2024-02-15", mode: "NetBanking", status: "Settled" }
+    ];
+
+    // Merge & Sort by Date
+    const mergedTransactions = [...expenseTransactions, ...paymentTransactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    setRecentTransactions(mergedTransactions);
+  }, []);
+
+  // Mapping Payment Modes to Icons
+  const modeIcons: { [key: string]: any } = {
+    UPI: faGooglePay,
+    PayPal: faPaypal,
+    Stripe: faStripe,
+    NetBanking: faGlobe
+  };
+
+  return (
+    <div className="bg-white shadow-lg rounded-lg p-6 mt-6">
+      <h3 className="text-xl font-semibold text-gray-800 mb-4">Recent Transactions</h3>
+
+      {recentTransactions.length === 0 ? (
+        <p className="text-gray-500 text-center">No transactions found.</p>
+      ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+          <table className="w-full border-collapse rounded-lg overflow-hidden">
             <thead>
-              <tr className="bg-indigo-600 text-white uppercase text-sm leading-normal">
-                <th className="py-3 px-6 text-left">Transaction</th>
-                <th className="py-3 px-6 text-center">Amount</th>
-                <th className="py-3 px-6 text-right">Date</th>
+              <tr className="bg-gray-100 text-gray-700 text-sm">
+                <th className="px-6 py-3 text-left">Payer</th>
+                <th className="px-6 py-3 text-left">Receiver</th>
+                <th className="px-6 py-3 text-center">Amount</th>
+                <th className="px-6 py-3 text-center">Mode</th>
+                <th className="px-6 py-3 text-center">Status</th>
+                <th className="px-6 py-3 text-right">Date</th>
               </tr>
             </thead>
             <tbody>
-              {latestTransactions.map((tx, index) => (
-                <tr
-                  key={tx.id}
-                  className={`border-b transition hover:bg-indigo-50 ${
-                    index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                  }`}
-                >
-                  <td className="py-3 px-6 text-left">{tx.name}</td>
-                  <td className="py-3 px-6 text-center font-semibold">{tx.amount}</td>
-                  <td className="py-3 px-6 text-right text-gray-500">{tx.date}</td>
+              {recentTransactions.map((txn, index) => (
+                <tr key={index} className="border-t hover:bg-gray-50 transition">
+                  <td className="px-6 py-4 font-medium text-gray-900">{txn.payer}</td>
+                  <td className="px-6 py-4 text-gray-700">{txn.receiver}</td>
+                  <td className="px-6 py-4 text-center font-bold text-blue-500">
+                    ₹{txn.amount.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <FontAwesomeIcon icon={modeIcons[txn.mode]} className="text-gray-500" />
+                      {txn.mode}
+                    </div>
+                  </td>
+                  <td
+                    className={`px-6 py-4 text-center font-semibold flex items-center justify-center gap-2 ${
+                      txn.status === "Pending" ? "text-red-500" : "text-green-600"
+                    }`}
+                  >
+                    {txn.status === "Pending" ? (
+                      <>
+                        <FontAwesomeIcon icon={faTimesCircle} />
+                        <span>Pending</span>
+                      </>
+                    ) : (
+                      <>
+                        <FontAwesomeIcon icon={faCheckCircle} />
+                        <span>Settled</span>
+                      </>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right text-gray-500">{txn.date}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
+}

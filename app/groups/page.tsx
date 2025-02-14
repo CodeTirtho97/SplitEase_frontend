@@ -26,7 +26,7 @@ export default function Groups() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [groupDescription, setGroupDescription] = useState("");
   const [groupEndDate, setGroupEndDate] = useState("");
-  const [newMembers, setNewMembers] = useState("");
+  const [newMembers, setNewMembers] = useState<string[]>([]);
 
   const [groupTransactions, setGroupTransactions] = useState([
     { groupId: 1, member: "Alice", amount: 1500, date: "2024-02-12" },
@@ -35,6 +35,48 @@ export default function Groups() {
     { groupId: 3, member: "David", amount: 2000, date: "2024-03-05" },
     { groupId: 3, member: "Eve", amount: 1000, date: "2024-03-08" },
   ]);
+
+  // ✅ Handle Edit Group
+  const handleEditGroup = (group: any) => {
+    setSelectedGroup(group);
+    setGroupDescription(group.description || "");
+    setGroupEndDate(group.endDate || "");
+    setNewMembers(group.membersList ? [...group.membersList] : []); // Ensure it's an array
+    setIsEditModalOpen(true);
+  };
+
+  // ✅ Handle Save Edited Group
+  const handleSaveGroup = () => {
+    if (!groupDescription.trim()) {
+      setToast({ message: "Group Description cannot be empty!", type: "error" });
+      return;
+    }
+  
+    // ✅ Update Groups List
+    setGroups((prevGroups) =>
+      prevGroups.map((group) =>
+        group.id === selectedGroup.id
+          ? { ...group, description: groupDescription, endDate: groupEndDate, membersList: newMembers }
+          : group
+      )
+    );
+  
+    setToast({ message: "Group updated successfully!", type: "success" });
+    setIsEditModalOpen(false);
+  };
+
+  // ✅ Handle Delete Group
+  const handleDeleteGroup = (group: any) => {
+    setSelectedGroup(group);
+    setIsDeleteModalOpen(true);
+  };
+
+  // ✅ Handle Confirm Delete
+  const handleConfirmDelete = () => {
+    if (!selectedGroup) return;
+    setGroups((prevGroups) => prevGroups.filter((group) => group.id !== selectedGroup.id));
+    setIsDeleteModalOpen(false);
+  };
 
   // ✅ 🟢 Add This Function Here 🟢 ✅
   const calculateOwes = (groupId: number) => {
@@ -84,7 +126,7 @@ export default function Groups() {
   };
 
   // Toast Notification State
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" | "info" } | null>(null);
 
   useEffect(() => {
     if (toast) {
@@ -227,7 +269,7 @@ export default function Groups() {
         {toast && (
         <div
             className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
-            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+            toast.type === "success" ? "bg-green-500" : toast.type === "info" ? "bg-blue-500" : "bg-red-500"
             }`}
             style={{ zIndex: 10000 }} // 🔥 Ensuring Toast appears above the modal
         >
@@ -289,17 +331,169 @@ export default function Groups() {
                     <FontAwesomeIcon icon={faRupeeSign} className="mx-1" /> {group.totalExpense} spent
                   </p>
                 </div>
-                <Button 
-                  text="View" 
-                  onClick={() => {
-                    setSelectedGroup(group);
-                    setIsViewModalOpen(true);
-                  }} 
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" 
-                />
+                <div className="flex gap-3">
+                  <Button 
+                    text="Edit" 
+                    onClick={() => handleEditGroup(group)} 
+                    className="bg-yellow-500 text-white px-4 py-2 rounded-md" 
+                  />
+                  <Button 
+                    text="View" 
+                    onClick={() => {
+                      setSelectedGroup(group);
+                      setIsViewModalOpen(true);
+                    }} 
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md" 
+                  />
+                </div>
               </div>
             ))}
           </div>
+
+          {/* ✅ Edit Group Modal (Two-Column Layout) */}
+          {isEditModalOpen && selectedGroup && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+              <div className="bg-white p-8 rounded-lg shadow-lg w-[700px] max-w-2xl flex flex-col gap-6 relative">
+                
+                {/* 🔹 Modal Title */}
+                <h2 className="text-xl font-bold text-center">Edit Group</h2>
+
+                {/* ✅ Two-Column Layout */}
+                <div className="grid grid-cols-2 gap-6">
+                  
+                  {/* 🔹 Left Column */}
+                  <div className="flex flex-col gap-4">
+                    
+                    {/* Group Name (Non-Editable) */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">Group Name</label>
+                      <input
+                        type="text"
+                        value={selectedGroup.name}
+                        disabled
+                        onClick={() => setToast({ message: "Cannot Edit this detail!", type: "error" })}
+                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Group Type (Non-Editable) */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">Group Type</label>
+                      <input
+                        type="text"
+                        value={selectedGroup.type}
+                        disabled
+                        onClick={() => setToast({ message: "Cannot Edit this detail!", type: "error" })}
+                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Group Description (Editable) */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">Group Description</label>
+                      <textarea
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                        className="w-full border p-2 rounded"
+                      />
+                    </div>
+
+                    {/* Start Date (Non-Editable) */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">Start Date</label>
+                      <input
+                        type="date"
+                        value={selectedGroup.startDate}
+                        disabled
+                        onClick={() => setToast({ message: "Cannot Edit this detail!", type: "error" })}
+                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* End Date (Editable) */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">End Date</label>
+                      <input
+                        type="date"
+                        value={groupEndDate}
+                        onChange={(e) => setGroupEndDate(e.target.value)}
+                        className="w-full border p-2 rounded"
+                      />
+                    </div>
+
+                  </div>
+
+                  {/* 🔹 Right Column */}
+                  <div className="flex flex-col gap-4">
+
+                    {/* Add/Remove Members */}
+                    <div>
+                      <label className="block text-gray-700 font-semibold">Group Members</label>
+
+                      {/* Member Dropdown */}
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value && !newMembers.includes(e.target.value)) {
+                            setNewMembers([...newMembers, e.target.value]);
+                          }
+                        }}
+                        className="w-full border p-2 rounded mb-3"
+                      >
+                        <option value="">Add a new member...</option>
+                        {dummyMembers
+                          .filter((member) => !newMembers.includes(member))
+                          .map((member, index) => (
+                            <option key={index} value={member}>
+                              {member}
+                            </option>
+                          ))}
+                      </select>
+
+                      {/* Member List with Remove Option */}
+                      <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
+                        {newMembers.length > 0 ? (
+                          newMembers.map((member, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
+                            >
+                              {member}
+                              {/* Remove Button */}
+                              <button
+                                type="button"
+                                className="text-white ml-2"
+                                onClick={() =>
+                                  setNewMembers(newMembers.filter((m) => m !== member))
+                                }
+                              >
+                                ❌
+                              </button>
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-gray-500 text-sm italic">No members selected.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🔹 Action Buttons */}
+                <div className="flex justify-between mt-4">
+                  <Button
+                    text="Cancel"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-md"
+                  />
+                  <Button
+                    text="Save Changes"
+                    onClick={handleSaveGroup}
+                    className="bg-green-500 text-white px-4 py-2 rounded-md"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Completed Groups */}
           <div className="bg-white shadow-lg rounded-lg p-6">
@@ -312,10 +506,24 @@ export default function Groups() {
                   <h3 className="text-lg font-bold">{group.name}</h3>
                   <p className="text-sm text-gray-600"><FontAwesomeIcon icon={faUser} className="mr-1" /> {group.members} members</p>
                 </div>
-                <Button text="Delete" className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md" />
+                <Button text="Delete" onClick={() => handleDeleteGroup(group)} className="bg-red-500 text-white px-4 py-2 rounded-md" />
               </div>
             ))}
           </div>
+
+          {/* Delete Confirmation Modal */}
+          {isDeleteModalOpen && selectedGroup && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+                <h2 className="text-xl font-semibold">Delete Group</h2>
+                <p>Are you sure you want to delete <strong>{selectedGroup.name}</strong>?</p>
+                <div className="flex justify-between mt-4">
+                  <Button text="Cancel" onClick={() => setIsDeleteModalOpen(false)} className="bg-gray-500 text-white px-4 py-2 rounded-md" />
+                  <Button text="Delete" onClick={handleConfirmDelete} className="bg-red-500 text-white px-4 py-2 rounded-md" />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Create Group Modal */}
           {isModalOpen && (
