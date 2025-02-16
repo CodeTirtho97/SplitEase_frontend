@@ -284,9 +284,6 @@ export default function Groups() {
             <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
               Groups
             </h1>
-            <p className="text-gray-600 text-lg mt-1">
-              Manage and track your groups & shared expenses.
-            </p>
           </div>
           {/* Add Group Button */}
           <Button

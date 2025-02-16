@@ -74,11 +74,9 @@ export default function PaymentsPage() {
 
       <div className="flex-1 p-8">
         {/* Page Header */}
-        <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-          Payments
-        </h1>
-        <p className="text-gray-600 text-lg mt-2">Manage and track your payments.</p>
-
+        <div className="flex items-center mb-6">
+          <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">Payments</h1>
+        </div>
         {/* 🔻 PENDING PAYMENTS TABLE */}
         <div className="bg-white shadow-lg rounded-lg p-6 mt-6">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">Pending Payments</h2>
