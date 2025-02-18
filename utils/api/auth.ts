@@ -3,8 +3,8 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // 🔹 Signup API Call
-export const signup = async (userData: { fullName: string; email: string; gender: string; password: string }) => {
-  const response = await axios.post(`${API_URL}/signup`, userData);
+export const signup = async (userData: { fullName: string; email: string; gender: string; password: string; confirmPassword: string }) => {
+  const response = await axios.post(`${API_URL}/auth/signup`, userData);
   return response.data;
 };
 
