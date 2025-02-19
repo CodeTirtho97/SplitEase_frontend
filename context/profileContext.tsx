@@ -27,6 +27,8 @@ interface ProfileContextType {
   }) => Promise<void>;
   addFriend: (friendId: string) => Promise<void>;
   searchFriend: (friendName: string) => Promise<any>;
+  deleteFriend: (friendId: string) => Promise<void>;
+  deletePayment: (paymentId: string) => Promise<void>;
 }
 
 export const ProfileContext = createContext<ProfileContextType | null>(null);
@@ -50,7 +52,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async () => {
     try {
-      console.log("🔄 Fetching Profile Data...");
+      //console.log("🔄 Fetching Profile Data...");
       const token = localStorage.getItem("userToken");
       if (!token) {
         console.error("❌ No token found, redirecting to login...");
@@ -59,11 +61,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const data = await fetchProfile(token);
-      console.log("✅ Profile Data Received:", data);
+      //console.log("✅ Profile Data Received:", data);
 
       setUser(data); // ✅ Update state with fetched user data
-    } catch (error) {
-      console.error("❌ Profile Fetch Error:", error);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Profile Fetch Error!");
     }
   };
 
@@ -74,7 +76,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   }) => {
     try {
       const token = localStorage.getItem("userToken");
-      console.log("🔄 Sending Update Request:", updatedData);
+      //console.log("🔄 Sending Update Request:", updatedData);
 
       const response = await axios.put(
         `${API_URL}/profile/update`,
@@ -84,7 +86,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         }
       );
 
-      console.log("✅ Update Successful:", response.data);
+      //console.log("✅ Update Successful:", response.data);
       return response.data;
     } catch (error: any) {
       console.error(
@@ -144,11 +146,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
       setToast({ message: "Password updated successfully!", type: "success" });
     } catch (error: any) {
-      console.error("Password Change Error:", error);
-      setToast({
-        message: error.message || "Failed to update password!",
-        type: "error",
-      });
+      throw new Error(
+        error.response?.data?.message || "Failed to update password!"
+      );
+      // setToast({
+      //   message: error.message || "Failed to update password!",
+      //   type: "error",
+      // });
     }
   };
 
@@ -163,8 +167,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
       const updatedUser = await addPaymentMethod(token, paymentData); // ✅ API Call
       setUser(updatedUser); // ✅ Update Context State with new payment methods
-    } catch (error) {
-      console.error("Add Payment Error:", error);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Add Payment Error:");
     }
   };
 
@@ -184,8 +188,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
       return response.data.friends || []; // ✅ Fix: Return empty array instead of null
     } catch (error: any) {
-      console.error(
-        "Friend Search Error:",
+      throw new Error(
         error.response?.data?.message || "Failed to search friends"
       );
 
@@ -193,6 +196,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // ✅ Add a Friend by ID
   const addFriend = async (friendId: string) => {
     try {
       const token = localStorage.getItem("userToken");
@@ -211,11 +215,50 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
       return response.data;
     } catch (error: any) {
-      console.error(
-        "Add Friend Error:",
-        error.response?.data?.message || "Failed to add friend"
+      throw new Error(error.response?.data?.message || "Failed to add friend");
+      //setToast({ message: "Failed to add friend!", type: "error" });
+    }
+  };
+
+  // ✅ Delete a Friend by ID
+  const deleteFriend = async (friendId: string) => {
+    try {
+      const token = localStorage.getItem("userToken");
+      if (!token) throw new Error("User not authenticated!");
+
+      const response = await axios.delete(
+        `${API_URL}/profile/delete-friend/${friendId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      setToast({ message: "Failed to add friend!", type: "error" });
+
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete friend"
+      );
+    }
+  };
+
+  // ✅ Delete a Payment by ID
+  const deletePayment = async (paymentId: string) => {
+    try {
+      const token = localStorage.getItem("userToken");
+      if (!token) throw new Error("User not authenticated!");
+
+      const response = await axios.delete(
+        `${API_URL}/profile/delete-payment/${paymentId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      throw new Error(
+        error.response?.data?.message || "Failed to delete payment method"
+      );
     }
   };
 
@@ -230,6 +273,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         addPayment,
         addFriend,
         searchFriend,
+        deleteFriend,
+        deletePayment,
       }}
     >
       {children}

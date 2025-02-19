@@ -8,7 +8,7 @@ import {
   faCheckCircle,
   faExclamationCircle,
 } from "@fortawesome/free-solid-svg-icons";
-import { signup } from "@/utils/api/auth";
+import { signup, googleAuth } from "@/utils/api/auth";
 import { AuthContext } from "@/context/authContext";
 
 const Signup = () => {
@@ -178,6 +178,7 @@ const Signup = () => {
 
         {/* Google Sign-Up Button */}
         <button
+          onClick={googleAuth}
           className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
           hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group"
         >

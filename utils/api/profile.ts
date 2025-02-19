@@ -27,14 +27,25 @@ export const updateProfile = async (token: string, updatedData: { fullName?: str
 };
 
 // 🔹 Change Password API Call
-export const changePassword = async (token: string, passwords: { oldPassword: string; newPassword: string; confirmNewPassword: string }) => {
+export const changePassword = async (
+  token: string,
+  passwords: { oldPassword: string; newPassword: string; confirmNewPassword: string }
+) => {
   try {
-    const response = await axios.put(`${API_URL}/profile/change-password`, passwords, {
-      headers: { Authorization: `Bearer ${token}` }, // ✅ Uses token from localStorage
-    });
+    //console.log("🔹 Sending Password Update Request...");
+    
+    const response = await axios.put(
+      `${API_URL}/profile/change-password`, 
+      passwords,
+      {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, // ✅ Ensure correct headers
+      }
+    );
 
+    //console.log("✅ Password Change Response:", response.data);
     return response.data;
   } catch (error: any) {
+    console.error("❌ Password Update Failed:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Password update failed!");
   }
 };

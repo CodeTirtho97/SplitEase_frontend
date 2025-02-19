@@ -7,7 +7,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
   faExclamationCircle,
+  faTimes,
+  faCreditCard,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  faGooglePay,
+  faPaypal,
+  faStripe,
+} from "@fortawesome/free-brands-svg-icons";
 import { ProfileContext } from "@/context/profileContext";
 
 export default function Profile() {
@@ -33,12 +40,14 @@ export default function Profile() {
     addFriend,
     addPayment,
     updatePassword,
+    deleteFriend,
+    deletePayment,
   } = profileContext;
 
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [updatedName, setUpdatedName] = useState(user?.fullName || "");
-  const [updatedGender, setUpdatedGender] = useState(user?.gender);
+  const [updatedGender, setUpdatedGender] = useState(user?.gender || "other");
   //const [profileImage, setProfileImage] = useState(user?.profilePic || null); // 🔥 Fix empty `src` issue
 
   // ✅ Friend Search
@@ -60,6 +69,10 @@ export default function Profile() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+
+  const [showFriendToast, setShowFriendToast] = useState(false);
+  const [showPaymentToast, setShowPaymentToast] = useState(false);
+  const [showPasswordToast, setShowPasswordToast] = useState(false);
 
   // useEffect(() => {
   //   if (!user) {
@@ -116,6 +129,8 @@ export default function Profile() {
   useEffect(() => {
     if (user?.gender) {
       setUpdatedGender(user.gender.toLowerCase()); // ✅ Sync updatedGender with latest user.gender
+    } else {
+      setUpdatedGender("other"); // ✅ Ensure gender is always set
     }
   }, [user?.gender]);
 
@@ -140,6 +155,30 @@ export default function Profile() {
   ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
+      const allowedFormats = ["image/jpeg", "image/jpg", "image/png"];
+      const maxSize = 100 * 1024; // 100KB
+
+      // ✅ Validate File Format
+      if (!allowedFormats.includes(file.type)) {
+        setToast({
+          message: "Invalid format! Only JPG, JPEG, PNG are allowed.",
+          type: "error",
+        });
+        return;
+      }
+
+      // ✅ Validate File Size
+      if (file.size > maxSize) {
+        setToast({
+          message: "File too large! Max size: 100KB.",
+          type: "error",
+        });
+        return;
+      }
+
+      // ✅ Show real-time preview before saving
+      const imageURL = URL.createObjectURL(file);
+      setProfileImage(imageURL); // ✅ Show image preview before backend upload
 
       try {
         const updatedImage = await uploadProfilePic(file); // ✅ Upload to backend
@@ -154,32 +193,34 @@ export default function Profile() {
   const handleSaveProfile = async () => {
     try {
       const formattedGender =
-        updatedGender.charAt(0).toUpperCase() +
-        updatedGender.slice(1).toLowerCase();
+        updatedGender && updatedGender.trim() !== ""
+          ? updatedGender.charAt(0).toUpperCase() +
+            updatedGender.slice(1).toLowerCase()
+          : "Other";
 
-      console.log("Saving Profile:", {
-        fullName: updatedName,
-        gender: formattedGender,
-      });
+      // console.log("Saving Profile:", {
+      //   fullName: updatedName,
+      //   gender: formattedGender,
+      // });
 
       await updateUserProfile({
         fullName: updatedName,
         gender: formattedGender,
       });
 
-      console.log("Sending Update Request...");
+      //console.log("Sending Update Request...");
 
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend
 
-      console.log("Update Successful:", {
-        fullName: updatedName,
-        gender: formattedGender,
-      });
+      // console.log("Update Successful:", {
+      //   fullName: updatedName,
+      //   gender: formattedGender,
+      // });
 
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
-      console.error("Profile Update Failed:", error);
+      //console.error("Profile Update Failed:", error);
       setToast({ message: "Failed to update profile!", type: "error" });
     }
   };
@@ -211,23 +252,44 @@ export default function Profile() {
         }
       } catch (error) {
         setSuggestedFriends([]);
-        setToast({ message: "Friend search failed!", type: "error" });
+        setToast({
+          message: "No Friends found! Try again with some different name",
+          type: "error",
+        });
       } finally {
         setLoading(false);
       }
     }, 500);
   }, []);
 
-  // ✅ Handle Add Friend
   const handleAddFriend = async (friendId: string) => {
     try {
       await addFriend(friendId);
-      setSuggestedFriends((prev) => prev.filter((f) => f._id !== friendId)); // ✅ Remove from suggestions
-      await fetchUserProfile(); // ✅ Update profile after adding friend
+      setSuggestedFriends((prev) => prev.filter((f) => f._id !== friendId));
+
+      await fetchUserProfile(); // ✅ Ensure UI updates with new friends
+
+      setIsAddContactModalOpen(false); // ✅ Close the modal first
+
+      setTimeout(() => {
+        setShowFriendToast(true); // ✅ Show toast AFTER modal is fully closed
+      }, 300); // ✅ Small delay to allow re-render
     } catch (error) {
       setToast({ message: "Failed to add friend!", type: "error" });
     }
   };
+
+  // ✅ Show toast after modal closes completely
+  useEffect(() => {
+    if (showFriendToast) {
+      setToast({ message: "Friend added successfully!", type: "success" });
+
+      setTimeout(() => {
+        setToast(null);
+        setShowFriendToast(false); // ✅ Reset showToast state
+      }, 5000); // ✅ Keep toast visible for 5 seconds
+    }
+  }, [showFriendToast]);
 
   // if (loading) {
   //   return (
@@ -250,15 +312,33 @@ export default function Profile() {
         accountDetails: paymentDetails,
       }); // ✅ Call Context Function
 
-      setToast({ message: "Payment method added!", type: "success" });
+      await fetchUserProfile(); // ✅ Ensure UI updates with new friends
+
+      // setToast({ message: "Payment method added!", type: "success" });
       setIsAddPaymentModalOpen(false);
-    } catch (error: any) {
+
+      setTimeout(() => {
+        setShowPaymentToast(true); // ✅ Show toast AFTER modal is fully closed
+      }, 300); // ✅ Small delay to allow re-render
+    } catch (error) {
       setToast({
-        message: error.message || "Failed to add payment method!",
+        message: "Unable to Add Payment! Try with some other Payment ID!",
         type: "error",
       });
     }
   };
+
+  // ✅ Show toast after modal closes completely
+  useEffect(() => {
+    if (showPaymentToast) {
+      setToast({ message: "Payment added successfully!", type: "success" });
+
+      setTimeout(() => {
+        setToast(null);
+        setShowPaymentToast(false); // ✅ Reset showToast state
+      }, 5000); // ✅ Keep toast visible for 5 seconds
+    }
+  }, [showPaymentToast]);
 
   // ✅ Handle Password Change
   const handleChangePassword = async () => {
@@ -281,36 +361,85 @@ export default function Profile() {
     }
 
     try {
-      await updatePassword({
-        oldPassword,
-        newPassword,
-        confirmNewPassword: confirmPassword,
-      }); // ✅ Call Corrected Function from Profile Context
+      // console.log("🔹 Initiating Password Update...");
+      // await updatePassword({
+      //   oldPassword,
+      //   newPassword,
+      //   confirmNewPassword: confirmPassword,
+      // });
 
-      setToast({ message: "Password changed successfully!", type: "success" });
+      //console.log("✅ Password Updated, Closing Modal...");
+      setIsPasswordModalOpen(false);
 
-      // ✅ Clear fields after success
+      setTimeout(() => {
+        //console.log("🔹 Showing Success Toast...");
+        setToast({
+          message: "Password changed successfully!",
+          type: "success",
+        });
+      }, 300); // ✅ Ensures re-render completes before showing toast
+
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setIsPasswordModalOpen(false);
     } catch (error: any) {
+      console.error("❌ Password Update Failed:", error.message);
       setToast({
-        message: error.message || "Failed to update password!",
+        message: error.message || "Failed to change password!",
         type: "error",
       });
     }
   };
 
   useEffect(() => {
-    if (user) {
-      setToast(null); // ✅ Clear toast when profile updates
+    if (showPasswordToast) {
+      setToast({ message: "Password changed successfully!", type: "success" });
+
+      setTimeout(() => {
+        setToast(null);
+        setShowPasswordToast(false); // ✅ Reset showToast state
+      }, 5000); // ✅ Keep toast visible for 5 seconds
     }
-  }, [user]);
+  }, [showPasswordToast]);
 
   const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  const handleDeleteFriend = async (friendId: string) => {
+    try {
+      await deleteFriend(friendId);
+      setToast({ message: "Friend removed successfully!", type: "success" });
+
+      await fetchUserProfile(); // ✅ Refresh UI
+    } catch (error) {
+      setToast({ message: "Failed to remove friend!", type: "error" });
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    try {
+      await deletePayment(paymentId);
+      setToast({ message: "Payment method removed!", type: "success" });
+
+      await fetchUserProfile(); // ✅ Refresh UI
+    } catch (error) {
+      setToast({ message: "Failed to remove payment method!", type: "error" });
+    }
+  };
+
+  const getPaymentIcon = (methodType: string) => {
+    switch (methodType.toLowerCase()) {
+      case "upi":
+        return faGooglePay; // Google Pay icon
+      case "paypal":
+        return faPaypal; // PayPal icon
+      case "stripe":
+        return faStripe; // Stripe icon
+      default:
+        return faCreditCard; // Default credit card icon
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 p-6">
@@ -332,6 +461,14 @@ export default function Profile() {
             className={`fixed top-24 right-6 px-5 py-3 rounded-lg shadow-md flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
               toast.type === "success" ? "bg-green-500" : "bg-red-500"
             }`}
+            style={{
+              zIndex:
+                isAddContactModalOpen ||
+                isAddPaymentModalOpen ||
+                isPasswordModalOpen
+                  ? 1050
+                  : 999,
+            }}
           >
             <FontAwesomeIcon
               icon={
@@ -349,7 +486,7 @@ export default function Profile() {
             {/* 🔥 Fix Profile Picture src issue */}
             <Image
               src={profileImage || "/avatar_male.png"} // ✅ Use fallback image if null
-              alt="Profile Picture"
+              alt="Profile Picture Not Supported"
               width={128}
               height={128}
               unoptimized
@@ -365,6 +502,7 @@ export default function Profile() {
             <div className="flex flex-col items-center mt-2">
               <label
                 htmlFor="profilePicUpload"
+                title={`Supported Formats : jpg, jpeg, png.\nSupported File Size : Less than 100KB.`}
                 className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md cursor-pointer"
               >
                 Upload Image
@@ -432,7 +570,12 @@ export default function Profile() {
             <Button
               text="Change Password"
               onClick={() => setIsPasswordModalOpen(true)}
-              className="bg-yellow-500 hover:bg-yellow-600 w-full"
+              className={`w-full ${
+                !user?.password
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-yellow-500 hover:bg-yellow-600"
+              } text-white`}
+              disabled={!user?.password}
             />
 
             {/* <Button text="Logout" onClick={handleLogout} className="text-white bg-red-500 hover:bg-red-600 w-full" /> */}
@@ -448,13 +591,39 @@ export default function Profile() {
           <div className="mt-4 max-h-40 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.friends && user.friends.length > 0 ? (
               user.friends.map((friend: any, index: number) => (
-                <div key={index} className="mb-2 border-b pb-2">
-                  <p className="font-semibold">{friend.fullName}</p>
-                  <p className="text-sm text-gray-500">{friend.email}</p>
+                <div
+                  key={index}
+                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
+                >
+                  <Image
+                    src="/avatar_friend.png"
+                    alt="Friend Avatar"
+                    width={40}
+                    height={40}
+                  />
+                  <div>
+                    <p className="font-semibold">
+                      {friend.fullName || "Unknown"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {friend.email || "No email"}
+                    </p>
+                  </div>
+
+                  {/* Delete Friend Button */}
+                  <button
+                    onClick={() => handleDeleteFriend(friend._id)}
+                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                    title="Delete Payment"
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500">No contacts added yet.</p>
+              <p className="text-sm text-gray-500 cursor-default">
+                No contacts added yet.
+              </p>
             )}
           </div>
 
@@ -477,15 +646,34 @@ export default function Profile() {
           <div className="mt-4 max-h-40 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.paymentMethods && user.paymentMethods.length > 0 ? (
               user.paymentMethods.map((method: any, index: number) => (
-                <div key={index} className="mb-2 border-b pb-2">
-                  <p className="font-semibold">{method.methodType}</p>
-                  <p className="text-sm text-gray-500">
-                    {method.accountDetails}
-                  </p>
+                <div
+                  key={index}
+                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Dynamically Display Payment Icon */}
+                    <FontAwesomeIcon
+                      icon={getPaymentIcon(method.methodType)}
+                      className="text-3xl text-indigo-500"
+                    />
+                    {/* <p className="font-semibold">{method.methodType}</p> */}
+                    <p className="text-sm text-gray-500">
+                      {method.accountDetails}
+                    </p>
+                  </div>
+
+                  {/* Delete Payment Button */}
+                  <button
+                    onClick={() => handleDeletePayment(method._id)}
+                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                    title="Delete Payment"
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 cursor-default">
                 No payment methods added yet.
               </p>
             )}
