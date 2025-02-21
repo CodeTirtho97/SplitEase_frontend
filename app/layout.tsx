@@ -4,6 +4,7 @@ import CustomScrollbar from "@/components/CustomScrollbar";
 import "./globals.css";
 import { AuthProvider } from "@/context/authContext";
 import { ProfileProvider } from "@/context/profileContext";
+import { GroupProvider } from "@/context/groupContext";
 
 export default function RootLayout({
   children,
@@ -15,10 +16,12 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <ProfileProvider>
-            <Navbar />
-            <CustomScrollbar />
-            {children}
-            <Footer />
+            <GroupProvider>
+              <Navbar />
+              <CustomScrollbar />
+              {children}
+              <Footer />
+            </GroupProvider>
           </ProfileProvider>
         </AuthProvider>
       </body>
