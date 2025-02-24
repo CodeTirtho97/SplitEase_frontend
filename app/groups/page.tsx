@@ -55,7 +55,7 @@ export default function Groups() {
   const [newGroup, setNewGroup] = useState({
     name: "",
     description: "",
-    type: "Other",
+    type: "Friends",
     members: [] as string[],
   });
 
@@ -111,11 +111,11 @@ export default function Groups() {
   }, [groups]);
 
   const avatarMap: { [key: string]: string } = {
-    Food: "/food_group.png",
-    Entertainment: "/entertainment_group.png",
     Travel: "/travel_group.png",
-    Utilities: "/utilities_group.png",
-    Other: "/other_group.png",
+    Household: "/household_group.png",
+    Event: "/event_group.png",
+    Work: "/work_group.png",
+    Friends: "/friends_group.png",
   };
 
   const handleGroupTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -146,7 +146,7 @@ export default function Groups() {
       setToast({ message: "Group created successfully!", type: "success" });
 
       // Reset fields
-      setNewGroup({ name: "", description: "", type: "Other", members: [] });
+      setNewGroup({ name: "", description: "", type: "Friends", members: [] });
     } catch (error: any) {
       setToast({ message: error.message, type: "error" });
     }
@@ -338,7 +338,7 @@ export default function Groups() {
                     >
                       {/* Group Avatar */}
                       <Image
-                        src={avatarMap[group.type] || "/other_group.png"} // Fallback avatar
+                        src={avatarMap[group.type] || "/friends_group.png"} // Fallback avatar
                         alt="Group Avatar"
                         width={50}
                         height={50}
@@ -595,7 +595,7 @@ export default function Groups() {
                   >
                     {/* Group Avatar */}
                     <Image
-                      src={avatarMap[group.type] || "/other_group.png"} // ✅ Fallback image handling
+                      src={avatarMap[group.type] || "/friends_group.png"} // ✅ Fallback image handling
                       alt="Group Avatar"
                       width={50}
                       height={50}
@@ -740,11 +740,11 @@ export default function Groups() {
                       className="w-full border p-2 rounded mb-3"
                       required
                     >
-                      <option value="Food">Food</option>
-                      <option value="Entertainment">Entertainment</option>
-                      <option value="Travel">Travel</option>
-                      <option value="Utilities">Utilities</option>
-                      <option value="Other">Other</option>
+                      <option value="Travel">Travel/Trip</option>
+                      <option value="Household">Household</option>
+                      <option value="Event">Event/Party</option>
+                      <option value="Work">Work/Office</option>
+                      <option value="Friends">Friends/Family</option>
                     </select>
                   </div>
 
@@ -860,7 +860,7 @@ export default function Groups() {
                       src={
                         selectedGroup?.avatar ||
                         avatarMap[selectedGroup?.type] ||
-                        "/other_group.png"
+                        "/friends_group.png"
                       }
                       alt="Group Avatar"
                       width={80}

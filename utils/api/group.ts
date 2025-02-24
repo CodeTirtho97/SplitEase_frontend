@@ -24,12 +24,15 @@ export const fetchGroupDetails = async (groupId: string) => {
     const token = localStorage.getItem("userToken");
     if (!token) throw new Error("User not authenticated!");
 
-    const response = await axios.get(`${API_URL}/groups/details/${groupId}`, {
+    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    if (!response.data.group) throw new Error("Group not found!");
+
     return response.data.group;
   } catch (error: any) {
+    console.error("Error fetching group details:", error);
     throw new Error(error.response?.data?.message || "Failed to fetch group details");
   }
 };

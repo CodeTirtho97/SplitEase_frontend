@@ -19,7 +19,7 @@ interface Group {
   _id: string;
   name: string;
   description: string;
-  type: "Food" | "Entertainment" | "Travel" | "Utilities" | "Other";
+  type: "Travel" | "Household" | "Event" | "Work" | "Friends";
   completed: boolean;
   createdBy: { fullName: string } | string;
   members: string[];
