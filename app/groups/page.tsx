@@ -92,14 +92,14 @@ export default function Groups() {
   }, [selectedGroup]);
 
   const { friends, refreshFriends } = useGroups();
-  //console.log("✅ Friends in Group Page:", friends);
-  //console.log("🛠️ Group Context Debug:", { friends, refreshFriends });
 
   // Fetch friends when modal opens
   useEffect(() => {
-    //console.log("🚀 Forcing Friends API Call on Page Load");
-    refreshFriends(); // ✅ Calls the API on page load
-  }, []);
+    if (isModalOpen) {
+      console.log("🚀 Fetching friends for Add Group modal...");
+      refreshFriends(); // ✅ Calls the API only when modal opens
+    }
+  }, [isModalOpen, refreshFriends]);
 
   useEffect(() => {
     console.log("🚀 Fetching Groups on Page Load...");
@@ -221,7 +221,7 @@ export default function Groups() {
     setIsViewModalOpen(true);
 
     try {
-      // ✅ Fetch transactions safely
+      // ✅ Fetch transactions safely using the updated endpoint
       const transactions = await fetchGroupTransactions(group._id);
       console.log("🔹 Transactions Fetched:", transactions);
 
@@ -384,7 +384,6 @@ export default function Groups() {
             )}
           </div>
 
-          {/* ✅ Edit Group Modal (Two-Column Layout) */}
           {isEditModalOpen && selectedGroup && (
             <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
               <div className="bg-white p-8 rounded-lg shadow-lg w-[700px] max-w-2xl flex flex-col gap-6 relative">
@@ -472,7 +471,8 @@ export default function Groups() {
                           const newMemberId = e.target.value;
                           if (
                             newMemberId &&
-                            !newMembers.includes(newMemberId)
+                            !newMembers.includes(newMemberId) && // ✅ Ensure not already added
+                            newMemberId !== selectedGroup.createdBy._id // ✅ Double-check excluding creator
                           ) {
                             setNewMembers([...newMembers, newMemberId]);
                           }
@@ -490,8 +490,8 @@ export default function Groups() {
                         {friends.length > 0 &&
                         !friends.some(
                           (friend) =>
-                            !newMembers.includes(friend._id) &&
-                            friend._id !== selectedGroup.createdBy._id
+                            friend._id !== selectedGroup.createdBy._id && // ✅ Exclude creator
+                            !newMembers.includes(friend._id) // ✅ Exclude already added members
                         ) ? (
                           <option value="">No new friends to add</option> // ✅ Show this when no friends available
                         ) : (
@@ -784,7 +784,7 @@ export default function Groups() {
                         <option disabled>No friends found</option>
                       )}
                     </select>
-                    ;{/* Selected Members List */}
+                    {/* Selected Members List */}
                     <h3 className="font-semibold text-gray-700 mt-2">
                       Selected Members{" "}
                       {newGroup.members.length > 0
@@ -899,12 +899,12 @@ export default function Groups() {
                   <h3 className="font-semibold text-gray-700 mt-4">
                     Members ({selectedGroup?.members?.length || 0})
                   </h3>
-                  <div className="flex flex-wrap gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                  <div className="flex flex-col text-start gap-2 mt-1 max-h-[200px] overflow-y-auto">
                     {selectedGroup?.members?.map(
                       (member: any, index: number) => (
                         <span
                           key={index}
-                          className="bg-gray-200 px-3 py-1 rounded-md text-sm"
+                          className="bg-white text-blue-600 px-3 py-1 rounded-md text-sm"
                         >
                           {member.fullName || "Unknown"}
                         </span>
@@ -940,43 +940,71 @@ export default function Groups() {
                   </div>
 
                   {/* Close Button */}
-                  <div className="flex justify-center mt-6">
+                  <div className="flex justify-center mt-10 bottom-2">
                     <Button
                       text="Close"
                       onClick={() => setIsViewModalOpen(false)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg text-lg"
+                      className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-lg text-lg"
                     />
                   </div>
                 </div>
 
                 {/* 🔹 Right Column - Transactions & Actions */}
                 <div className="flex-1 p-6 flex flex-col gap-6 bg-gray-50 rounded-lg">
-                  {/* Recent Transactions */}
-                  <div>
+                  {/* Recent Transactions (Completed) */}
+                  {/* <div>
                     <h3 className="font-semibold text-gray-700">
                       Recent Transactions
                     </h3>
-                    {/* Display transactions only if groupTransactions is an array */}
-                    {Array.isArray(groupTransactions) ? (
-                      groupTransactions
-                        .filter((txn) => txn.groupId === selectedGroup._id)
-                        .slice(0, 3)
-                        .map((txn, index) => (
+                    {groupTransactions.completed.length > 0 ? (
+                      groupTransactions.completed.map(
+                        (txn: any, index: number) => (
                           <div
                             key={index}
                             className="flex justify-between border-b py-2"
                           >
                             <span className="text-gray-600">
-                              {txn.member.fullName || "Unknown"}
+                              {txn.sender?.fullName || "Unknown"} →{" "}
+                              {txn.receiver?.fullName || "Unknown"}
                             </span>
                             <span className="font-bold">
                               ₹{txn.amount.toLocaleString()}
                             </span>
                           </div>
-                        ))
+                        )
+                      )
                     ) : (
                       <p className="text-gray-500 italic">
                         No transactions found.
+                      </p>
+                    )}
+                  </div> */}
+
+                  {/* Pending Transactions (Optional Display) */}
+                  <div>
+                    <h3 className="font-semibold text-gray-700">
+                      Pending Transactions ({groupTransactions.pending.length})
+                    </h3>
+                    {groupTransactions.pending.length > 0 ? (
+                      groupTransactions.pending.map(
+                        (txn: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex justify-between border-b py-2 text-yellow-600"
+                          >
+                            <span className="text-gray-600">
+                              {txn.sender?.fullName || "Unknown"} →{" "}
+                              {txn.receiver?.fullName || "Unknown"}
+                            </span>
+                            <span className="font-bold">
+                              ₹{txn.amount.toLocaleString()}
+                            </span>
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <p className="text-gray-500 italic">
+                        No pending transactions found.
                       </p>
                     )}
                   </div>
@@ -984,7 +1012,7 @@ export default function Groups() {
                   {/* Who Owes Whom Calculation */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-700">
-                      Who Owes Whom
+                      Who Owes Whom ({owesList.length})
                     </h3>
 
                     {owesList.length > 0 ? (
@@ -1009,25 +1037,15 @@ export default function Groups() {
                   <div className="flex flex-col gap-3">
                     <button
                       onClick={() => router.push("/expenses")}
-                      className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 text-lg"
+                      className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 text-lg"
                     >
-                      Go to Expense Page
-                    </button>
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/split-expenses?groupId=${selectedGroup._id}`
-                        )
-                      }
-                      className="w-full bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 text-lg"
-                    >
-                      Go to Split Expenses
+                      Check Expenses
                     </button>
                     <button
                       onClick={() => router.push("/payments")}
                       className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg"
                     >
-                      Settle Payment
+                      Settle Payments
                     </button>
                   </div>
                 </div>

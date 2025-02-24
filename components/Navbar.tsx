@@ -5,16 +5,54 @@ import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/Button";
 
+// Utility function to listen for storage changes
+const useStorageListener = (key: any, callback: any) => {
+  useEffect(() => {
+    const handleStorageChange = (event: any) => {
+      if (event.key === key) {
+        callback(event.newValue);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [key, callback]);
+};
+
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname(); // Get the current route
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Simulating authentication check (Replace with actual auth logic)
+  // Check authentication on mount and update on localStorage changes
   useEffect(() => {
-    const user = localStorage.getItem("userToken"); // Replace this with actual authentication logic
-    setIsLoggedIn(!!user);
-  }, []);
+    const userToken = localStorage.getItem("userToken");
+    setIsLoggedIn(!!userToken);
+
+    // Use a custom effect to monitor localStorage changes and pathname
+    const checkAuthState = () => {
+      const token = localStorage.getItem("userToken");
+      setIsLoggedIn(!!token);
+    };
+
+    // Monitor localStorage changes (same as useStorageListener, but simpler here)
+    const handleStorageChange = (event: any) => {
+      if (event.key === "userToken") {
+        checkAuthState();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    // Optionally, monitor pathname changes to re-evaluate state
+    const handlePopState = () => checkAuthState();
+    window.addEventListener("popstate", handlePopState);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [pathname]); // Re-run when pathname changes to handle navigation
 
   // Logout function
   const handleLogout = () => {
@@ -29,7 +67,12 @@ export default function Navbar() {
         {/* Logo & App Name */}
         <div className="flex items-center space-x-3">
           <Image src="/logo.png" alt="SplitEase Logo" width={40} height={40} />
-          <Link href="/" className={`text-3xl font-extrabold tracking-tight ${isLoggedIn ? "pointer-events-none opacity-50" : "text-gray-900"}`}>
+          <Link
+            href="/"
+            className={`text-3xl font-extrabold tracking-tight ${
+              isLoggedIn ? "pointer-events-none opacity-50" : "text-gray-900"
+            }`}
+          >
             SplitEase<span className="text-indigo-600">.</span>
           </Link>
         </div>
@@ -94,10 +137,16 @@ export default function Navbar() {
 
               {/* Sign Up Button */}
               <Link href="/signup">
-                <button className={`bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 
-                  text-white rounded-lg transition-all duration-250 ease-out shadow-md transform hover:scale-105 
-                  w-[120px] h-[40px] flex items-center justify-center
-                  ${pathname === "/signup" ? "ring-2 ring-indigo-500 shadow-md scale-100" : ""}`}>
+                <button
+                  className={`bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 
+                    text-white rounded-lg transition-all duration-250 ease-out shadow-md transform hover:scale-105 
+                    w-[120px] h-[40px] flex items-center justify-center
+                    ${
+                      pathname === "/signup"
+                        ? "ring-2 ring-indigo-500 shadow-md scale-100"
+                        : ""
+                    }`}
+                >
                   Sign Up
                 </button>
               </Link>

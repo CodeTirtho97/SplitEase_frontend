@@ -15,6 +15,7 @@ import expenseApi from "@/utils/api/expense";
 import DashboardCards from "@/components/ExpenseCard"; // Updated component name
 import { useGroups } from "@/context/groupContext";
 import ExpenseModal from "@/components/ExpenseModal";
+import { useTransactionContext } from "@/context/transactionContext";
 
 // Define types at the top of the file
 type Currency = "INR" | "USD" | "EUR" | "GBP" | "JPY";
@@ -54,6 +55,15 @@ interface Group {
   members: Member[];
 }
 
+interface ChartData {
+  breakdown: { [key: string]: number };
+  monthlyTrend: { [key: string]: number };
+  breakdownPending: { [key: string]: number };
+  breakdownSettled: { [key: string]: number };
+  monthlyTrendPending: { [key: string]: number };
+  monthlyTrendSettled: { [key: string]: number };
+}
+
 export default function Expenses() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,17 +80,18 @@ export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [showCharts, setShowCharts] = useState(false);
-  const [chartData, setChartData] = useState<{
-    breakdown: { [key: string]: number };
-    monthlyTrend: { [key: string]: number };
-  } | null>(null);
+  const [chartData, setChartData] = useState<ChartData | null>(null);
   const [loadingCharts, setLoadingCharts] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [summary, setSummary] = useState<
     { [key in Currency]?: Summary } | null
   >(null); // Use defined types
   const [error, setError] = useState<string | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<Currency>("INR"); // Define state for selectedCurrency
+  const [selectedCurrency, setSelectedCurrency] = useState<Currency>("INR"); // UI-only for Expense Cards, no data impact
+  const { refreshExpenses } = useTransactionContext(); // Keep for potential future use, but decouple completely
+
+  // Track if component has mounted to prevent multiple fetches in Strict Mode
+  const [hasMounted, setHasMounted] = useState(false);
 
   // Transform context groups to match ExpenseModal's expected type (only when modal is open)
   const transformedGroups: Group[] = useMemo(() => {
@@ -122,11 +133,11 @@ export default function Expenses() {
         members,
       };
     });
-  }, [contextGroups]); // Keep this memoized, but fetch groups only when needed
+  }, []); // Empty dependency array to prevent re-computation
 
-  // Fetch recent expenses only on page mount (no polling)
+  // Fetch recent expenses only on page mount (no polling, context updates, or refresh)
   const fetchRecentExpenses = useCallback(async () => {
-    if (isFetching) return;
+    if (isFetching || hasMounted) return; // Prevent multiple fetches in Strict Mode
     setIsFetching(true);
     try {
       console.log("Fetching recent expenses on page load...");
@@ -142,10 +153,11 @@ export default function Expenses() {
     } finally {
       setIsFetching(false);
     }
-  }, [isFetching]);
+  }, [isFetching, hasMounted]); // Add hasMounted to prevent re-fetching
 
-  // Fetch expense summary only on page mount
+  // Fetch expense summary only on page mount (no polling, context updates, or refresh)
   const fetchSummary = useCallback(async () => {
+    if (hasMounted) return; // Prevent multiple fetches in Strict Mode
     try {
       console.log("Fetching expense summary on page load...");
       const response = await expenseApi.getExpenseSummary();
@@ -158,31 +170,80 @@ export default function Expenses() {
       console.error("Error fetching expense summary:", error);
       setError("Failed to load summary");
     }
-  }, []); // Empty dependency array for one-time fetch
+  }, [hasMounted]); // Add hasMounted to prevent re-fetching
 
-  // Fetch on page mount only (no polling or real-time updates)
+  // Fetch chart data only on page mount (no polling, context updates, or refresh)
+  const fetchExpenseBreakdown = useCallback(async () => {
+    if (hasMounted) return; // Prevent multiple fetches in Strict Mode
+    console.log("fetchExpenseBreakdown called (page load only)");
+    setLoadingCharts(true);
+    try {
+      const response = await expenseApi.getExpenseBreakdown("INR"); // Hardcode INR for charts, no dynamic updates
+      console.log(
+        "Expense breakdown response:",
+        JSON.stringify(response.data, null, 2)
+      );
+      setChartData(
+        response.data || {
+          breakdown: {},
+          monthlyTrend: {},
+          breakdownPending: {},
+          breakdownSettled: {},
+          monthlyTrendPending: {},
+          monthlyTrendSettled: {},
+        }
+      );
+    } catch (error) {
+      console.error("Error fetching expense breakdown:", error);
+      setChartData(null);
+      setToast({ message: "Failed to load chart data", type: "error" });
+    } finally {
+      setLoadingCharts(false);
+    }
+  }, [hasMounted]); // Add hasMounted to prevent re-fetching
+
+  // Fetch on page mount only (no polling, context updates, or refresh), handle Strict Mode
   useEffect(() => {
+    console.log("useEffect triggered in Expenses.tsx (page load only)", {
+      mounted: true,
+      renderCount: (window as any).renderCount || 0,
+      showCharts,
+      selectedCurrency,
+      user,
+      expensesLength: expenses.length,
+      summary: summary ? Object.keys(summary) : "null",
+      chartData: chartData ? Object.keys(chartData).length : "null",
+      contextGroupsLength: contextGroups?.length || 0,
+    });
+    (window as any).renderCount = ((window as any).renderCount || 0) + 1;
     const storedToken = localStorage.getItem("userToken");
     if (!storedToken) {
       router.push("/login");
-    } else {
+    } else if (!hasMounted) {
       setUser({ name: "Test User" });
+      setHasMounted(true); // Mark as mounted to prevent subsequent fetches
       const fetchInitialData = async () => {
         try {
+          console.log("Fetching recent expenses on page load...");
           await fetchRecentExpenses();
-          await fetchSummary(); // Fetch summary on mount
+          console.log("Fetching expense summary on page load...");
+          await fetchSummary();
+          console.log("fetchExpenseBreakdown called (page load only)");
+          await fetchExpenseBreakdown();
         } catch (error) {
           console.error("Error fetching initial data:", error);
           setToast({ message: "Failed to load initial data", type: "error" });
         }
       };
       fetchInitialData();
-
-      return () => {
-        // No cleanup needed for polling since we removed it
-      };
     }
-  }, [router, fetchRecentExpenses, fetchSummary]); // Removed refreshGroups and polling
+  }, [
+    router,
+    fetchRecentExpenses,
+    fetchSummary,
+    fetchExpenseBreakdown,
+    hasMounted,
+  ]); // Add hasMounted to control re-fetching
 
   // Fetch groups only when the "Add Expense" modal is opened
   useEffect(() => {
@@ -200,46 +261,12 @@ export default function Expenses() {
     }
   }, [isModalOpen, refreshGroups]); // Trigger groups fetch only when modal opens
 
-  // Handle groups error if it exists
-  // useEffect(() => {
-  //   if (groupsError) {
-  //     console.error("Groups fetch error:", groupsError);
-  //     setToast({ message: "Failed to fetch groups", type: "error" });
-  //   }
-  // }, [groupsError]);
-
   // Update expenses when a new expense is created (but only on page refresh)
   useEffect(() => {
     if (expenses.length > 5) {
       setExpenses((prev) => prev.slice(0, 5));
     }
   }, [expenses]);
-
-  // Fetch chart data in INR only (on page load or when showCharts changes, but no real-time updates)
-  useEffect(() => {
-    if (showCharts) {
-      const fetchChartData = async () => {
-        setLoadingCharts(true);
-        try {
-          const response = await expenseApi.getExpenseBreakdown("INR"); // Hardcode INR for consistency
-          const breakdown = response.data.breakdown || {};
-          const monthlyTrend = response.data.monthlyTrend || {};
-
-          setChartData({
-            breakdown,
-            monthlyTrend,
-          });
-        } catch (error) {
-          console.error("Error fetching expense breakdown:", error);
-          setChartData(null);
-          setToast({ message: "Failed to load chart data", type: "error" });
-        } finally {
-          setLoadingCharts(false);
-        }
-      };
-      fetchChartData();
-    }
-  }, [showCharts]); // No real-time updates for charts
 
   // Clear toast after 5 seconds
   useEffect(() => {
@@ -256,7 +283,7 @@ export default function Expenses() {
       acc[group._id] = group.name;
       return acc;
     }, {} as { [key: string]: string });
-  }, [transformedGroups]);
+  }, []); // Empty dependency array to prevent re-computation
 
   const handleSaveExpense = async (data: any) => {
     const {
@@ -358,7 +385,7 @@ export default function Expenses() {
           fetchSummary={fetchSummary} // Pass for potential manual refresh, but not used here
           error={error}
           selectedCurrency={selectedCurrency}
-          setSelectedCurrency={setSelectedCurrency} // Pass for currency selection
+          setSelectedCurrency={setSelectedCurrency} // Pass for UI-only currency selection in Expense Cards
         />{" "}
         {/* Pass necessary props to DashboardCards */}
         <button
@@ -375,7 +402,13 @@ export default function Expenses() {
               </div>
             ) : !chartData ||
               (Object.keys(chartData?.breakdown || {}).length === 0 &&
-                Object.keys(chartData?.monthlyTrend || {}).length === 0) ? (
+                Object.keys(chartData?.monthlyTrend || {}).length === 0 &&
+                Object.keys(chartData?.breakdownPending || {}).length === 0 &&
+                Object.keys(chartData?.breakdownSettled || {}).length === 0 &&
+                Object.keys(chartData?.monthlyTrendPending || {}).length ===
+                  0 &&
+                Object.keys(chartData?.monthlyTrendSettled || {}).length ===
+                  0) ? (
               <div className="flex flex-col items-center text-center justify-center w-full py-12">
                 <h2 className="text-2xl font-semibold text-gray-700">
                   No Expenses Added Yet!
@@ -388,15 +421,16 @@ export default function Expenses() {
               <>
                 <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center">
                   <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
-                    Expense Breakdown
+                    Expense Breakdown (Total)
                   </h2>
                   <div className="w-full h-[300px]">
                     <Pie
                       data={{
-                        labels: Object.keys(chartData.breakdown),
+                        labels: Object.keys(chartData?.breakdown || {}),
                         datasets: [
                           {
-                            data: Object.values(chartData.breakdown),
+                            label: "Total Expenses",
+                            data: Object.values(chartData?.breakdown || {}),
                             backgroundColor: [
                               "#FF6384", // Food (Pink)
                               "#36A2EB", // Transportation (Blue)
@@ -405,6 +439,15 @@ export default function Expenses() {
                               "#8A2BE2", // Entertainment (Purple, if needed)
                               "#00FA9A", // Miscellaneous (Turquoise, if needed)
                             ],
+                            borderColor: [
+                              "#FF6384",
+                              "#36A2EB",
+                              "#FFCE56",
+                              "#4CAF50",
+                              "#8A2BE2",
+                              "#00FA9A",
+                            ],
+                            borderWidth: 1,
                           },
                         ],
                       }}
@@ -413,7 +456,7 @@ export default function Expenses() {
                         plugins: {
                           title: {
                             display: true,
-                            text: "Expense Breakdown",
+                            text: "Expense Breakdown (Total)",
                             font: { size: 16 },
                           },
                           legend: {
@@ -423,21 +466,32 @@ export default function Expenses() {
                                 const data = chart.data;
                                 if (
                                   !data.labels ||
-                                  !data.datasets[0]?.backgroundColor
+                                  !data.datasets ||
+                                  data.datasets.length === 0 ||
+                                  !data.datasets[0].backgroundColor
                                 ) {
                                   return [];
                                 }
+                                const labels = data.labels as string[];
                                 const backgroundColors = Array.isArray(
                                   data.datasets[0].backgroundColor
                                 )
-                                  ? data.datasets[0].backgroundColor
+                                  ? (data.datasets[0]
+                                      .backgroundColor as string[])
+                                  : typeof data.datasets[0].backgroundColor ===
+                                    "string"
+                                  ? Array(labels.length).fill(
+                                      data.datasets[0].backgroundColor
+                                    )
                                   : [
                                       data.datasets[0]
                                         .backgroundColor as string,
                                     ];
-                                return data.labels.map((label, i) => ({
-                                  text: label as string,
-                                  fillStyle: backgroundColors[i] as string,
+                                return labels.map((label, i) => ({
+                                  text: label,
+                                  fillStyle:
+                                    (backgroundColors[i] as string) ||
+                                    "#000000",
                                   hidden: false,
                                   lineWidth: 0,
                                   fontColor: "#000",
@@ -450,12 +504,11 @@ export default function Expenses() {
                               label: (context) => {
                                 const value = context.raw as number;
                                 const total = Object.values(
-                                  chartData.breakdown
-                                ).reduce((sum, val) => sum + val, 0);
-                                const percentage = (
-                                  (value / total) *
-                                  100
-                                ).toFixed(1);
+                                  chartData?.breakdown || {}
+                                ).reduce((sum, val) => sum + (val || 0), 0);
+                                const percentage = total
+                                  ? ((value / total) * 100).toFixed(1)
+                                  : "0.0";
                                 return `${
                                   context.label
                                 }: ₹${value.toLocaleString()} (${percentage}%)`;
@@ -469,24 +522,20 @@ export default function Expenses() {
                 </div>
                 <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
                   <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
-                    Category-wise Expense
+                    Monthly Expense Trend (Total)
                   </h2>
                   <div className="w-full h-[250px]">
-                    <Bar
+                    <Line
                       data={{
-                        labels: Object.keys(chartData.breakdown),
+                        labels: Object.keys(chartData?.monthlyTrend || {}),
                         datasets: [
                           {
-                            label: "Amount (INR)",
-                            data: Object.values(chartData.breakdown),
-                            backgroundColor: [
-                              "#FF6384", // Food (Pink)
-                              "#36A2EB", // Transportation (Blue)
-                              "#FFCE56", // Accommodation (Yellow)
-                              "#4CAF50", // Utilities (Green, if needed)
-                              "#8A2BE2", // Entertainment (Purple, if needed)
-                              "#00FA9A", // Miscellaneous (Turquoise, if needed)
-                            ],
+                            label: "Total Expenses",
+                            data: Object.values(chartData?.monthlyTrend || {}),
+                            borderColor: "#6200ea",
+                            backgroundColor: "rgba(98, 0, 234, 0.2)",
+                            fill: true,
+                            tension: 0.1,
                           },
                         ],
                       }}
@@ -495,7 +544,66 @@ export default function Expenses() {
                         plugins: {
                           title: {
                             display: true,
-                            text: "Category-wise Expense",
+                            text: "Monthly Expense Trend (Total)",
+                            font: { size: 16 },
+                          },
+                          legend: {
+                            display: false, // Hide legend for Line chart if not needed
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `Spending: ₹${value.toLocaleString()}`;
+                              },
+                            },
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: "Amount (INR)",
+                            },
+                          },
+                          x: {
+                            title: {
+                              display: true,
+                              text: "Month",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
+                    Expense Breakdown by Category (Pending)
+                  </h2>
+                  <div className="w-full h-[250px]">
+                    <Bar
+                      data={{
+                        labels: Object.keys(chartData?.breakdownPending || {}),
+                        datasets: [
+                          {
+                            label: "Pending Expenses",
+                            data: Object.values(
+                              chartData?.breakdownPending || {}
+                            ),
+                            backgroundColor: "rgba(255, 206, 86, 0.2)",
+                            borderColor: "rgba(255, 206, 86, 1)",
+                            borderWidth: 1,
+                          },
+                        ],
+                      }}
+                      options={{
+                        maintainAspectRatio: false,
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Expense Breakdown by Category (Pending)",
                             font: { size: 16 },
                           },
                           legend: {
@@ -531,21 +639,26 @@ export default function Expenses() {
                     />
                   </div>
                 </div>
-                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-3 flex flex-col items-center">
+                <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
                   <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
-                    Monthly Spending Trend
+                    Monthly Expense Trend (Pending)
                   </h2>
                   <div className="w-full h-[250px]">
                     <Line
                       data={{
-                        labels: Object.keys(chartData.monthlyTrend),
+                        labels: Object.keys(
+                          chartData?.monthlyTrendPending || {}
+                        ),
                         datasets: [
                           {
-                            label: "Spending (INR)",
-                            data: Object.values(chartData.monthlyTrend),
-                            borderColor: "#6200ea",
-                            backgroundColor: "rgba(98, 0, 234, 0.2)",
+                            label: "Pending Expenses",
+                            data: Object.values(
+                              chartData?.monthlyTrendPending || {}
+                            ),
+                            borderColor: "rgba(255, 206, 86, 1)",
+                            backgroundColor: "rgba(255, 206, 86, 0.2)",
                             fill: true,
+                            tension: 0.1,
                           },
                         ],
                       }}
@@ -554,7 +667,7 @@ export default function Expenses() {
                         plugins: {
                           title: {
                             display: true,
-                            text: "Monthly Spending Trend",
+                            text: "Monthly Expense Trend (Pending)",
                             font: { size: 16 },
                           },
                           legend: {
@@ -564,7 +677,7 @@ export default function Expenses() {
                             callbacks: {
                               label: (context) => {
                                 const value = context.raw as number;
-                                return `Spending: ₹${value.toLocaleString()}`;
+                                return `Pending: ₹${value.toLocaleString()}`;
                               },
                             },
                           },
@@ -574,7 +687,130 @@ export default function Expenses() {
                             beginAtZero: true,
                             title: {
                               display: true,
-                              text: "Spending (INR)",
+                              text: "Amount (INR)",
+                            },
+                          },
+                          x: {
+                            title: {
+                              display: true,
+                              text: "Month",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
+                    Expense Breakdown by Category (Settled)
+                  </h2>
+                  <div className="w-full h-[250px]">
+                    <Bar
+                      data={{
+                        labels: Object.keys(chartData?.breakdownSettled || {}),
+                        datasets: [
+                          {
+                            label: "Settled Expenses",
+                            data: Object.values(
+                              chartData?.breakdownSettled || {}
+                            ),
+                            backgroundColor: "rgba(75, 192, 192, 0.2)",
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            borderWidth: 1,
+                          },
+                        ],
+                      }}
+                      options={{
+                        maintainAspectRatio: false,
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Expense Breakdown by Category (Settled)",
+                            font: { size: 16 },
+                          },
+                          legend: {
+                            display: false, // Hide legend for Bar chart if not needed
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `${
+                                  context.label
+                                }: ₹${value.toLocaleString()}`;
+                              },
+                            },
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: "Amount (INR)",
+                            },
+                          },
+                          x: {
+                            title: {
+                              display: true,
+                              text: "Category",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
+                    Monthly Expense Trend (Settled)
+                  </h2>
+                  <div className="w-full h-[250px]">
+                    <Line
+                      data={{
+                        labels: Object.keys(
+                          chartData?.monthlyTrendSettled || {}
+                        ),
+                        datasets: [
+                          {
+                            label: "Settled Expenses",
+                            data: Object.values(
+                              chartData?.monthlyTrendSettled || {}
+                            ),
+                            borderColor: "rgba(75, 192, 192, 1)",
+                            backgroundColor: "rgba(75, 192, 192, 0.2)",
+                            fill: true,
+                            tension: 0.1,
+                          },
+                        ],
+                      }}
+                      options={{
+                        maintainAspectRatio: false,
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Monthly Expense Trend (Settled)",
+                            font: { size: 16 },
+                          },
+                          legend: {
+                            display: false, // Hide legend for Line chart if not needed
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `Settled: ₹${value.toLocaleString()}`;
+                              },
+                            },
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: "Amount (INR)",
                             },
                           },
                           x: {
@@ -593,7 +829,7 @@ export default function Expenses() {
           </div>
         )}
         <div className="bg-white shadow-lg rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">
+          <h2 className="text-lg font-semibold text-orange-500 mb-4">
             Recent Expenses
           </h2>
           {expenses.length === 0 ? (
@@ -624,7 +860,7 @@ export default function Expenses() {
                       <tr className="border-t hover:bg-gray-100 transition">
                         <td className="py-3 px-4">{expense.description}</td>
                         <td className="py-3 px-4">{expense.type}</td>
-                        <td className="py-3 px-4 text-right font-bold">
+                        <td className="py-3 px-4 text-right text-indigo-500 font-bold">
                           {expense.currency === "INR"
                             ? "₹"
                             : expense.currency === "EUR"
@@ -690,13 +926,22 @@ export default function Expenses() {
                                     ?.filter(
                                       (member) =>
                                         member.user?.fullName !==
-                                        expense.payer.fullName
-                                    ) // Filter out self-payments
+                                        expense.payer.fullName // Filter out self-payments
+                                    )
                                     .map((member, index) => {
                                       console.log(
                                         `Rendering split detail for expense ${expense._id}, member ${index}:`,
                                         JSON.stringify(member, null, 2)
                                       ); // Log for debugging (optional)
+                                      const isPaymentDone =
+                                        !!member.transactionId; // Boolean check for transactionId
+                                      const amountColor = isPaymentDone
+                                        ? "text-green-500"
+                                        : "text-red-500";
+                                      const statusColor = isPaymentDone
+                                        ? "text-green-500"
+                                        : "text-red-500";
+
                                       return (
                                         <tr
                                           key={`${expense._id}-member-${index}`}
@@ -705,7 +950,9 @@ export default function Expenses() {
                                           <td className="py-2 px-3">
                                             {member.user?.fullName || "Unknown"}
                                           </td>
-                                          <td className="py-2 px-3 text-center font-bold text-red-500">
+                                          <td
+                                            className={`py-2 px-3 text-center font-bold ${amountColor}`}
+                                          >
                                             {expense.currency === "INR"
                                               ? "₹"
                                               : expense.currency === "EUR"
@@ -724,10 +971,10 @@ export default function Expenses() {
                                               "Unknown"}{" "}
                                             {/* Debug payee name */}
                                           </td>
-                                          <td className="py-2 px-3 text-center">
-                                            {member.transactionId
-                                              ? "Yes"
-                                              : "No"}
+                                          <td
+                                            className={`py-2 px-3 font-bold text-center ${statusColor}`}
+                                          >
+                                            {isPaymentDone ? "Yes" : "No"}
                                           </td>
                                         </tr>
                                       );

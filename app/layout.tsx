@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/authContext";
 import { ProfileProvider } from "@/context/profileContext";
 import { GroupProvider } from "@/context/groupContext";
+import { TransactionProvider } from "@/context/transactionContext";
 
 export default function RootLayout({
   children,
@@ -17,10 +18,12 @@ export default function RootLayout({
         <AuthProvider>
           <ProfileProvider>
             <GroupProvider>
-              <Navbar />
-              <CustomScrollbar />
-              {children}
-              <Footer />
+              <TransactionProvider>
+                <Navbar />
+                <CustomScrollbar />
+                {children}
+                <Footer />
+              </TransactionProvider>
             </GroupProvider>
           </ProfileProvider>
         </AuthProvider>

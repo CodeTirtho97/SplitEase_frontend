@@ -21,11 +21,9 @@ const getRecentExpenses = async () => {
   });
 };
 
-const getExpenseBreakdown = async (currency?: string) => {
-  const params = currency ? { currency } : {};
-  return await axios.get(`${API_URL}/expenses/breakdown`, {
-    headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
-    params,
+const getExpenseBreakdown = async (currency: string) => {
+    return await axios.get(`${API_URL}/expenses/breakdown/${currency}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("userToken")}` },
   });
 };
 

@@ -99,7 +99,9 @@ export const fetchGroupTransactions = async (groupId: string) => {
     const token = localStorage.getItem("userToken");
     if (!token) throw new Error("User not authenticated!");
 
-    const response = await axios.get(`${API_URL}/transactions/group/${groupId}`, {
+    console.log(`Fetching transactions for group ${groupId} at ${API_URL}/${groupId}`); // Debug log
+
+    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -108,8 +110,12 @@ export const fetchGroupTransactions = async (groupId: string) => {
       return { completed: [], pending: [] };
     }
 
+    // Extract completed and pending transactions from the response
     const completed = response.data.completedTransactions?.slice(0, 5) || [];
     const pending = response.data.pendingTransactions?.slice(0, 5) || [];
+
+    console.log("Fetched Completed Transactions:", completed);
+    console.log("Fetched Pending Transactions:", pending);
 
     if (completed.length === 0 && pending.length === 0) {
       console.log(`ℹ️ No transactions available for group ${groupId}`);
@@ -118,8 +124,8 @@ export const fetchGroupTransactions = async (groupId: string) => {
     return { completed, pending };
   } catch (error: any) {
     if (error.response?.status === 404) {
-      console.log(`ℹ️ No transactions found for group ${groupId}`);
-      return { completed: [], pending: [] }; // ✅ Graceful return instead of an error
+      console.log(`ℹ️ No transactions or group found for group ${groupId}`);
+      return { completed: [], pending: [] }; // ✅ Graceful return
     }
 
     console.error("❌ Unexpected error fetching transactions:", error.message);
@@ -127,22 +133,30 @@ export const fetchGroupTransactions = async (groupId: string) => {
   }
 };
 
-// ✅ Calculate Who Owes Whom (Based on Transactions)
+// ✅ Calculate Who Owes Whom (Based on Both Completed and Pending Transactions)
 export const calculateOwes = async (groupId: string) => {
   try {
     const transactions = await fetchGroupTransactions(groupId);
 
-    if (transactions.completed.length === 0) {
-      console.log(`ℹ️ No settled transactions available for group ${groupId}`);
+    if (transactions.completed.length === 0 && transactions.pending.length === 0) {
+      console.log(`ℹ️ No transactions available for group ${groupId}`);
       return [];
     }
 
     const memberTotals: { [key: string]: number } = {};
+    // Process completed transactions
     transactions.completed.forEach((txn: any) => {
-      if (!memberTotals[txn.sender]) memberTotals[txn.sender] = 0;
-      if (!memberTotals[txn.receiver]) memberTotals[txn.receiver] = 0;
-      memberTotals[txn.sender] -= txn.amount;
-      memberTotals[txn.receiver] += txn.amount;
+      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
+      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
+      memberTotals[txn.sender?.fullName] -= txn.amount;
+      memberTotals[txn.receiver?.fullName] += txn.amount;
+    });
+    // Process pending transactions
+    transactions.pending.forEach((txn: any) => {
+      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
+      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
+      memberTotals[txn.sender?.fullName] -= txn.amount;
+      memberTotals[txn.receiver?.fullName] += txn.amount;
     });
 
     const balances = Object.entries(memberTotals).map(([name, balance]) => ({
