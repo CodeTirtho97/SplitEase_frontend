@@ -20,11 +20,14 @@ import dynamic from "next/dynamic";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
+// Dynamically import Google OAuth components
 const GoogleLoginComponent = dynamic(
   () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-  {
-    ssr: false, // Disable SSR for GoogleLogin
-  }
+  { ssr: false }
+);
+const GoogleOAuthProvider = dynamic(
+  () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
+  { ssr: false }
 );
 
 export default function LoginPage() {
@@ -329,7 +332,7 @@ export default function LoginPage() {
       </div>
 
       {/* Custom Toast Notification */}
-      {showToast && (
+      {showToast && typeof window !== "undefined" && (
         <div
           className={`fixed top-24 right-6 px-4 py-3 rounded-md text-white text-sm font-semibold shadow-lg transition-all duration-300 ${
             showToast.type === "success" ? "bg-green-500" : "bg-red-500"
@@ -346,7 +349,7 @@ export default function LoginPage() {
         </div>
       )}
 
-      {error && (
+      {error && typeof window !== "undefined" && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
           suppressHydrationWarning
@@ -370,13 +373,18 @@ export default function LoginPage() {
           Login to continue with SplitEase.
         </p>
 
-        {/* Google Sign-In Button */}
-        <GoogleLoginComponent
-          onSuccess={handleGoogleSuccess}
-          onError={() => console.log("Google Login Failed")}
-          useOneTap
-          //disabled={loading}
-        />
+        {/* Google Sign-In with OAuth Provider (Client-side only) */}
+        {typeof window !== "undefined" && (
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+          >
+            <GoogleLoginComponent
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Google Login Failed")}
+              useOneTap
+            />
+          </GoogleOAuthProvider>
+        )}
 
         {/* Divider */}
         <div className="relative flex items-center my-6">
@@ -465,11 +473,12 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
-      {isForgotPasswordOpen && (
+      {/* Forgot Password Modal (Client-side only) */}
+      {isForgotPasswordOpen && typeof window !== "undefined" && (
         <div
           className="fixed inset-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50"
           onClick={() => setIsForgotPasswordOpen(false)}
+          suppressHydrationWarning
         >
           <div
             className="bg-white p-6 rounded-lg shadow-xl w-[90%] max-w-md"
