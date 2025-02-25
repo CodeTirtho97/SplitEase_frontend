@@ -2,7 +2,6 @@
 
 import { createContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation"; // Removed usePathname to simplify
-import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { signup, login } from "../utils/api/auth"; // Only import server-safe functions
 
 interface AuthContextType {
@@ -27,12 +26,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  // Load user and token from cookies on client-side only
+  // Load user and token from localStorage on client-side only
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const loadFromCookies = () => {
-        const storedUser = Cookies.get("user");
-        const storedToken = Cookies.get("token");
+      const loadFromLocalStorage = () => {
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("token");
 
         if (storedUser && storedToken) {
           setUser(JSON.parse(storedUser));
@@ -40,31 +39,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       };
 
-      loadFromCookies();
+      loadFromLocalStorage();
 
-      // Listen for cookie changes (optional, as Cookies doesn't natively support storage events)
-      // Note: You might need a custom solution or library for cookie change events
-      // For simplicity, we'll rely on the initial load and state updates
+      // Listen for localStorage changes
+      const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === "user" || event.key === "token") {
+          loadFromLocalStorage();
+        }
+      };
+
+      window.addEventListener("storage", handleStorageChange);
+
+      return () => window.removeEventListener("storage", handleStorageChange);
     }
   }, []);
 
-  // Sync user and token with cookies on client-side only
+  // Sync user and token with localStorage on client-side only
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (user && token) {
-        Cookies.set("user", JSON.stringify(user), {
-          expires: 7,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-        });
-        Cookies.set("token", token, {
-          expires: 7,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-        });
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("token", token);
       } else {
-        Cookies.remove("user");
-        Cookies.remove("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
       }
     }
   }, [user, token]);

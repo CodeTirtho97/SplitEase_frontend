@@ -11,18 +11,8 @@ import {
   faLock,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import { signup } from "@/utils/api/auth"; // Only import server-safe functions
+import { signup, googleAuth } from "@/utils/api/auth";
 import { AuthContext } from "@/context/authContext";
-import dynamic from "next/dynamic";
-import Cookies from "js-cookie"; // Using cookies instead of localStorage
-import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
-
-const GoogleLoginComponent = dynamic(
-  () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-  {
-    ssr: false, // Disable SSR for GoogleLogin
-  }
-);
 
 const Signup = () => {
   const router = useRouter();
@@ -102,18 +92,13 @@ const Signup = () => {
     }
 
     try {
-      const response = await signup({
+      await signup({
         fullName,
         email,
         gender,
         password,
         confirmPassword,
       });
-      if (setToken && setUser) {
-        // Type guard
-        setToken(response.token);
-        setUser(response.user);
-      }
       setShowToast({ message: "Signup successful!", type: "success" });
 
       setTimeout(() => {
@@ -156,17 +141,28 @@ const Signup = () => {
     }
   };
 
-  // Handle Google Auth Success (Updated to use API-based callback)
-  const handleGoogleSuccess = async (response: any) => {
+  // Handle Google Auth (Defer to client-side)
+  const handleGoogleSignUp = () => {
     if (typeof window !== "undefined") {
-      try {
-        const { credential } = response;
-        const { user, token } = await handleGoogleCallback(); // API call to get token and user
-        if (setToken && setUser) {
-          // Type guard
-          setToken(token);
-          setUser(user);
-        }
+      googleAuth();
+    }
+  };
+
+  // Handle Google callback on client-side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const userId = params.get("userId");
+      const fullName = params.get("fullName");
+      const profilePic = params.get("profilePic");
+      const email = params.get("email");
+
+      if (token && userId) {
+        setUser?.({ userId, fullName, profilePic, email });
+        setToken?.(token);
+        localStorage.setItem("userToken", token);
+
         setShowToast({ message: "Signup successful!", type: "success" });
         setTimeout(() => {
           setShowToast({
@@ -175,19 +171,14 @@ const Signup = () => {
           });
           setTimeout(() => router.push("/dashboard"), 2000);
         }, 2000);
-      } catch (error: any) {
-        setShowToast({
-          message: error.message || "Google Signup failed!",
-          type: "error",
-        });
-        setTimeout(() => setShowToast(null), 3000);
       }
     }
-  };
+  }, [router, setUser, setToken]);
 
   // Stabilize particle animations (defer to client)
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Ensure particle positions and animations are calculated on client only
       const particleElements = document.querySelectorAll(
         ".animate-float-particle"
       );
@@ -211,10 +202,7 @@ const Signup = () => {
   }, []);
 
   return (
-    <div
-      className="min-h-screen pt-20 pb-6 flex items-center justify-center relative bg-gradient-to-br from-gray-100 via-gray-50 to-indigo-50 overflow-hidden"
-      suppressHydrationWarning
-    >
+    <div className="min-h-screen pt-20 pb-6 flex items-center justify-center relative bg-gradient-to-br from-gray-100 via-gray-50 to-indigo-50 overflow-hidden">
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
@@ -360,10 +348,8 @@ const Signup = () => {
       {/* Custom Toast Notification */}
       {showToast && (
         <div
-          className={`fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg transition-all duration-300 ${
-            showToast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
-          suppressHydrationWarning
+          className={`fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg transition-all duration-300 
+          ${showToast.type === "success" ? "bg-green-500" : "bg-red-500"}`}
         >
           <FontAwesomeIcon
             icon={
@@ -376,10 +362,7 @@ const Signup = () => {
       )}
 
       {error && (
-        <div
-          className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
-          suppressHydrationWarning
-        >
+        <div className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300">
           <FontAwesomeIcon icon={faExclamationCircle} className="mr-2" />
           {error}
         </div>
@@ -399,13 +382,24 @@ const Signup = () => {
           Sign up to get started!
         </p>
 
-        {/* Google Sign-In Button */}
-        <GoogleLoginComponent
-          onSuccess={handleGoogleSuccess}
-          onError={() => console.log("Google Signup Failed")}
-          useOneTap
-          //disabled={loading}
-        />
+        {/* Google Sign-Up Button */}
+        <button
+          onClick={handleGoogleSignUp} // Use client-side handler
+          className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
+          hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group"
+          disabled={loading}
+        >
+          {/* Left Background Animation Effect */}
+          <span className="absolute left-0 w-0 h-full bg-indigo-500 transition-all duration-300 group-hover:w-full opacity-10"></span>
+
+          {/* Google Icon */}
+          <FontAwesomeIcon
+            icon={faGoogle}
+            className="text-indigo-900 group-hover:text-white text-2xl transition-all duration-300"
+          />
+
+          <span className="relative">Sign Up with Google</span>
+        </button>
 
         {/* OR Separator */}
         <div className="flex items-center my-4">
@@ -486,7 +480,7 @@ const Signup = () => {
               type="password"
               placeholder="Create a password"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={handlePasswordChange} // 🔹 Call function here
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "password")
                   ? "border-red-500 focus:ring-red-500"
@@ -505,7 +499,7 @@ const Signup = () => {
               type="password"
               placeholder="Re-enter password"
               value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
+              onChange={handleConfirmPasswordChange} // 🔹 Call function here
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "confirmPassword")
                   ? "border-red-500 focus:ring-red-500"
@@ -546,7 +540,6 @@ const Signup = () => {
           >
             {loading ? "Signing Up..." : "Sign Up"}
           </button>
-
           {/* Login Link */}
           <div className="text-center mt-5">
             <p className="text-gray-600">
@@ -565,10 +558,7 @@ const Signup = () => {
 
       {/* Terms & Conditions Modal */}
       {isTermsModalOpen && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-          suppressHydrationWarning
-        >
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white w-[90%] max-w-3xl rounded-lg shadow-xl relative">
             {/* Header with Title & Close Button */}
             <div className="p-5 border-b flex justify-between items-center bg-gray-100 rounded-t-lg">
@@ -598,7 +588,7 @@ const Signup = () => {
                   signifies acceptance of these terms.
                 </p>
               </section>
-              {/* 2️⃣ User Responsibilities */}
+              /* 2️⃣ User Responsibilities */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   2. User Responsibilities
@@ -617,7 +607,7 @@ const Signup = () => {
                   </li>
                 </ul>
               </section>
-              {/* 3️⃣ Payment Terms */}
+              /* 3️⃣ Payment Terms */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   3. Payments & Transactions
@@ -637,7 +627,7 @@ const Signup = () => {
                   </li>
                 </ul>
               </section>
-              {/* 4️⃣ Privacy & Data Security */}
+              /* 4️⃣ Privacy & Data Security */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   4. Privacy & Data Security
@@ -648,7 +638,7 @@ const Signup = () => {
                   user data with third parties unless required by law.
                 </p>
               </section>
-              {/* 5️⃣ Limitation of Liability */}
+              /* 5️⃣ Limitation of Liability */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   5. Limitation of Liability
