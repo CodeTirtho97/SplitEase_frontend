@@ -1,4 +1,5 @@
 import axios from "axios";
+import Cookies from "js-cookie"; // Using cookies instead of localStorage
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,29 +17,33 @@ export const login = async (credentials: { email: string; password: string }) =>
 
 // 🔹 Google OAuth Redirect
 export const googleAuth = () => {
+  if (typeof window !== "undefined") {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
+  }
+  // Note: If called server-side, this will throw; handle in components with `typeof window !== "undefined"`
 };
 
-// 🔹 Handle Google OAuth Callback
-export const handleGoogleCallback = async () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get("token");
-  const userId = urlParams.get("userId");
-  const fullName = urlParams.get("fullName");
-  const profilePic = urlParams.get("profilePic");
-  const email = urlParams.get("email");
+// 🔹 Handle Google OAuth Callback (Updated to use API call instead of URLSearchParams)
+export const handleGoogleCallback = async (): Promise<{ user: any; token: string }> => {
+  try {
+    const response = await axios.get(`${API_URL}/auth/google/callback`, {
+      withCredentials: true, // Include cookies if needed for authentication
+    });
+    const { token, user } = response.data;
 
-  if (token && userId) {
-    localStorage.setItem("userToken", token);
-    // localStorage.setItem(
-    //   "user",
-    //   JSON.stringify({ userId, fullName, profilePic, email })
-    // );
+    if (token && user) {
+      if (typeof window !== "undefined") {
+        // Optionally set cookies on client-side for persistence
+        Cookies.set("userToken", token, { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "strict" });
+        Cookies.set("user", JSON.stringify(user), { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "strict" });
+      }
+      return { user, token };
+    }
 
-    return { user: { userId, fullName, profilePic, email }, token };
+    throw new Error("Google authentication failed!");
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Google authentication failed!");
   }
-
-  throw new Error("Google authentication failed!");
 };
 
 // 🔹 Forgot Password API Call
