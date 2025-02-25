@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useContext, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Removed usePathname to simplify
+import { useRouter, usePathname } from "next/navigation"; // Use usePathname for navigation detection
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
@@ -11,12 +11,14 @@ import {
   faLock,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import { signup } from "@/utils/api/auth"; // Only import server-safe functions
+import { signup, googleAuth } from "@/utils/api/auth";
 import { AuthContext } from "@/context/authContext";
 
 const Signup = () => {
   const router = useRouter();
-  const { setUser, setToken, loading, error } = useContext(AuthContext) || {};
+  const pathname = usePathname();
+  const { setUser, setToken, user, loading, error } =
+    useContext(AuthContext) || {}; // Include loading and error
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +34,7 @@ const Signup = () => {
     type: "success" | "error";
   } | null>(null);
 
-  // Validation Functions (Server-safe)
+  // Validation Functions
   const validateName = (name: string) => /^[A-Za-z\s]+$/.test(name);
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -139,107 +141,63 @@ const Signup = () => {
     }
   };
 
-  // Handle Google Auth (Client-side only, moved to useEffect)
-  const [googleButtonClicked, setGoogleButtonClicked] = useState(false);
-
+  // Handle Google Auth (Defer to client-side)
   const handleGoogleSignUp = () => {
     if (typeof window !== "undefined") {
-      setGoogleButtonClicked(true); // Mark that Google button was clicked
-      // Dynamically import and call googleAuth on client-side
-      import("@/utils/api/auth").then((module) => {
-        module.googleAuth();
-      });
+      googleAuth();
     }
   };
 
   // Handle Google callback on client-side only
   useEffect(() => {
-    let mounted = true;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get("token");
+      const userId = params.get("userId");
+      const fullName = params.get("fullName");
+      const profilePic = params.get("profilePic");
+      const email = params.get("email");
 
-    if (typeof window !== "undefined" && googleButtonClicked) {
-      const handleGoogleCallback = () => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
-        const userId = params.get("userId");
-        const fullName = params.get("fullName");
-        const profilePic = params.get("profilePic");
-        const email = params.get("email");
+      if (token && userId) {
+        setUser?.({ userId, fullName, profilePic, email });
+        setToken?.(token);
+        localStorage.setItem("userToken", token);
 
-        if (mounted && token && userId) {
-          setUser?.({ userId, fullName, profilePic, email });
-          setToken?.(token);
-          localStorage.setItem("userToken", token);
-
-          setShowToast({ message: "Signup successful!", type: "success" });
-          setTimeout(() => {
-            setShowToast({
-              message: "Redirecting to dashboard...",
-              type: "success",
-            });
-            setTimeout(() => router.push("/dashboard"), 2000);
-            setGoogleButtonClicked(false); // Reset after handling
-          }, 2000);
-        }
-      };
-
-      handleGoogleCallback();
+        setShowToast({ message: "Signup successful!", type: "success" });
+        setTimeout(() => {
+          setShowToast({
+            message: "Redirecting to dashboard...",
+            type: "success",
+          });
+          setTimeout(() => router.push("/dashboard"), 2000);
+        }, 2000);
+      }
     }
+  }, [router, setUser, setToken]);
 
-    return () => {
-      mounted = false;
-    };
-  }, [router, setUser, setToken, googleButtonClicked]);
-
-  // Stabilize animations and dynamic content (client-side only)
+  // Stabilize particle animations (defer to client)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Floating Icons (Client-side only, deterministic positions)
-      const floatingIcons = [
-        { top: "20%", left: "10%", icon: faUser, color: "indigo-400" },
-        { top: "40%", left: "60%", icon: faLock, color: "purple-400" },
-        { top: "60%", left: "80%", icon: faGoogle, color: "purple-400" },
-        { top: "20%", left: "20%", icon: faEnvelope, color: "green-400" },
-        {
-          top: "40%",
-          left: "40%",
-          icon: faExclamationCircle,
-          color: "red-400",
-        },
-        { top: "10%", left: "60%", icon: faUser, color: "indigo-400" },
-        { top: "10%", left: "60%", icon: faLock, color: "purple-400" },
-      ];
+      // Ensure particle positions and animations are calculated on client only
+      const particleElements = document.querySelectorAll(
+        ".animate-float-particle"
+      );
+      particleElements.forEach((element, index) => {
+        const top = `${Math.random() * 100}%`;
+        const left = `${Math.random() * 100}%`;
+        const backgroundColor =
+          index % 3 === 0
+            ? "indigo-300"
+            : index % 3 === 1
+            ? "purple-300"
+            : "gray-300";
+        const animationDelay = `${Math.random() * 5}s`;
 
-      floatingIcons.forEach(({ top, left, icon, color }, index) => {
-        const element = document.createElement("div");
-        element.className = `absolute animate-float-${
-          index % 3 === 0 ? "slow" : index % 3 === 1 ? "" : "fast"
-        }`;
-        element.innerHTML = `<FontAwesomeIcon icon="${icon.iconName}" className="text-${color} text-4xl opacity-20" />`;
-        element.style.top = top;
-        element.style.left = left;
-        document.querySelector(".absolute.inset-0.z-0")?.appendChild(element);
+        (element as HTMLElement).style.top = top;
+        (element as HTMLElement).style.left = left;
+        (element as HTMLElement).style.backgroundColor = backgroundColor;
+        (element as HTMLElement).style.animationDelay = animationDelay;
       });
-
-      // Particle Effects (Client-side only, deterministic positions)
-      const particleContainer = document.querySelector(".absolute.inset-0.z-0");
-      if (particleContainer) {
-        Array.from({ length: 30 }).forEach((_, index) => {
-          const particle = document.createElement("span");
-          particle.className = `absolute w-${index % 2 === 0 ? 2 : 3} h-${
-            index % 2 === 0 ? 2 : 3
-          } rounded-full opacity-15 animate-float-particle`;
-          particle.style.top = `${(index * 3.33) % 100}%`; // Deterministic top positions
-          particle.style.left = `${(index * 3.33) % 100}%`; // Deterministic left positions
-          particle.style.backgroundColor =
-            index % 3 === 0
-              ? "indigo-300"
-              : index % 3 === 1
-              ? "purple-300"
-              : "gray-300";
-          particle.style.animationDelay = `${(index * 0.2) % 5}s`; // Deterministic delay
-          particleContainer.appendChild(particle);
-        });
-      }
     }
   }, []);
 
@@ -278,13 +236,83 @@ const Signup = () => {
         </div>
       )}
 
-      {/* Static Background Elements (Server-safe) */}
+      {/* Enhanced Animated Background Elements (Client-side only) */}
       <div className="absolute inset-0 z-0">
-        {/* Subtle Gradient Overlay (Server-safe) */}
+        {/* Subtle Gradient Overlay with More Depth */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 via-purple-100/40 to-gray-100/50 animate-gradient-shift"></div>
         <div className="absolute inset-0 bg-gradient-to-tl from-purple-200/20 via-indigo-200/15 to-gray-200/10 animate-gradient-pulse"></div>
 
-        {/* Wave Patterns (Server-safe) */}
+        {/* Multiple Floating Icons (Client-side only) */}
+        {typeof window !== "undefined" && (
+          <>
+            <div className="absolute top-20 left-10 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-indigo-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-40 left-60 animate-float">
+              <FontAwesomeIcon
+                icon={faLock}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-60 right-20 animate-float-fast">
+              <FontAwesomeIcon
+                icon={faGoogle}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-20 left-20 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faEnvelope}
+                className="text-green-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-40 right-40 animate-float">
+              <FontAwesomeIcon
+                icon={faExclamationCircle}
+                className="text-red-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-10 right-60 animate-float-fast">
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-indigo-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-10 left-60 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faLock}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Enhanced Particle Effects (Client-side only) */}
+        {typeof window !== "undefined" &&
+          Array.from({ length: 30 }).map((_, index) => (
+            <span
+              key={index}
+              className={`absolute w-${index % 2 === 0 ? 2 : 3} h-${
+                index % 2 === 0 ? 2 : 3
+              } rounded-full opacity-15 animate-float-particle`}
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                backgroundColor:
+                  index % 3 === 0
+                    ? "indigo-300"
+                    : index % 3 === 1
+                    ? "purple-300"
+                    : "gray-300",
+                animationDelay: `${Math.random() * 5}s`,
+              }}
+            />
+          ))}
+
+        {/* Multiple Subtle Wave Patterns */}
         <svg
           className="absolute bottom-0 w-full h-32 text-indigo-200 opacity-30"
           xmlns="http://www.w3.org/2000/svg"
@@ -356,7 +384,7 @@ const Signup = () => {
 
         {/* Google Sign-Up Button */}
         <button
-          onClick={handleGoogleSignUp}
+          onClick={handleGoogleSignUp} // Use client-side handler
           className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
           hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group"
           disabled={loading}
@@ -452,7 +480,7 @@ const Signup = () => {
               type="password"
               placeholder="Create a password"
               value={password}
-              onChange={handlePasswordChange}
+              onChange={handlePasswordChange} // 🔹 Call function here
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "password")
                   ? "border-red-500 focus:ring-red-500"
@@ -471,7 +499,7 @@ const Signup = () => {
               type="password"
               placeholder="Re-enter password"
               value={confirmPassword}
-              onChange={handleConfirmPasswordChange}
+              onChange={handleConfirmPasswordChange} // 🔹 Call function here
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "confirmPassword")
                   ? "border-red-500 focus:ring-red-500"
@@ -560,8 +588,7 @@ const Signup = () => {
                   signifies acceptance of these terms.
                 </p>
               </section>
-
-              {/* 2️⃣ User Responsibilities */}
+              /* 2️⃣ User Responsibilities */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   2. User Responsibilities
@@ -580,8 +607,7 @@ const Signup = () => {
                   </li>
                 </ul>
               </section>
-
-              {/* 3️⃣ Payment Terms */}
+              /* 3️⃣ Payment Terms */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   3. Payments & Transactions
@@ -601,8 +627,7 @@ const Signup = () => {
                   </li>
                 </ul>
               </section>
-
-              {/* 4️⃣ Privacy & Data Security */}
+              /* 4️⃣ Privacy & Data Security */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   4. Privacy & Data Security
@@ -613,8 +638,7 @@ const Signup = () => {
                   user data with third parties unless required by law.
                 </p>
               </section>
-
-              {/* 5️⃣ Limitation of Liability */}
+              /* 5️⃣ Limitation of Liability */
               <section>
                 <h3 className="font-semibold text-lg text-gray-800">
                   5. Limitation of Liability

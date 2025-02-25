@@ -96,10 +96,10 @@ export default function PaymentsPage() {
 
     try {
       // Simulate payment gateway call without PIN in request
-      console.log("Settling transaction with:", {
-        transactionId: selectedTransaction.transactionId,
-        mode: selectedMode,
-      }); // Debug the request payload
+      // console.log("Settling transaction with:", {
+      //   transactionId: selectedTransaction.transactionId,
+      //   mode: selectedMode,
+      // }); // Debug the request payload
       const response = await transactionApi.settleTransaction(
         selectedTransaction.transactionId, // Hashed string, now encoded
         {

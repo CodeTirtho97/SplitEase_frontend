@@ -68,7 +68,7 @@ export default function Groups() {
 
   useEffect(() => {
     if (selectedGroup) {
-      console.log("🛠️ Selected Group Data:", selectedGroup);
+      //console.log("🛠️ Selected Group Data:", selectedGroup);
 
       if (!selectedGroup.members || !Array.isArray(selectedGroup.members)) {
         console.warn(
@@ -83,7 +83,7 @@ export default function Groups() {
         (member: any) => member._id !== selectedGroup.createdBy._id
       );
 
-      console.log("✅ Filtered Members (Excluding Creator):", filteredMembers);
+      //console.log("✅ Filtered Members (Excluding Creator):", filteredMembers);
 
       setNewMembers(filteredMembers.map((member: any) => member._id));
       setGroupDescription(selectedGroup.description || "");
@@ -96,18 +96,21 @@ export default function Groups() {
   // Fetch friends when modal opens
   useEffect(() => {
     if (isModalOpen) {
-      console.log("🚀 Fetching friends for Add Group modal...");
+      //console.log("🚀 Fetching friends for Add Group modal...");
       refreshFriends(); // ✅ Calls the API only when modal opens
     }
   }, [isModalOpen, refreshFriends]);
 
+  const token = localStorage.getItem("userToken");
   useEffect(() => {
-    console.log("🚀 Fetching Groups on Page Load...");
-    refreshGroups(); // ✅ Ensures groups are reloaded when page loads
-  }, []);
+    //console.log("🚀 Fetching Groups on Page Load...");
+    if (token) {
+      refreshGroups();
+    } // ✅ Ensures groups are reloaded when page loads
+  }, [token]);
 
   useEffect(() => {
-    console.log("🛠️ Groups Data:", groups);
+    //console.log("🛠️ Groups Data:", groups);
   }, [groups]);
 
   const avatarMap: { [key: string]: string } = {
@@ -215,7 +218,7 @@ export default function Groups() {
       return;
     }
 
-    console.log("🔍 Group Creator Data:", group.createdBy);
+    //console.log("🔍 Group Creator Data:", group.createdBy);
 
     setSelectedGroup(group);
     setIsViewModalOpen(true);
@@ -223,7 +226,7 @@ export default function Groups() {
     try {
       // ✅ Fetch transactions safely using the updated endpoint
       const transactions = await fetchGroupTransactions(group._id);
-      console.log("🔹 Transactions Fetched:", transactions);
+      //console.log("🔹 Transactions Fetched:", transactions);
 
       if (!transactions || typeof transactions !== "object") {
         console.warn("⚠️ Unexpected transaction data:", transactions);
@@ -234,7 +237,7 @@ export default function Groups() {
 
       // ✅ Fetch "Who Owes Whom" safely
       const owes = await calculateOwes(group._id);
-      console.log("🔹 Owes Data Fetched:", owes);
+      //console.log("🔹 Owes Data Fetched:", owes);
       setOwesList(owes || []); // Ensure empty array if API fails
     } catch (error: any) {
       console.error("❌ Error fetching transactions:", error.message || error);

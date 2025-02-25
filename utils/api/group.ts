@@ -6,7 +6,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export const fetchUserGroups = async () => {
   try {
     const token = localStorage.getItem("userToken");
-    if (!token) throw new Error("User not authenticated!");
+    if (!token) {
+      console.warn("User not authenticated, returning empty groups list.");
+      return []; // Return empty array instead of throwing error
+    }
 
     const response = await axios.get(`${API_URL}/groups/mygroups`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -59,7 +62,7 @@ export const updateGroup = async (groupId: string, updatedData: any) => {
     const token = localStorage.getItem("userToken");
     if (!token) throw new Error("User not authenticated!");
 
-    console.log("🚀 Sending update request to:", `${API_URL}/groups/edit/${groupId}`);
+    //console.log("🚀 Sending update request to:", `${API_URL}/groups/edit/${groupId}`);
 
     const response = await axios.put(
       `${API_URL}/groups/edit/${groupId}`,
@@ -69,7 +72,7 @@ export const updateGroup = async (groupId: string, updatedData: any) => {
       }
     );
 
-    console.log("✅ Group Updated Successfully:", response.data);
+    //console.log("✅ Group Updated Successfully:", response.data);
     return response.data.updatedGroup;
   } catch (error: any) {
     console.error("❌ Error updating group:", error.response?.data?.message || error.message);
@@ -99,7 +102,7 @@ export const fetchGroupTransactions = async (groupId: string) => {
     const token = localStorage.getItem("userToken");
     if (!token) throw new Error("User not authenticated!");
 
-    console.log(`Fetching transactions for group ${groupId} at ${API_URL}/${groupId}`); // Debug log
+    //console.log(`Fetching transactions for group ${groupId} at ${API_URL}/${groupId}`); // Debug log
 
     const response = await axios.get(`${API_URL}/groups/${groupId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -114,17 +117,17 @@ export const fetchGroupTransactions = async (groupId: string) => {
     const completed = response.data.completedTransactions?.slice(0, 5) || [];
     const pending = response.data.pendingTransactions?.slice(0, 5) || [];
 
-    console.log("Fetched Completed Transactions:", completed);
-    console.log("Fetched Pending Transactions:", pending);
+    //console.log("Fetched Completed Transactions:", completed);
+    //console.log("Fetched Pending Transactions:", pending);
 
     if (completed.length === 0 && pending.length === 0) {
-      console.log(`ℹ️ No transactions available for group ${groupId}`);
+      //console.log(`ℹ️ No transactions available for group ${groupId}`);
     }
 
     return { completed, pending };
   } catch (error: any) {
     if (error.response?.status === 404) {
-      console.log(`ℹ️ No transactions or group found for group ${groupId}`);
+      //console.log(`ℹ️ No transactions or group found for group ${groupId}`);
       return { completed: [], pending: [] }; // ✅ Graceful return
     }
 
@@ -139,7 +142,7 @@ export const calculateOwes = async (groupId: string) => {
     const transactions = await fetchGroupTransactions(groupId);
 
     if (transactions.completed.length === 0 && transactions.pending.length === 0) {
-      console.log(`ℹ️ No transactions available for group ${groupId}`);
+      //console.log(`ℹ️ No transactions available for group ${groupId}`);
       return [];
     }
 
@@ -187,7 +190,7 @@ export const calculateOwes = async (groupId: string) => {
     }
 
     if (owesList.length === 0) {
-      console.log(`ℹ️ No outstanding balances to settle for group ${groupId}`);
+      //console.log(`ℹ️ No outstanding balances to settle for group ${groupId}`);
     }
 
     return owesList;
@@ -201,7 +204,10 @@ export const calculateOwes = async (groupId: string) => {
 export const fetchUserFriends = async () => {
   try {
     const token = localStorage.getItem("userToken");
-    if (!token) throw new Error("User not authenticated!");
+    if (!token) {
+      console.warn("User not authenticated, returning empty friends list.");
+      return []; // Return empty array instead of throwing error
+    }
 
     //console.log("📡 [Frontend] Sending request to backend...");
 

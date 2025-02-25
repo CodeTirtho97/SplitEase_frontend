@@ -24,6 +24,11 @@ export default function Navbar() {
   const pathname = usePathname(); // Get the current route
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  const [showToast, setShowToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
   // Check authentication on mount and update on localStorage changes
   useEffect(() => {
     const userToken = localStorage.getItem("userToken");
@@ -59,6 +64,11 @@ export default function Navbar() {
     localStorage.removeItem("userToken"); // Clear token
     setIsLoggedIn(false);
     router.push("/login"); // Redirect to login page
+    setShowToast({ message: "Logged out successfully!", type: "success" });
+    setTimeout(() => {
+      setShowToast(null);
+      router.push("/login"); // Redirect to login
+    }, 2000);
   };
 
   return (

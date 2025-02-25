@@ -140,12 +140,12 @@ export default function Expenses() {
     if (isFetching || hasMounted) return; // Prevent multiple fetches in Strict Mode
     setIsFetching(true);
     try {
-      console.log("Fetching recent expenses on page load...");
+      //console.log("Fetching recent expenses on page load...");
       const response = await expenseApi.getRecentExpenses();
-      console.log(
-        "Recent expenses response:",
-        JSON.stringify(response.data.expenses, null, 2)
-      );
+      // console.log(
+      //   "Recent expenses response:",
+      //   JSON.stringify(response.data.expenses, null, 2)
+      // );
       setExpenses(response.data.expenses || []);
     } catch (error) {
       console.error("Error fetching recent expenses:", error);
@@ -159,7 +159,7 @@ export default function Expenses() {
   const fetchSummary = useCallback(async () => {
     if (hasMounted) return; // Prevent multiple fetches in Strict Mode
     try {
-      console.log("Fetching expense summary on page load...");
+      //console.log("Fetching expense summary on page load...");
       const response = await expenseApi.getExpenseSummary();
       if (response.data?.summary) {
         setSummary(response.data.summary);
@@ -175,14 +175,14 @@ export default function Expenses() {
   // Fetch chart data only on page mount (no polling, context updates, or refresh)
   const fetchExpenseBreakdown = useCallback(async () => {
     if (hasMounted) return; // Prevent multiple fetches in Strict Mode
-    console.log("fetchExpenseBreakdown called (page load only)");
+    //console.log("fetchExpenseBreakdown called (page load only)");
     setLoadingCharts(true);
     try {
       const response = await expenseApi.getExpenseBreakdown("INR"); // Hardcode INR for charts, no dynamic updates
-      console.log(
-        "Expense breakdown response:",
-        JSON.stringify(response.data, null, 2)
-      );
+      // console.log(
+      //   "Expense breakdown response:",
+      //   JSON.stringify(response.data, null, 2)
+      // );
       setChartData(
         response.data || {
           breakdown: {},
@@ -204,17 +204,17 @@ export default function Expenses() {
 
   // Fetch on page mount only (no polling, context updates, or refresh), handle Strict Mode
   useEffect(() => {
-    console.log("useEffect triggered in Expenses.tsx (page load only)", {
-      mounted: true,
-      renderCount: (window as any).renderCount || 0,
-      showCharts,
-      selectedCurrency,
-      user,
-      expensesLength: expenses.length,
-      summary: summary ? Object.keys(summary) : "null",
-      chartData: chartData ? Object.keys(chartData).length : "null",
-      contextGroupsLength: contextGroups?.length || 0,
-    });
+    //console.log("useEffect triggered in Expenses.tsx (page load only)", {
+    //   mounted: true,
+    //   renderCount: (window as any).renderCount || 0,
+    //   showCharts,
+    //   selectedCurrency,
+    //   user,
+    //   expensesLength: expenses.length,
+    //   summary: summary ? Object.keys(summary) : "null",
+    //   chartData: chartData ? Object.keys(chartData).length : "null",
+    //   contextGroupsLength: contextGroups?.length || 0,
+    // });
     (window as any).renderCount = ((window as any).renderCount || 0) + 1;
     const storedToken = localStorage.getItem("userToken");
     if (!storedToken) {
@@ -224,11 +224,11 @@ export default function Expenses() {
       setHasMounted(true); // Mark as mounted to prevent subsequent fetches
       const fetchInitialData = async () => {
         try {
-          console.log("Fetching recent expenses on page load...");
+          //console.log("Fetching recent expenses on page load...");
           await fetchRecentExpenses();
-          console.log("Fetching expense summary on page load...");
+          //console.log("Fetching expense summary on page load...");
           await fetchSummary();
-          console.log("fetchExpenseBreakdown called (page load only)");
+          //console.log("fetchExpenseBreakdown called (page load only)");
           await fetchExpenseBreakdown();
         } catch (error) {
           console.error("Error fetching initial data:", error);
@@ -251,7 +251,7 @@ export default function Expenses() {
       const fetchGroups = async () => {
         try {
           await refreshGroups();
-          console.log("Groups fetched for Add Expense modal:", contextGroups);
+          //console.log("Groups fetched for Add Expense modal:", contextGroups);
         } catch (error) {
           console.error("Error fetching groups for modal:", error);
           setToast({ message: "Failed to load groups", type: "error" });
@@ -319,10 +319,10 @@ export default function Expenses() {
       payeeId, // Already added in your previous update
     };
 
-    console.log(
-      "Final payload for createExpense:",
-      JSON.stringify(payload, null, 2)
-    ); // Debug payload before sending
+    // console.log(
+    //   "Final payload for createExpense:",
+    //   JSON.stringify(payload, null, 2)
+    // ); // Debug payload before sending
 
     try {
       const response = await expenseApi.createExpense(payload);
@@ -851,10 +851,10 @@ export default function Expenses() {
               </thead>
               <tbody>
                 {expenses.map((expense) => {
-                  console.log(
-                    "Rendering expense:",
-                    JSON.stringify(expense, null, 2)
-                  ); // Log for debugging (optional)
+                  // console.log(
+                  //   "Rendering expense:",
+                  //   JSON.stringify(expense, null, 2)
+                  // ); // Log for debugging (optional)
                   return (
                     <React.Fragment key={expense._id}>
                       <tr className="border-t hover:bg-gray-100 transition">
@@ -929,10 +929,10 @@ export default function Expenses() {
                                         expense.payer.fullName // Filter out self-payments
                                     )
                                     .map((member, index) => {
-                                      console.log(
-                                        `Rendering split detail for expense ${expense._id}, member ${index}:`,
-                                        JSON.stringify(member, null, 2)
-                                      ); // Log for debugging (optional)
+                                      // console.log(
+                                      //   `Rendering split detail for expense ${expense._id}, member ${index}:`,
+                                      //   JSON.stringify(member, null, 2)
+                                      // ); // Log for debugging (optional)
                                       const isPaymentDone =
                                         !!member.transactionId; // Boolean check for transactionId
                                       const amountColor = isPaymentDone

@@ -43,13 +43,13 @@ export default function Dashboard() {
       try {
         const storedToken = localStorage.getItem("userToken");
         if (!storedToken) {
-          console.log("No user token found, redirecting to login...");
+          //console.log("No user token found, redirecting to login...");
           router.push("/login"); // Redirect if no token found
           return;
         }
 
         // Fetch user data (assuming backend returns fullName)
-        console.log("Fetching user profile from:", `${API_URL}/profile/me`);
+        //console.log("Fetching user profile from:", `${API_URL}/profile/me`);
         const userResponse = await axios.get(`${API_URL}/profile/me`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         });
@@ -57,12 +57,12 @@ export default function Dashboard() {
         setUser({ fullName: userResponse.data.fullName || "Test User" });
 
         // Fetch dashboard stats
-        console.log("Fetching stats from:", `${API_URL}/stats`);
+        //console.log("Fetching stats from:", `${API_URL}/stats`);
         try {
           const statsResponse = await axios.get(`${API_URL}/stats`, {
             headers: { Authorization: `Bearer ${storedToken}` },
           });
-          console.log("Stats response data:", statsResponse.data);
+          //console.log("Stats response data:", statsResponse.data);
           const {
             totalExpenses: expenses = 0,
             pendingPayments = 0,
@@ -90,10 +90,10 @@ export default function Dashboard() {
             groupExpenses > 0;
 
           // Fetch recent transactions
-          console.log(
-            "Fetching transactions from:",
-            `${API_URL}/transactions/recent`
-          );
+          // console.log(
+          //   "Fetching transactions from:",
+          //   `${API_URL}/transactions/recent`
+          // );
           try {
             const transactionsResponse = await axios.get(
               `${API_URL}/transactions/recent`,
@@ -101,10 +101,10 @@ export default function Dashboard() {
                 headers: { Authorization: `Bearer ${storedToken}` },
               }
             );
-            console.log(
-              "Transactions response data:",
-              transactionsResponse.data
-            );
+            // console.log(
+            //   "Transactions response data:",
+            //   transactionsResponse.data
+            // );
             const transactions = transactionsResponse.data.transactions || [];
             setRecentTransactions(transactions);
 
@@ -114,7 +114,7 @@ export default function Dashboard() {
               (transactions.length > 0 &&
                 transactions.some((txn: any) => txn.amount > 0));
             setHasData(finalHasData);
-            console.log("Final hasData set to:", finalHasData);
+            //console.log("Final hasData set to:", finalHasData);
           } catch (transactionsError: any) {
             console.error("Transactions API error:", {
               status: transactionsError.response?.status,
