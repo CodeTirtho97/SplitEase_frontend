@@ -3,9 +3,9 @@ import axios from "axios";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // ✅ Fetch User's Groups
-export const fetchUserGroups = async () => {
+export const fetchUserGroups = async (token?: string) => {
   try {
-    const token = localStorage.getItem("userToken");
+    //const token = localStorage.getItem("userToken");
     if (!token) {
       console.warn("User not authenticated, returning empty groups list.");
       return []; // Return empty array instead of throwing error
