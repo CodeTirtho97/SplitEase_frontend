@@ -17,11 +17,14 @@ import dynamic from "next/dynamic";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
+// Dynamically import Google OAuth components
 const GoogleLoginComponent = dynamic(
   () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-  {
-    ssr: false, // Disable SSR for GoogleLogin
-  }
+  { ssr: false }
+);
+const GoogleOAuthProvider = dynamic(
+  () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
+  { ssr: false }
 );
 
 const Signup = () => {
@@ -358,7 +361,7 @@ const Signup = () => {
       </div>
 
       {/* Custom Toast Notification */}
-      {showToast && (
+      {showToast && typeof window !== "undefined" && (
         <div
           className={`fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg transition-all duration-300 ${
             showToast.type === "success" ? "bg-green-500" : "bg-red-500"
@@ -375,7 +378,7 @@ const Signup = () => {
         </div>
       )}
 
-      {error && (
+      {error && typeof window !== "undefined" && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
           suppressHydrationWarning
@@ -399,13 +402,18 @@ const Signup = () => {
           Sign up to get started!
         </p>
 
-        {/* Google Sign-In Button */}
-        <GoogleLoginComponent
-          onSuccess={handleGoogleSuccess}
-          onError={() => console.log("Google Signup Failed")}
-          useOneTap
-          //disabled={loading}
-        />
+        {/* Google Sign-In with OAuth Provider (Client-side only) */}
+        {typeof window !== "undefined" && (
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+          >
+            <GoogleLoginComponent
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.log("Google Signup Failed")}
+              useOneTap
+            />
+          </GoogleOAuthProvider>
+        )}
 
         {/* OR Separator */}
         <div className="flex items-center my-4">
@@ -563,8 +571,8 @@ const Signup = () => {
         </form>
       </div>
 
-      {/* Terms & Conditions Modal */}
-      {isTermsModalOpen && (
+      {/* Terms & Conditions Modal (Client-side only) */}
+      {isTermsModalOpen && typeof window !== "undefined" && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
           suppressHydrationWarning
