@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useContext, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import Image from "next/image";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
@@ -14,39 +14,28 @@ import {
   faLock,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  login,
-  googleAuth,
-  forgotPassword,
-  handleGoogleCallback,
-} from "@/utils/api/auth";
+import { login } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
+import dynamic from "next/dynamic";
+import Cookies from "js-cookie"; // Using cookies instead of localStorage
+import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
-const LoginPage = () => {
+const GoogleLoginComponent = dynamic(
+  () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
+  {
+    ssr: false, // Disable SSR for GoogleLogin
+  }
+);
+
+export default function LoginPage() {
   const router = useRouter();
-  const pathname = usePathname();
-  const { setUser, setToken, user, loading, error, logout } =
-    useContext(AuthContext) || {}; // Include loading, error, and logout
+  const { setUser, setToken, loading, error, logout } =
+    useContext(AuthContext) || {};
   const [form, setForm] = useState({
-    email:
-      typeof window !== "undefined"
-        ? localStorage.getItem("rememberedEmail") || ""
-        : "",
+    email: "",
     password: "",
   });
-  const [rememberMe, setRememberMe] = useState<boolean>(false); // Default to false
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Ensure it's client-side
-      const storedEmail = localStorage.getItem("rememberedEmail");
-      if (storedEmail) {
-        setForm((prev) => ({ ...prev, email: storedEmail }));
-        setRememberMe(true);
-      }
-    }
-  }, []);
-
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ field: string; message: string }[]>(
     []
   );
@@ -60,6 +49,17 @@ const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(false);
+
+  // Load remembered email from cookies on client-side only
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedEmail = Cookies.get("rememberedEmail");
+      if (storedEmail) {
+        setForm((prev) => ({ ...prev, email: storedEmail }));
+        setRememberMe(true);
+      }
+    }
+  }, []);
 
   // Validation Functions
   const validateEmail = (email: string) =>
@@ -97,12 +97,27 @@ const LoginPage = () => {
     }
 
     try {
-      await login(form);
+      const response = await login(form);
+      if (setToken && setUser) {
+        // Type guard
+        setToken(response.token);
+        setUser(response.user);
+      }
+      if (rememberMe && typeof window !== "undefined") {
+        Cookies.set("rememberedEmail", form.email, {
+          expires: 7,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+        });
+      } else if (typeof window !== "undefined") {
+        Cookies.remove("rememberedEmail");
+      }
+
       setShowToast({ message: "Login successful!", type: "success" });
 
       setTimeout(() => {
         setShowToast(null);
-        router.push("/dashboard"); // Redirect after login
+        router.push("/dashboard");
       }, 2000);
     } catch (error: any) {
       setShowToast({
@@ -113,52 +128,48 @@ const LoginPage = () => {
     }
   };
 
-  // Handle Google Auth (Defer to client-side)
-  const handleGoogleLogin = () => {
+  // Handle Google Auth Success (Updated to use API-based callback)
+  const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
-      googleAuth();
-    }
-  };
-
-  // Handle Google callback on client-side only
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const token = params.get("token");
-      const userId = params.get("userId");
-      const fullName = params.get("fullName");
-      const profilePic = params.get("profilePic");
-      const email = params.get("email");
-
-      if (token && userId) {
-        setUser?.({ userId, fullName, profilePic, email });
-        setToken?.(token);
-        localStorage.setItem("userToken", token);
-
+      try {
+        const { credential } = response;
+        // Use googleAuth from AuthContext to redirect to backend
+        const { user, token } = await handleGoogleCallback(); // API call to get token and user
+        if (setToken && setUser) {
+          // Type guard
+          setToken(token);
+          setUser(user);
+        }
         setShowToast({ message: "Login successful!", type: "success" });
         setTimeout(() => {
           setShowToast(null);
           router.push("/dashboard");
         }, 2000);
+      } catch (error: any) {
+        setShowToast({
+          message: error.message || "Google Login failed!",
+          type: "error",
+        });
+        setTimeout(() => setShowToast(null), 3000);
       }
     }
-  }, [router, setUser, setToken]);
+  };
 
   // Handle logout
   const handleLogout = () => {
     if (logout) {
-      logout(); // Call context logout function
+      logout();
       setShowToast({ message: "Logged out successfully!", type: "success" });
       setTimeout(() => {
         setShowToast(null);
-        router.push("/login"); // Redirect to login
+        router.push("/login");
       }, 2000);
     }
   };
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handle Forgot Password
+  // Handle Forgot Password (Client-side only)
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const emailValue = e.target.value.trim().toLowerCase();
     setResetEmail(emailValue);
@@ -166,62 +177,85 @@ const LoginPage = () => {
   };
 
   const handlePasswordReset = async () => {
-    setIsLoading(true); // Start loading
-    setResetMessage(""); // Clear old messages
+    if (typeof window !== "undefined") {
+      setIsLoading(true);
+      setResetMessage("");
 
-    try {
-      await forgotPassword(resetEmail);
-      setTimeout(() => {
-        setResetMessage("✅ Reset Link sent. Check your email!");
-        setIsLoading(false); // Stop loading
-      }, 2000); // Delay response for UI effect
-    } catch (error) {
-      setTimeout(() => {
-        setResetMessage("❌ Email Not Registered!");
-        setIsLoading(false); // Stop loading
-      }, 2000);
+      try {
+        await import("@/utils/api/auth").then((module) =>
+          module.forgotPassword(resetEmail)
+        );
+        setTimeout(() => {
+          setResetMessage("✅ Reset Link sent. Check your email!");
+          setIsLoading(false);
+        }, 2000);
+      } catch (error) {
+        setTimeout(() => {
+          setResetMessage("❌ Email Not Registered!");
+          setIsLoading(false);
+        }, 2000);
+      }
     }
   };
 
-  // Stabilize animations and positioning (defer to client)
+  // Stabilize animations and dynamic content (client-side only)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      // Floating Icons
-      const iconElements = document.querySelectorAll(
-        ".animate-float, .animate-float-slow, .animate-float-fast"
-      );
-      iconElements.forEach((element, index) => {
-        const top = `${Math.random() * 100}%`;
-        const left = `${Math.random() * 100}%`;
-        (element as HTMLElement).style.top = top;
-        (element as HTMLElement).style.left = left;
+      // Floating Icons (Client-side only, deterministic positions)
+      const floatingIcons = [
+        { top: "20%", left: "10%", icon: faUser, color: "indigo-400" },
+        { top: "40%", left: "60%", icon: faLock, color: "purple-400" },
+        { top: "60%", left: "80%", icon: faGoogle, color: "purple-400" },
+        { top: "20%", left: "20%", icon: faEnvelope, color: "green-400" },
+        {
+          top: "40%",
+          left: "40%",
+          icon: faExclamationCircle,
+          color: "red-400",
+        },
+        { top: "10%", left: "60%", icon: faUser, color: "indigo-400" },
+        { top: "10%", left: "60%", icon: faLock, color: "purple-400" },
+      ];
+
+      floatingIcons.forEach(({ top, left, icon, color }, index) => {
+        const element = document.createElement("div");
+        element.className = `absolute animate-float-${
+          index % 3 === 0 ? "slow" : index % 3 === 1 ? "" : "fast"
+        }`;
+        element.innerHTML = `<FontAwesomeIcon icon="${icon.iconName}" className="text-${color} text-4xl opacity-20" />`;
+        element.style.top = top;
+        element.style.left = left;
+        document.querySelector(".absolute.inset-0.z-0")?.appendChild(element);
       });
 
-      // Particle Effects
-      const particleElements = document.querySelectorAll(
-        ".animate-float-particle"
-      );
-      particleElements.forEach((element, index) => {
-        const top = `${Math.random() * 100}%`;
-        const left = `${Math.random() * 100}%`;
-        const backgroundColor =
-          index % 3 === 0
-            ? "indigo-300"
-            : index % 3 === 1
-            ? "purple-300"
-            : "gray-300";
-        const animationDelay = `${Math.random() * 5}s`;
-
-        (element as HTMLElement).style.top = top;
-        (element as HTMLElement).style.left = left;
-        (element as HTMLElement).style.backgroundColor = backgroundColor;
-        (element as HTMLElement).style.animationDelay = animationDelay;
-      });
+      // Particle Effects (Client-side only, deterministic positions)
+      const particleContainer = document.querySelector(".absolute.inset-0.z-0");
+      if (particleContainer) {
+        Array.from({ length: 30 }).forEach((_, index) => {
+          const particle = document.createElement("span");
+          particle.className = `absolute w-${index % 2 === 0 ? 2 : 3} h-${
+            index % 2 === 0 ? 2 : 3
+          } rounded-full opacity-15 animate-float-particle`;
+          particle.style.top = `${(index * 3.33) % 100}%`; // Deterministic top
+          particle.style.left = `${(index * 3.33) % 100}%`; // Deterministic left
+          particle.style.backgroundColor =
+            index % 3 === 0
+              ? "indigo-300"
+              : index % 3 === 1
+              ? "purple-300"
+              : "gray-300";
+          particle.style.animationDelay = `${(index * 0.2) % 5}s`; // Deterministic delay
+          particleContainer.appendChild(particle);
+        });
+      }
     }
   }, []);
 
   return (
-    <div className="min-h-screen pt-16 flex items-center justify-center relative bg-gradient-to-br from-gray-100 via-gray-50 to-purple-50 overflow-hidden">
+    <div
+      className="min-h-screen pt-16 flex items-center justify-center relative bg-gradient-to-br from-gray-100 via-gray-50 to-purple-50 overflow-hidden"
+      suppressHydrationWarning
+    >
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
@@ -255,83 +289,13 @@ const LoginPage = () => {
         </div>
       )}
 
-      {/* Enhanced Animated Background Elements (Client-side only) */}
-      <div className="absolute inset-0 z-0" suppressHydrationWarning>
-        {/* Deeper Gradient Overlay with More Layers */}
+      {/* Static Background Elements (Server-safe) */}
+      <div className="absolute inset-0 z-0">
+        {/* Deeper Gradient Overlay (Server-safe) */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 via-purple-100/40 to-gray-100/50 animate-gradient-shift"></div>
         <div className="absolute inset-0 bg-gradient-to-tl from-purple-200/20 via-indigo-200/15 to-gray-200/10 animate-gradient-pulse"></div>
 
-        {/* Multiple Floating Icons (Client-side only) */}
-        {typeof window !== "undefined" && (
-          <>
-            <div className="absolute top-20 left-10 animate-float-slow">
-              <FontAwesomeIcon
-                icon={faUser}
-                className="text-indigo-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute top-40 left-60 animate-float">
-              <FontAwesomeIcon
-                icon={faLock}
-                className="text-purple-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute top-60 right-20 animate-float-fast">
-              <FontAwesomeIcon
-                icon={faGoogle}
-                className="text-purple-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute bottom-20 left-20 animate-float-slow">
-              <FontAwesomeIcon
-                icon={faEnvelope}
-                className="text-green-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute bottom-40 right-40 animate-float">
-              <FontAwesomeIcon
-                icon={faExclamationCircle}
-                className="text-red-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute top-10 right-60 animate-float-fast">
-              <FontAwesomeIcon
-                icon={faUser}
-                className="text-indigo-400 text-4xl opacity-20"
-              />
-            </div>
-            <div className="absolute bottom-10 left-60 animate-float-slow">
-              <FontAwesomeIcon
-                icon={faLock}
-                className="text-purple-400 text-4xl opacity-20"
-              />
-            </div>
-          </>
-        )}
-
-        {/* Enhanced Particle Effects (Client-side only) */}
-        {typeof window !== "undefined" &&
-          Array.from({ length: 30 }).map((_, index) => (
-            <span
-              key={index}
-              className={`absolute w-${index % 2 === 0 ? 2 : 3} h-${
-                index % 2 === 0 ? 2 : 3
-              } rounded-full opacity-15 animate-float-particle`}
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                backgroundColor:
-                  index % 3 === 0
-                    ? "indigo-300"
-                    : index % 3 === 1
-                    ? "purple-300"
-                    : "gray-300",
-                animationDelay: `${Math.random() * 5}s`,
-              }}
-            />
-          ))}
-
-        {/* Multiple Subtle Wave Patterns */}
+        {/* Wave Patterns (Server-safe) */}
         <svg
           className="absolute bottom-0 w-full h-32 text-purple-200 opacity-30"
           xmlns="http://www.w3.org/2000/svg"
@@ -367,8 +331,10 @@ const LoginPage = () => {
       {/* Custom Toast Notification */}
       {showToast && (
         <div
-          className={`fixed top-24 right-6 px-4 py-3 rounded-md text-white text-sm font-semibold shadow-lg transition-all duration-300 
-          ${showToast.type === "success" ? "bg-green-500" : "bg-red-500"}`}
+          className={`fixed top-24 right-6 px-4 py-3 rounded-md text-white text-sm font-semibold shadow-lg transition-all duration-300 ${
+            showToast.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
+          suppressHydrationWarning
         >
           <FontAwesomeIcon
             icon={
@@ -381,7 +347,10 @@ const LoginPage = () => {
       )}
 
       {error && (
-        <div className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300">
+        <div
+          className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
+          suppressHydrationWarning
+        >
           <FontAwesomeIcon icon={faExclamationCircle} className="mr-2" />
           {error}
         </div>
@@ -402,23 +371,12 @@ const LoginPage = () => {
         </p>
 
         {/* Google Sign-In Button */}
-        <button
-          onClick={handleGoogleLogin} // Use client-side handler
-          className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
-              hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group"
-          disabled={loading}
-        >
-          {/* Left Background Animation Effect */}
-          <span className="absolute left-0 w-0 h-full bg-indigo-500 transition-all duration-300 group-hover:w-full opacity-10"></span>
-
-          {/* Google Icon */}
-          <FontAwesomeIcon
-            icon={faGoogle}
-            className="text-indigo-900 group-hover:text-white text-2xl transition-all duration-300"
-          />
-
-          <span className="relative">Sign In with Google</span>
-        </button>
+        <GoogleLoginComponent
+          onSuccess={handleGoogleSuccess}
+          onError={() => console.log("Google Login Failed")}
+          useOneTap
+          //disabled={loading}
+        />
 
         {/* Divider */}
         <div className="relative flex items-center my-6">
@@ -443,7 +401,6 @@ const LoginPage = () => {
                 ? "border-red-500 focus:ring-red-500"
                 : "border-gray-300 focus:ring-indigo-500"
             }`}
-            //disabled={loading}
           />
 
           <Input
@@ -458,7 +415,6 @@ const LoginPage = () => {
                 ? "border-red-500 focus:ring-red-500"
                 : "border-gray-300 focus:ring-indigo-500"
             }`}
-            //disabled={loading}
           />
 
           <div className="flex justify-between text-sm text-gray-600">
@@ -502,7 +458,6 @@ const LoginPage = () => {
             <span
               className="text-indigo-600 font-semibold cursor-pointer hover:underline"
               onClick={() => router.push("/signup")}
-              aria-disabled={loading}
             >
               Sign Up
             </span>
@@ -538,13 +493,11 @@ const LoginPage = () => {
             <button
               onClick={handlePasswordReset}
               disabled={!isEmailValid || isLoading || loading}
-              className={`w-full py-2 mt-6 text-white rounded-lg transition-all 
-          ${
-            !isEmailValid || isLoading || loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-indigo-600 hover:bg-indigo-700"
-          }
-        `}
+              className={`w-full py-2 mt-6 text-white rounded-lg transition-all ${
+                !isEmailValid || isLoading || loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700"
+              }`}
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
@@ -583,6 +536,4 @@ const LoginPage = () => {
       )}
     </div>
   );
-};
-
-export default LoginPage;
+}

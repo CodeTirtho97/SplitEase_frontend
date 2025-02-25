@@ -1,4 +1,5 @@
 "use client";
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   fetchUserGroups,
@@ -8,6 +9,7 @@ import {
   removeGroup,
   fetchGroupDetails,
 } from "@/utils/api/group";
+import Cookies from "js-cookie"; // Optional: Added for potential future persistence, but not used here
 
 interface Friend {
   _id: string;
@@ -32,8 +34,8 @@ interface GroupContextType {
   groups: Group[];
   friends: Friend[];
   loading: boolean;
-  refreshGroups: () => void;
-  refreshFriends: () => void;
+  refreshGroups: () => Promise<void>; // Updated to return Promise for async clarity
+  refreshFriends: () => Promise<void>; // Updated to return Promise for async clarity
   addGroup: (groupData: Omit<Group, "_id" | "createdAt">) => Promise<void>;
   editGroup: (groupId: string, updatedData: Partial<Group>) => Promise<void>;
   deleteGroup: (groupId: string) => Promise<void>;
@@ -48,10 +50,10 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [friends, setFriends] = useState([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch Groups from API
+  // ✅ Fetch Groups from API (Server-safe, async)
   const refreshGroups = async () => {
     setLoading(true);
     try {
@@ -64,24 +66,25 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ✅ Fetch Friends from API
+  // ✅ Fetch Friends from API (Server-safe, async)
   const refreshFriends = async () => {
     try {
-      //console.log("🔍 [Frontend] Calling fetchUserFriends API...");
       const friendsList = await fetchUserFriends();
-      //console.log("✅ [Frontend] Friends received:", friendsList);
       setFriends(friendsList);
     } catch (error) {
-      console.error("❌ [Frontend] Error fetching friends:", error);
+      console.error("Error fetching friends:", error);
     }
   };
 
+  // Initial load (client-side only to prevent SSR hydration issues)
   useEffect(() => {
-    refreshFriends();
-    refreshGroups();
+    if (typeof window !== "undefined") {
+      refreshFriends();
+      refreshGroups();
+    }
   }, []);
 
-  // ✅ Add a New Group
+  // ✅ Add a New Group (Server-safe, async)
   const addGroup = async (groupData: Omit<Group, "_id" | "createdAt">) => {
     try {
       const newGroup = await createNewGroup(groupData);
@@ -91,7 +94,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ✅ Edit a Group
+  // ✅ Edit a Group (Server-safe, async)
   const editGroup = async (groupId: string, updatedData: Partial<Group>) => {
     try {
       const updatedGroup = await updateGroup(groupId, updatedData);
@@ -105,7 +108,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ✅ Delete a Group
+  // ✅ Delete a Group (Server-safe, async)
   const deleteGroup = async (groupId: string) => {
     try {
       await removeGroup(groupId);
@@ -117,7 +120,7 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  // ✅ Fetch Group Details
+  // ✅ Fetch Group Details (Server-safe, async)
   const getGroupDetails = async (groupId: string): Promise<Group | null> => {
     try {
       return await fetchGroupDetails(groupId);
@@ -131,8 +134,8 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
     <GroupContext.Provider
       value={{
         groups,
-        loading,
         friends,
+        loading,
         refreshGroups,
         refreshFriends,
         addGroup,

@@ -21,10 +21,11 @@ import {
   fetchGroupTransactions,
   calculateOwes,
 } from "@/utils/api/group";
+import Cookies from "js-cookie"; // Using cookies instead of localStorage
 
 export default function Groups() {
   const router = useRouter();
-  const { groups, refreshGroups } = useGroups();
+  const { groups, refreshGroups, friends, refreshFriends } = useGroups();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -36,12 +37,17 @@ export default function Groups() {
   });
   const [owesList, setOwesList] = useState<any[]>([]);
 
-  // Fetch Who Owes Whom Data
+  // Fetch Who Owes Whom Data (Client-side only)
   useEffect(() => {
     const fetchOwesData = async () => {
-      if (selectedGroup) {
+      if (selectedGroup && typeof window !== "undefined") {
         try {
-          const owesData = await calculateOwes(selectedGroup._id); // ✅ Await the promise
+          const token = Cookies.get("userToken");
+          if (!token) {
+            console.warn("User not authenticated, cannot calculate owes.");
+            return;
+          }
+          const owesData = await calculateOwes(selectedGroup._id, token); // Pass token
           setOwesList(owesData);
         } catch (error) {
           console.error("Error calculating owes:", error);
@@ -66,24 +72,20 @@ export default function Groups() {
     null
   );
 
+  // Sync selected group data (Client-side only)
   useEffect(() => {
-    if (selectedGroup) {
-      //console.log("🛠️ Selected Group Data:", selectedGroup);
-
+    if (selectedGroup && typeof window !== "undefined") {
       if (!selectedGroup.members || !Array.isArray(selectedGroup.members)) {
         console.warn(
-          "⚠️ Members array is missing or invalid!",
+          "Members array is missing or invalid!",
           selectedGroup.members
         );
         return;
       }
 
-      // ✅ Ensure the creator is not in the members list
       const filteredMembers = selectedGroup.members.filter(
         (member: any) => member._id !== selectedGroup.createdBy._id
       );
-
-      //console.log("✅ Filtered Members (Excluding Creator):", filteredMembers);
 
       setNewMembers(filteredMembers.map((member: any) => member._id));
       setGroupDescription(selectedGroup.description || "");
@@ -91,26 +93,28 @@ export default function Groups() {
     }
   }, [selectedGroup]);
 
-  const { friends, refreshFriends } = useGroups();
-
-  // Fetch friends when modal opens
+  // Fetch friends when modal opens (Client-side only)
   useEffect(() => {
-    if (isModalOpen) {
-      //console.log("🚀 Fetching friends for Add Group modal...");
-      refreshFriends(); // ✅ Calls the API only when modal opens
+    if (isModalOpen && typeof window !== "undefined") {
+      refreshFriends(); // Calls the API only when modal opens
     }
   }, [isModalOpen, refreshFriends]);
 
-  const token = localStorage.getItem("userToken");
+  // Fetch groups on page load (Client-side only)
   useEffect(() => {
-    //console.log("🚀 Fetching Groups on Page Load...");
-    if (token) {
-      refreshGroups();
-    } // ✅ Ensures groups are reloaded when page loads
-  }, [token]);
+    if (typeof window !== "undefined") {
+      const token = Cookies.get("userToken");
+      if (token) {
+        refreshGroups();
+      }
+    }
+  }, [refreshGroups]);
 
+  // Log groups for debugging (Client-side only)
   useEffect(() => {
-    //console.log("🛠️ Groups Data:", groups);
+    if (typeof window !== "undefined") {
+      console.log("Groups Data:", groups);
+    }
   }, [groups]);
 
   const avatarMap: { [key: string]: string } = {
@@ -129,134 +133,150 @@ export default function Groups() {
   };
 
   useEffect(() => {
-    if (toast) {
+    if (toast && typeof window !== "undefined") {
       const timer = setTimeout(() => setToast(null), 3000);
       return () => clearTimeout(timer);
     }
   }, [toast]);
 
-  // ✅ Create New Group
+  // ✅ Create New Group (Client-side only)
   const handleAddGroup = async () => {
-    if (!newGroup.name.trim() || newGroup.members.length === 0) {
-      setToast({ message: "Group name & members required!", type: "error" });
-      return;
-    }
+    if (typeof window !== "undefined") {
+      if (!newGroup.name.trim() || newGroup.members.length === 0) {
+        setToast({ message: "Group name & members required!", type: "error" });
+        return;
+      }
 
-    try {
-      await createNewGroup(newGroup);
-      setIsModalOpen(false);
-      refreshGroups();
-      setToast({ message: "Group created successfully!", type: "success" });
+      try {
+        const token = Cookies.get("userToken");
+        if (!token) throw new Error("User not authenticated!");
 
-      // Reset fields
-      setNewGroup({ name: "", description: "", type: "Friends", members: [] });
-    } catch (error: any) {
-      setToast({ message: error.message, type: "error" });
+        await createNewGroup(newGroup, token);
+        setIsModalOpen(false);
+        refreshGroups();
+        setToast({ message: "Group created successfully!", type: "success" });
+
+        // Reset fields
+        setNewGroup({
+          name: "",
+          description: "",
+          type: "Friends",
+          members: [],
+        });
+      } catch (error: any) {
+        setToast({ message: error.message, type: "error" });
+      }
     }
   };
 
-  // ✅ Edit Group Details
+  // ✅ Edit Group Details (Client-side only)
   const handleEditGroup = (group: any) => {
-    setSelectedGroup(group);
-    setGroupDescription(group.description || "");
-    setCompletedStatus(group.completed || false);
-    setNewMembers([...group.members]);
-    setIsEditModalOpen(true);
+    if (typeof window !== "undefined") {
+      setSelectedGroup(group);
+      setGroupDescription(group.description || "");
+      setCompletedStatus(group.completed || false);
+      setNewMembers([...group.members]);
+      setIsEditModalOpen(true);
+    }
   };
 
   const handleSaveGroup = async () => {
-    if (newMembers.length < 1) {
-      // ✅ Ensure at least 1 member + creator
-      setToast({
-        message:
-          "A group must have at least 2 members (including the creator)!",
-        type: "error",
-      });
-      return;
-    }
+    if (typeof window !== "undefined") {
+      if (newMembers.length < 1) {
+        setToast({
+          message:
+            "A group must have at least 2 members (including the creator)!",
+          type: "error",
+        });
+        return;
+      }
 
-    const updatedData = {
-      description: groupDescription,
-      completed: completedStatus,
-      members: [...newMembers, selectedGroup.createdBy._id], // ✅ Ensure creator is included
-    };
+      const token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
 
-    try {
-      await updateGroup(selectedGroup._id, updatedData);
-      setIsEditModalOpen(false);
-      refreshGroups();
-      setToast({ message: "✅ Group updated successfully!", type: "success" });
-    } catch (error) {
-      console.error("Error updating group:", error);
-      setToast({ message: "❌ Failed to update group!", type: "error" });
+      const updatedData = {
+        description: groupDescription,
+        completed: completedStatus,
+        members: [...newMembers, selectedGroup.createdBy._id], // Ensure creator is included
+      };
+
+      try {
+        await updateGroup(selectedGroup._id, updatedData, token);
+        setIsEditModalOpen(false);
+        refreshGroups();
+        setToast({ message: "Group updated successfully!", type: "success" });
+      } catch (error) {
+        console.error("Error updating group:", error);
+        setToast({ message: "Failed to update group!", type: "error" });
+      }
     }
   };
 
-  // ✅ Delete Group
+  // ✅ Delete Group (Client-side only)
   const handleDeleteGroup = (group: any) => {
-    setSelectedGroup(group);
-    setIsDeleteModalOpen(true);
+    if (typeof window !== "undefined") {
+      setSelectedGroup(group);
+      setIsDeleteModalOpen(true);
+    }
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedGroup) return;
-    try {
-      await removeGroup(selectedGroup._id);
-      setIsDeleteModalOpen(false);
-      refreshGroups();
-      setToast({ message: "Group deleted successfully!", type: "success" });
-    } catch (error: any) {
-      setToast({ message: error.message, type: "error" });
+    if (typeof window !== "undefined" && selectedGroup) {
+      try {
+        const token = Cookies.get("userToken");
+        if (!token) throw new Error("User not authenticated!");
+
+        await removeGroup(selectedGroup._id, token);
+        setIsDeleteModalOpen(false);
+        refreshGroups();
+        setToast({ message: "Group deleted successfully!", type: "success" });
+      } catch (error: any) {
+        setToast({ message: error.message, type: "error" });
+      }
     }
   };
 
-  // ✅ Fetch Group Transactions and "Who Owes Whom" when viewing a group
+  // ✅ Fetch Group Transactions and "Who Owes Whom" when viewing a group (Client-side only)
   const handleViewGroup = async (group: any) => {
-    if (!group || !group._id) {
-      console.error("❌ Invalid group selected:", group);
-      setToast({ message: "Invalid group selected!", type: "error" });
-      return;
-    }
-
-    //console.log("🔍 Group Creator Data:", group.createdBy);
-
-    setSelectedGroup(group);
-    setIsViewModalOpen(true);
-
-    try {
-      // ✅ Fetch transactions safely using the updated endpoint
-      const transactions = await fetchGroupTransactions(group._id);
-      //console.log("🔹 Transactions Fetched:", transactions);
-
-      if (!transactions || typeof transactions !== "object") {
-        console.warn("⚠️ Unexpected transaction data:", transactions);
-        setGroupTransactions({ completed: [], pending: [] });
-      } else {
-        setGroupTransactions(transactions);
+    if (typeof window !== "undefined") {
+      if (!group || !group._id) {
+        console.error("Invalid group selected:", group);
+        setToast({ message: "Invalid group selected!", type: "error" });
+        return;
       }
 
-      // ✅ Fetch "Who Owes Whom" safely
-      const owes = await calculateOwes(group._id);
-      //console.log("🔹 Owes Data Fetched:", owes);
-      setOwesList(owes || []); // Ensure empty array if API fails
-    } catch (error: any) {
-      console.error("❌ Error fetching transactions:", error.message || error);
-      setToast({ message: "Failed to fetch transactions!", type: "error" });
+      setSelectedGroup(group);
+      setIsViewModalOpen(true);
 
-      // ✅ Ensure UI doesn't break by setting safe defaults
-      setGroupTransactions({ completed: [], pending: [] });
-      setOwesList([]);
+      try {
+        const token = Cookies.get("userToken");
+        if (!token) throw new Error("User not authenticated!");
+
+        const transactions = await fetchGroupTransactions(group._id, token);
+        setGroupTransactions(transactions || { completed: [], pending: [] });
+
+        const owes = await calculateOwes(group._id, token);
+        setOwesList(owes || []);
+      } catch (error: any) {
+        console.error("Error fetching transactions:", error.message || error);
+        setToast({ message: "Failed to fetch transactions!", type: "error" });
+        setGroupTransactions({ completed: [], pending: [] });
+        setOwesList([]);
+      }
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-20">
+    <div
+      className="flex min-h-screen bg-gray-100 pt-20"
+      suppressHydrationWarning
+    >
       {/* Sidebar */}
       <Sidebar activePage="groups" />
 
       <div className="flex-1 p-8">
-        {/* 🚀 Toast Notification */}
-        {toast && (
+        {/* Toast Notification (Client-side only) */}
+        {toast && typeof window !== "undefined" && (
           <div
             className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
               toast.type === "success"
@@ -333,71 +353,62 @@ export default function Groups() {
             ) : (
               groups
                 .filter((group) => !group.completed)
-                .map((group) => {
-                  return (
-                    <div
-                      key={group._id}
-                      className="bg-gray-100 p-4 rounded-lg mb-3 flex items-center shadow-sm hover:shadow-md transition"
-                    >
-                      {/* Group Avatar */}
-                      <Image
-                        src={avatarMap[group.type] || "/friends_group.png"} // Fallback avatar
-                        alt="Group Avatar"
-                        width={50}
-                        height={50}
-                        className="rounded-full mr-3"
-                      />
-
-                      {/* Group Details */}
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold">{group.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          <FontAwesomeIcon icon={faUser} className="mr-1" />{" "}
-                          {group.members.length} members · Created by{" "}
-                          <span className="font-semibold">
-                            {typeof group.createdBy === "object" &&
-                            group.createdBy?.fullName
-                              ? group.createdBy.fullName
-                              : "Unknown"}
-                          </span>
-                          <br />
-                          <span className="text-xs text-gray-500">
-                            Created on{" "}
-                            {new Date(group.createdAt).toLocaleDateString()}
-                          </span>
-                        </p>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-3">
-                        <Button
-                          text="Edit"
-                          onClick={() => handleEditGroup(group)}
-                          className="bg-yellow-500 text-white px-4 py-2 rounded-md"
-                        />
-                        <Button
-                          text="View"
-                          onClick={() => handleViewGroup(group)} // ✅ Uses function to fetch transactions
-                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-                        />
-                      </div>
+                .map((group) => (
+                  <div
+                    key={group._id}
+                    className="bg-gray-100 p-4 rounded-lg mb-3 flex items-center shadow-sm hover:shadow-md transition"
+                  >
+                    <Image
+                      src={avatarMap[group.type] || "/friends_group.png"} // Fallback avatar
+                      alt="Group Avatar"
+                      width={50}
+                      height={50}
+                      className="rounded-full mr-3"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold">{group.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        <FontAwesomeIcon icon={faUser} className="mr-1" />{" "}
+                        {group.members.length} members · Created by{" "}
+                        <span className="font-semibold">
+                          {typeof group.createdBy === "object" &&
+                          group.createdBy?.fullName
+                            ? group.createdBy.fullName
+                            : "Unknown"}
+                        </span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          Created on{" "}
+                          {new Date(group.createdAt).toLocaleDateString()}
+                        </span>
+                      </p>
                     </div>
-                  );
-                })
+                    <div className="flex gap-3">
+                      <Button
+                        text="Edit"
+                        onClick={() => handleEditGroup(group)}
+                        className="bg-yellow-500 text-white px-4 py-2 rounded-md"
+                      />
+                      <Button
+                        text="View"
+                        onClick={() => handleViewGroup(group)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                      />
+                    </div>
+                  </div>
+                ))
             )}
           </div>
 
           {isEditModalOpen && selectedGroup && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+              suppressHydrationWarning
+            >
               <div className="bg-white p-8 rounded-lg shadow-lg w-[700px] max-w-2xl flex flex-col gap-6 relative">
-                {/* 🔹 Modal Title */}
                 <h2 className="text-xl font-bold text-center">Edit Group</h2>
-
-                {/* ✅ Two-Column Layout */}
                 <div className="grid grid-cols-2 gap-6">
-                  {/* 🔹 Left Column */}
                   <div className="flex flex-col gap-4">
-                    {/* Group Name (Non-Editable) */}
                     <div>
                       <label className="block text-gray-700 font-semibold">
                         Group Name
@@ -409,8 +420,6 @@ export default function Groups() {
                         className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
                       />
                     </div>
-
-                    {/* Group Type (Non-Editable) */}
                     <div>
                       <label className="block text-gray-700 font-semibold">
                         Group Type
@@ -422,8 +431,6 @@ export default function Groups() {
                         className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
                       />
                     </div>
-
-                    {/* Group Description (Editable) */}
                     <div>
                       <label className="block text-gray-700 font-semibold">
                         Group Description
@@ -446,39 +453,31 @@ export default function Groups() {
                       </label>
                     </div>
                   </div>
-
-                  {/* 🔹 Right Column */}
                   <div className="flex flex-col gap-4">
-                    {/* Group Owner (Created By) */}
                     <div>
                       <label className="block text-gray-700 font-semibold">
                         Group Creator
                       </label>
                       <input
                         type="text"
-                        value={selectedGroup.createdBy?.fullName || "Unknown"} // ✅ Fetch from `createdBy`
+                        value={selectedGroup.createdBy?.fullName || "Unknown"}
                         disabled
                         className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
                       />
                     </div>
-
-                    {/* Add/Remove Members */}
                     <div>
                       <label className="block text-gray-700 font-semibold">
                         Group Members
                       </label>
-
-                      {/* Member Dropdown - Show "No new friends to add" when empty */}
                       <select
                         onChange={(e) => {
                           const newMemberId = e.target.value;
                           if (
                             newMemberId &&
-                            !newMembers.includes(newMemberId) && // ✅ Ensure not already added
-                            newMemberId !== selectedGroup.createdBy._id // ✅ Double-check excluding creator
-                          ) {
+                            !newMembers.includes(newMemberId) &&
+                            newMemberId !== selectedGroup.createdBy._id
+                          )
                             setNewMembers([...newMembers, newMemberId]);
-                          }
                         }}
                         className="w-full border p-2 rounded mb-3"
                         disabled={
@@ -488,23 +487,23 @@ export default function Groups() {
                               friend._id === selectedGroup.createdBy._id ||
                               newMembers.includes(friend._id)
                           )
-                        } // ✅ Disable dropdown if no new members to add
+                        }
                       >
                         {friends.length > 0 &&
                         !friends.some(
                           (friend) =>
-                            friend._id !== selectedGroup.createdBy._id && // ✅ Exclude creator
-                            !newMembers.includes(friend._id) // ✅ Exclude already added members
+                            friend._id !== selectedGroup.createdBy._id &&
+                            !newMembers.includes(friend._id)
                         ) ? (
-                          <option value="">No new friends to add</option> // ✅ Show this when no friends available
+                          <option value="">No new friends to add</option>
                         ) : (
                           <>
                             <option value="">Add a new member...</option>
                             {friends
                               .filter(
                                 (friend) =>
-                                  friend._id !== selectedGroup.createdBy._id && // ✅ Exclude creator
-                                  !newMembers.includes(friend._id) // ✅ Exclude already added members
+                                  friend._id !== selectedGroup.createdBy._id &&
+                                  !newMembers.includes(friend._id)
                               )
                               .map((friend) => (
                                 <option key={friend._id} value={friend._id}>
@@ -514,8 +513,6 @@ export default function Groups() {
                           </>
                         )}
                       </select>
-
-                      {/* Member List with Remove Option */}
                       <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
                         {newMembers.length > 0 ? (
                           newMembers.map((memberId, index) => {
@@ -528,8 +525,7 @@ export default function Groups() {
                                   key={index}
                                   className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
                                 >
-                                  {friend.fullName}
-                                  {/* Remove Button */}
+                                  <span>{friend.fullName}</span>
                                   <button
                                     type="button"
                                     className="text-white ml-2"
@@ -537,7 +533,7 @@ export default function Groups() {
                                       if (newMembers.length <= 1) {
                                         setToast({
                                           message:
-                                            "❌ A group must have at least 2 members (including the creator)!",
+                                            "A group must have at least 2 members (including the creator)!",
                                           type: "error",
                                         });
                                         return;
@@ -547,7 +543,7 @@ export default function Groups() {
                                       );
                                     }}
                                   >
-                                    ❌
+                                    {"❌"}
                                   </button>
                                 </span>
                               )
@@ -562,8 +558,6 @@ export default function Groups() {
                     </div>
                   </div>
                 </div>
-
-                {/* 🔹 Action Buttons */}
                 <div className="flex justify-between mt-4">
                   <Button
                     text="Cancel"
@@ -590,22 +584,19 @@ export default function Groups() {
               <p className="text-gray-500 italic">No completed groups found.</p>
             ) : (
               groups
-                .filter((group) => group.completed) // ✅ Filtering correctly using `completed: true`
+                .filter((group) => group.completed)
                 .map((group) => (
                   <div
                     key={group._id}
                     className="bg-gray-100 p-4 rounded-lg mb-3 flex items-center shadow-sm hover:shadow-md transition"
                   >
-                    {/* Group Avatar */}
                     <Image
-                      src={avatarMap[group.type] || "/friends_group.png"} // ✅ Fallback image handling
+                      src={avatarMap[group.type] || "/friends_group.png"} // Fallback image
                       alt="Group Avatar"
                       width={50}
                       height={50}
                       className="rounded-full mr-3"
                     />
-
-                    {/* Group Details */}
                     <div className="flex-1">
                       <h3 className="text-lg font-bold">{group.name}</h3>
                       <p className="text-sm text-gray-600">
@@ -624,8 +615,6 @@ export default function Groups() {
                         </span>
                       </p>
                     </div>
-
-                    {/* Delete Button */}
                     <Button
                       text="Delete"
                       onClick={() => handleDeleteGroup(group)}
@@ -636,82 +625,77 @@ export default function Groups() {
             )}
           </div>
 
-          {/* Delete Confirmation Modal */}
-          {isDeleteModalOpen && selectedGroup && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
-              <div className="bg-white p-6 rounded-lg shadow-lg text-center transition-all transform scale-95 animate-fadeIn">
-                {/* 🔹 Modal Title */}
-                <h2 className="text-xl font-semibold text-red-600">
-                  Delete Group
-                </h2>
-
-                {/* 🔹 Group Details */}
-                <p className="text-gray-700 mt-3">
-                  Are you sure you want to delete{" "}
-                  <strong className="text-red-500">
-                    {selectedGroup.name || "this group"}
-                  </strong>
-                  ?
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  This action <span className="font-bold">cannot</span> be
-                  undone.
-                </p>
-
-                {/* 🔹 Group Info */}
-                <div className="mt-4 bg-gray-100 p-4 rounded-md text-sm">
-                  <p>
-                    <strong>Type:</strong> {selectedGroup.type || "Unknown"}
+          {/* Delete Confirmation Modal (Client-side only) */}
+          {isDeleteModalOpen &&
+            selectedGroup &&
+            typeof window !== "undefined" && (
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+                suppressHydrationWarning
+              >
+                <div className="bg-white p-6 rounded-lg shadow-lg text-center transition-all transform scale-95 animate-fadeIn">
+                  <h2 className="text-xl font-semibold text-red-600">
+                    Delete Group
+                  </h2>
+                  <p className="text-gray-700 mt-3">
+                    Are you sure you want to delete{" "}
+                    <strong className="text-red-500">
+                      {selectedGroup.name || "this group"}
+                    </strong>
+                    ?
                   </p>
-                  <p>
-                    <strong>Created By:</strong>{" "}
-                    {typeof selectedGroup.createdBy === "object"
-                      ? selectedGroup.createdBy.fullName
-                      : "Unknown"}
+                  <p className="text-sm text-gray-500 mt-1">
+                    This action <span className="font-bold">cannot</span> be
+                    undone.
                   </p>
-                </div>
-
-                {/* 🔹 Action Buttons */}
-                <div className="flex justify-center gap-4 mt-6">
-                  <Button
-                    text="Cancel"
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-md transition"
-                  />
-                  <Button
-                    text="Delete"
-                    onClick={handleConfirmDelete}
-                    className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md transition"
-                  />
+                  <div className="mt-4 bg-gray-100 p-4 rounded-md text-sm">
+                    <p>
+                      <strong>Type:</strong> {selectedGroup.type || "Unknown"}
+                    </p>
+                    <p>
+                      <strong>Created By:</strong>{" "}
+                      {typeof selectedGroup.createdBy === "object"
+                        ? selectedGroup.createdBy.fullName
+                        : "Unknown"}
+                    </p>
+                  </div>
+                  <div className="flex justify-center gap-4 mt-6">
+                    <Button
+                      text="Cancel"
+                      onClick={() => setIsDeleteModalOpen(false)}
+                      className="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-md transition"
+                    />
+                    <Button
+                      text="Delete"
+                      onClick={handleConfirmDelete}
+                      className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md transition"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Create Group Modal */}
-          {isModalOpen && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          {/* Create Group Modal (Client-side only) */}
+          {isModalOpen && typeof window !== "undefined" && (
+            <div
+              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+              suppressHydrationWarning
+            >
               <div className="bg-white p-6 rounded-lg shadow-lg w-[750px] max-w-[750px] flex flex-col gap-6 relative transition-all transform scale-95 animate-fadeIn">
-                {/* Group Avatar */}
                 <div className="flex justify-center mb-4">
                   <Image
-                    src={avatarMap[newGroup.type]} // Dynamically fetch avatar based on group type
+                    src={avatarMap[newGroup.type]}
                     alt={`${newGroup.type} Group Avatar`}
                     width={80}
                     height={80}
                     className="rounded-full border-2 border-gray-300 shadow-lg"
                   />
                 </div>
-
                 <h2 className="text-xl text-center font-semibold mb-4">
                   Create a New Group
                 </h2>
-
-                {/* Two-Column Layout */}
                 <div className="grid grid-cols-2 gap-6">
-                  {/* Left Column - Group Details */}
                   <div className="flex-1">
-                    {/* Group Name */}
                     <input
                       type="text"
                       placeholder="Group Name *"
@@ -722,8 +706,6 @@ export default function Groups() {
                       className="w-full border p-2 rounded mb-3"
                       required
                     />
-
-                    {/* Group Description */}
                     <textarea
                       placeholder="Group Description (optional)"
                       value={newGroup.description}
@@ -735,8 +717,6 @@ export default function Groups() {
                       }
                       className="w-full border p-2 rounded mb-3"
                     />
-
-                    {/* Group Type */}
                     <select
                       value={newGroup.type}
                       onChange={handleGroupTypeChange}
@@ -750,25 +730,21 @@ export default function Groups() {
                       <option value="Friends">Friends/Family</option>
                     </select>
                   </div>
-
-                  {/* Right Column - Member Selection */}
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-700 mb-2">
                       Select Members
                     </h3>
-                    {/* Dropdown for Available Friends (Real List from Context) */}
                     <select
                       value=""
                       onChange={(e) => {
                         if (
                           e.target.value &&
                           !newGroup.members.includes(e.target.value)
-                        ) {
+                        )
                           setNewGroup((prevGroup) => ({
                             ...prevGroup,
                             members: [...prevGroup.members, e.target.value],
                           }));
-                        }
                       }}
                       className="w-full border p-2 rounded mb-3"
                     >
@@ -787,7 +763,6 @@ export default function Groups() {
                         <option disabled>No friends found</option>
                       )}
                     </select>
-                    {/* Selected Members List */}
                     <h3 className="font-semibold text-gray-700 mt-2">
                       Selected Members{" "}
                       {newGroup.members.length > 0
@@ -806,7 +781,7 @@ export default function Groups() {
                                 key={index}
                                 className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
                               >
-                                {friend.fullName}
+                                <span>{friend.fullName}</span>
                                 <button
                                   type="button"
                                   className="text-white ml-2"
@@ -819,7 +794,7 @@ export default function Groups() {
                                     }))
                                   }
                                 >
-                                  ❌
+                                  {"❌"}
                                 </button>
                               </span>
                             )
@@ -833,8 +808,6 @@ export default function Groups() {
                     </div>
                   </div>
                 </div>
-
-                {/* Footer - Buttons */}
                 <div className="flex justify-between mt-4">
                   <Button
                     text="Cancel"
@@ -851,210 +824,173 @@ export default function Groups() {
             </div>
           )}
 
-          {/* ✅ View Group Modal */}
-          {isViewModalOpen && selectedGroup && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
-              <div className="bg-white p-8 rounded-lg shadow-lg w-[900px] max-w-5xl h-auto flex flex-col md:flex-row gap-8">
-                {/* 🔹 Left Column - Group Info */}
-                <div className="flex-1 p-6">
-                  {/* Group Avatar, Name, Type */}
-                  <div className="flex items-center gap-4">
-                    <Image
-                      src={
-                        selectedGroup?.avatar ||
-                        avatarMap[selectedGroup?.type] ||
-                        "/friends_group.png"
-                      }
-                      alt="Group Avatar"
-                      width={80}
-                      height={80}
-                      className="rounded-full border-2 shadow-lg"
-                    />
-                    <div>
-                      <h2 className="text-xl font-bold">
-                        {selectedGroup.name}
-                      </h2>
-                      <p className="text-gray-500 text-sm">
-                        {selectedGroup.type} Group
+          {/* View Group Modal (Client-side only) */}
+          {isViewModalOpen &&
+            selectedGroup &&
+            typeof window !== "undefined" && (
+              <div
+                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+                suppressHydrationWarning
+              >
+                <div className="bg-white p-8 rounded-lg shadow-lg w-[900px] max-w-5xl h-auto flex flex-col md:flex-row gap-8">
+                  <div className="flex-1 p-6">
+                    <div className="flex items-center gap-4">
+                      <Image
+                        src={
+                          selectedGroup?.avatar ||
+                          avatarMap[selectedGroup?.type] ||
+                          "/friends_group.png"
+                        }
+                        alt="Group Avatar"
+                        width={80}
+                        height={80}
+                        className="rounded-full border-2 shadow-lg"
+                      />
+                      <div>
+                        <h2 className="text-xl font-bold">
+                          {selectedGroup.name}
+                        </h2>
+                        <p className="text-gray-500 text-sm">
+                          {selectedGroup.type} Group
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <h3 className="font-semibold text-gray-700">
+                        Group Details
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {selectedGroup.description ||
+                          "No description provided."}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Group Details */}
-                  <div className="mt-4">
-                    <h3 className="font-semibold text-gray-700">
-                      Group Details
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {selectedGroup.description || "No description provided."}
-                    </p>
-                  </div>
-
-                  {/* Group Owner */}
-                  <div className="mt-2">
-                    <h3 className="font-semibold text-gray-700">Group Owner</h3>
-                    <p className="text-sm text-gray-600">
-                      {selectedGroup.createdBy?.fullName || "Unknown"}
-                    </p>
-                  </div>
-
-                  {/* Members List */}
-                  <h3 className="font-semibold text-gray-700 mt-4">
-                    Members ({selectedGroup?.members?.length || 0})
-                  </h3>
-                  <div className="flex flex-col text-start gap-2 mt-1 max-h-[200px] overflow-y-auto">
-                    {selectedGroup?.members?.map(
-                      (member: any, index: number) => (
-                        <span
-                          key={index}
-                          className="bg-white text-blue-600 px-3 py-1 rounded-md text-sm"
-                        >
-                          {member.fullName || "Unknown"}
-                        </span>
-                      )
-                    )}
-                  </div>
-
-                  {/* Start Date & Status */}
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-gray-100 p-3 rounded-md text-center">
-                      <h4 className="text-gray-700 font-semibold">
-                        Start Date
-                      </h4>
-                      <p className="text-sm">
-                        {new Date(selectedGroup.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {/* Group Status */}
                     <div className="mt-2">
                       <h3 className="font-semibold text-gray-700">
-                        Group Status
+                        Group Owner
                       </h3>
-                      <p
-                        className={`text-sm font-semibold ${
-                          selectedGroup.completed
-                            ? "text-green-600"
-                            : "text-blue-500"
-                        }`}
-                      >
-                        {selectedGroup.completed ? "✅ Completed" : "🟢 Active"}
+                      <p className="text-sm text-gray-600">
+                        {selectedGroup.createdBy?.fullName || "Unknown"}
                       </p>
                     </div>
-                  </div>
-
-                  {/* Close Button */}
-                  <div className="flex justify-center mt-10 bottom-2">
-                    <Button
-                      text="Close"
-                      onClick={() => setIsViewModalOpen(false)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-lg text-lg"
-                    />
-                  </div>
-                </div>
-
-                {/* 🔹 Right Column - Transactions & Actions */}
-                <div className="flex-1 p-6 flex flex-col gap-6 bg-gray-50 rounded-lg">
-                  {/* Recent Transactions (Completed) */}
-                  {/* <div>
-                    <h3 className="font-semibold text-gray-700">
-                      Recent Transactions
+                    <h3 className="font-semibold text-gray-700 mt-4">
+                      Members ({selectedGroup?.members?.length || 0})
                     </h3>
-                    {groupTransactions.completed.length > 0 ? (
-                      groupTransactions.completed.map(
-                        (txn: any, index: number) => (
-                          <div
+                    <div className="flex flex-col text-start gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                      {selectedGroup?.members?.map(
+                        (member: any, index: number) => (
+                          <span
                             key={index}
-                            className="flex justify-between border-b py-2"
+                            className="bg-white text-blue-600 px-3 py-1 rounded-md text-sm"
                           >
-                            <span className="text-gray-600">
-                              {txn.sender?.fullName || "Unknown"} →{" "}
-                              {txn.receiver?.fullName || "Unknown"}
-                            </span>
-                            <span className="font-bold">
-                              ₹{txn.amount.toLocaleString()}
-                            </span>
-                          </div>
+                            {member.fullName || "Unknown"}
+                          </span>
                         )
-                      )
-                    ) : (
-                      <p className="text-gray-500 italic">
-                        No transactions found.
-                      </p>
-                    )}
-                  </div> */}
-
-                  {/* Pending Transactions (Optional Display) */}
-                  <div>
-                    <h3 className="font-semibold text-gray-700">
-                      Pending Transactions ({groupTransactions.pending.length})
-                    </h3>
-                    {groupTransactions.pending.length > 0 ? (
-                      groupTransactions.pending.map(
-                        (txn: any, index: number) => (
-                          <div
-                            key={index}
-                            className="flex justify-between border-b py-2 text-yellow-600"
-                          >
-                            <span className="text-gray-600">
-                              {txn.sender?.fullName || "Unknown"} →{" "}
-                              {txn.receiver?.fullName || "Unknown"}
-                            </span>
-                            <span className="font-bold">
-                              ₹{txn.amount.toLocaleString()}
-                            </span>
-                          </div>
+                      )}
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="bg-gray-100 p-3 rounded-md text-center">
+                        <h4 className="text-gray-700 font-semibold">
+                          Start Date
+                        </h4>
+                        <p className="text-sm">
+                          {new Date(
+                            selectedGroup.createdAt
+                          ).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="mt-2">
+                        <h3 className="font-semibold text-gray-700">
+                          Group Status
+                        </h3>
+                        <p
+                          className={`text-sm font-semibold ${
+                            selectedGroup.completed
+                              ? "text-green-600"
+                              : "text-blue-500"
+                          }`}
+                        >
+                          {selectedGroup.completed
+                            ? "✅ Completed"
+                            : "🟢 Active"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex justify-center mt-10 bottom-2">
+                      <Button
+                        text="Close"
+                        onClick={() => setIsViewModalOpen(false)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-lg text-lg"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex-1 p-6 flex flex-col gap-6 bg-gray-50 rounded-lg">
+                    <div>
+                      <h3 className="font-semibold text-gray-700">
+                        Pending Transactions ({groupTransactions.pending.length}
                         )
-                      )
-                    ) : (
-                      <p className="text-gray-500 italic">
-                        No pending transactions found.
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Who Owes Whom Calculation */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-700">
-                      Who Owes Whom ({owesList.length})
-                    </h3>
-
-                    {owesList.length > 0 ? (
-                      <ul className="text-gray-600">
-                        {owesList.map((entry, index) => (
-                          <li key={index} className="border-b py-2">
-                            {entry.from} owes {entry.to}{" "}
-                            <span className="font-bold">
-                              ₹{entry.amount.toLocaleString()}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-gray-500 italic">
-                        All payments settled!
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Navigation Buttons - Updated Layout */}
-                  <div className="flex flex-col gap-3">
-                    <button
-                      onClick={() => router.push("/expenses")}
-                      className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 text-lg"
-                    >
-                      Check Expenses
-                    </button>
-                    <button
-                      onClick={() => router.push("/payments")}
-                      className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg"
-                    >
-                      Settle Payments
-                    </button>
+                      </h3>
+                      {groupTransactions.pending.length > 0 ? (
+                        groupTransactions.pending.map(
+                          (txn: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex justify-between border-b py-2 text-yellow-600"
+                            >
+                              <span className="text-gray-600">
+                                {txn.sender?.fullName || "Unknown"} →{" "}
+                                {txn.receiver?.fullName || "Unknown"}
+                              </span>
+                              <span className="font-bold">
+                                ₹{txn.amount.toLocaleString()}
+                              </span>
+                            </div>
+                          )
+                        )
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          No pending transactions found.
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">
+                        Who Owes Whom ({owesList.length})
+                      </h3>
+                      {owesList.length > 0 ? (
+                        <ul className="text-gray-600">
+                          {owesList.map((entry, index) => (
+                            <li key={index} className="border-b py-2">
+                              {entry.from} owes {entry.to}{" "}
+                              <span className="font-bold">
+                                ₹{entry.amount.toLocaleString()}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-500 italic">
+                          All payments settled!
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => router.push("/expenses")}
+                        className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 text-lg"
+                      >
+                        Check Expenses
+                      </button>
+                      <button
+                        onClick={() => router.push("/payments")}
+                        className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg"
+                      >
+                        Settle Payments
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
     </div>
