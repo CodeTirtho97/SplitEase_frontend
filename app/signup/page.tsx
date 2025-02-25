@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useState, useContext, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
   faCheckCircle,
   faExclamationCircle,
+  faUser,
+  faLock,
+  faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
-import { signup, googleAuth } from "@/utils/api/auth";
+import { signup } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
 
 const Signup = () => {
   const router = useRouter();
-  const { setUser, setToken } = useContext(AuthContext) || {}; // Get context functions
+  const { setUser, setToken, loading, error } = useContext(AuthContext) || {};
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +31,8 @@ const Signup = () => {
     message: string;
     type: "success" | "error";
   } | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Validation Functions
+  // Validation Functions (Server-safe)
   const validateName = (name: string) => /^[A-Za-z\s]+$/.test(name);
   const validateEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -39,11 +41,10 @@ const Signup = () => {
       password
     );
 
-  // Handle Submit
+  // Handle Submit (Server-safe)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors([]);
-    setLoading(true); // 🔹 Start loading
 
     const newErrors: { field: string; message: string }[] = [];
 
@@ -85,21 +86,17 @@ const Signup = () => {
       setErrors(newErrors);
       setShowToast({ message: newErrors[0].message, type: "error" });
       setTimeout(() => setShowToast(null), 3000);
-      setLoading(false);
       return;
     }
 
     try {
-      const data = await signup({
+      await signup({
         fullName,
         email,
         gender,
         password,
         confirmPassword,
       });
-      setUser?.(data); // 🔹 Set user in context
-      setToken?.(data.token); // 🔹 Set token in context
-      localStorage.setItem("userToken", data.token);
       setShowToast({ message: "Signup successful!", type: "success" });
 
       setTimeout(() => {
@@ -115,8 +112,6 @@ const Signup = () => {
         type: "error",
       });
       setTimeout(() => setShowToast(null), 3000);
-    } finally {
-      setLoading(false); // 🔹 Stop loading
     }
   };
 
@@ -144,8 +139,184 @@ const Signup = () => {
     }
   };
 
+  // Handle Google Auth (Client-side only, moved to useEffect)
+  const [googleButtonClicked, setGoogleButtonClicked] = useState(false);
+
+  const handleGoogleSignUp = () => {
+    if (typeof window !== "undefined") {
+      setGoogleButtonClicked(true); // Mark that Google button was clicked
+      // Dynamically import and call googleAuth on client-side
+      import("@/utils/api/auth").then((module) => {
+        module.googleAuth();
+      });
+    }
+  };
+
+  // Handle Google callback on client-side only
+  useEffect(() => {
+    let mounted = true;
+
+    if (typeof window !== "undefined" && googleButtonClicked) {
+      const handleGoogleCallback = () => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+        const userId = params.get("userId");
+        const fullName = params.get("fullName");
+        const profilePic = params.get("profilePic");
+        const email = params.get("email");
+
+        if (mounted && token && userId) {
+          setUser?.({ userId, fullName, profilePic, email });
+          setToken?.(token);
+          localStorage.setItem("userToken", token);
+
+          setShowToast({ message: "Signup successful!", type: "success" });
+          setTimeout(() => {
+            setShowToast({
+              message: "Redirecting to dashboard...",
+              type: "success",
+            });
+            setTimeout(() => router.push("/dashboard"), 2000);
+            setGoogleButtonClicked(false); // Reset after handling
+          }, 2000);
+        }
+      };
+
+      handleGoogleCallback();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [router, setUser, setToken, googleButtonClicked]);
+
+  // Stabilize animations and dynamic content (client-side only)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Floating Icons (Client-side only, deterministic positions)
+      const floatingIcons = [
+        { top: "20%", left: "10%", icon: faUser, color: "indigo-400" },
+        { top: "40%", left: "60%", icon: faLock, color: "purple-400" },
+        { top: "60%", left: "80%", icon: faGoogle, color: "purple-400" },
+        { top: "20%", left: "20%", icon: faEnvelope, color: "green-400" },
+        {
+          top: "40%",
+          left: "40%",
+          icon: faExclamationCircle,
+          color: "red-400",
+        },
+        { top: "10%", left: "60%", icon: faUser, color: "indigo-400" },
+        { top: "10%", left: "60%", icon: faLock, color: "purple-400" },
+      ];
+
+      floatingIcons.forEach(({ top, left, icon, color }, index) => {
+        const element = document.createElement("div");
+        element.className = `absolute animate-float-${
+          index % 3 === 0 ? "slow" : index % 3 === 1 ? "" : "fast"
+        }`;
+        element.innerHTML = `<FontAwesomeIcon icon="${icon.iconName}" className="text-${color} text-4xl opacity-20" />`;
+        element.style.top = top;
+        element.style.left = left;
+        document.querySelector(".absolute.inset-0.z-0")?.appendChild(element);
+      });
+
+      // Particle Effects (Client-side only, deterministic positions)
+      const particleContainer = document.querySelector(".absolute.inset-0.z-0");
+      if (particleContainer) {
+        Array.from({ length: 30 }).forEach((_, index) => {
+          const particle = document.createElement("span");
+          particle.className = `absolute w-${index % 2 === 0 ? 2 : 3} h-${
+            index % 2 === 0 ? 2 : 3
+          } rounded-full opacity-15 animate-float-particle`;
+          particle.style.top = `${(index * 3.33) % 100}%`; // Deterministic top positions
+          particle.style.left = `${(index * 3.33) % 100}%`; // Deterministic left positions
+          particle.style.backgroundColor =
+            index % 3 === 0
+              ? "indigo-300"
+              : index % 3 === 1
+              ? "purple-300"
+              : "gray-300";
+          particle.style.animationDelay = `${(index * 0.2) % 5}s`; // Deterministic delay
+          particleContainer.appendChild(particle);
+        });
+      }
+    }
+  }, []);
+
   return (
-    <div className="min-h-screen pt-20 pb-6 flex items-center justify-center bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 px-8 relative">
+    <div className="min-h-screen pt-20 pb-6 flex items-center justify-center relative bg-gradient-to-br from-gray-100 via-gray-50 to-indigo-50 overflow-hidden">
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
+            <svg
+              className="w-16 h-16 text-indigo-500 animate-spin"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              />
+            </svg>
+            <p className="mt-4 text-xl font-medium text-gray-700">
+              Signing Up...
+            </p>
+            <p className="text-sm text-gray-500">
+              Please wait while we process your request securely.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Static Background Elements (Server-safe) */}
+      <div className="absolute inset-0 z-0">
+        {/* Subtle Gradient Overlay (Server-safe) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/50 via-purple-100/40 to-gray-100/50 animate-gradient-shift"></div>
+        <div className="absolute inset-0 bg-gradient-to-tl from-purple-200/20 via-indigo-200/15 to-gray-200/10 animate-gradient-pulse"></div>
+
+        {/* Wave Patterns (Server-safe) */}
+        <svg
+          className="absolute bottom-0 w-full h-32 text-indigo-200 opacity-30"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+        >
+          <path
+            fill="currentColor"
+            d="M0,160L48,176C96,192,192,224,288,208C384,192,480,128,576,117.3C672,107,768,149,864,160C960,171,1056,149,1152,138.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
+        <svg
+          className="absolute bottom-16 w-full h-32 text-purple-200 opacity-20"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+        >
+          <path
+            fill="currentColor"
+            d="M0,160L48,144C96,128,192,96,288,96C384,96,480,128,576,138.7C672,149,768,139,864,128C960,117,1056,107,1152,117.3C1248,128,1344,160,1392,176L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
+        <svg
+          className="absolute bottom-32 w-full h-32 text-gray-200 opacity-15"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+        >
+          <path
+            fill="currentColor"
+            d="M0,160L48,176C96,192,192,224,288,208C384,192,480,128,576,117.3C672,107,768,149,864,160C960,171,1056,149,1152,138.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+          />
+        </svg>
+      </div>
+
       {/* Custom Toast Notification */}
       {showToast && (
         <div
@@ -162,7 +333,14 @@ const Signup = () => {
         </div>
       )}
 
-      <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-xl border border-gray-300 backdrop-blur-md">
+      {error && (
+        <div className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300">
+          <FontAwesomeIcon icon={faExclamationCircle} className="mr-2" />
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-xl border border-gray-300 backdrop-blur-md relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-4">
           <img src="/logo.png" alt="SplitEase" className="w-12 h-12" />
@@ -178,9 +356,10 @@ const Signup = () => {
 
         {/* Google Sign-Up Button */}
         <button
-          onClick={googleAuth}
+          onClick={handleGoogleSignUp}
           className="w-full flex items-center justify-center gap-3 border border-gray-300 bg-white text-gray-700 font-semibold py-3 rounded-lg shadow-md transition-all 
           hover:bg-orange-600 hover:text-white hover:shadow-lg hover:border-orange-600 active:scale-95 relative overflow-hidden group"
+          disabled={loading}
         >
           {/* Left Background Animation Effect */}
           <span className="absolute left-0 w-0 h-full bg-indigo-500 transition-all duration-300 group-hover:w-full opacity-10"></span>
@@ -202,7 +381,10 @@ const Signup = () => {
         </div>
 
         {/* Signup Form */}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => handleSubmit(e).catch(console.error)}
+        >
           {/* Full Name */}
           <div>
             <label className="text-sm font-semibold text-gray-700">
@@ -218,6 +400,7 @@ const Signup = () => {
                   ? "border-red-500 focus:ring-red-500"
                   : "border-gray-300 focus:ring-indigo-500"
               }`}
+              disabled={loading}
             />
           </div>
 
@@ -234,6 +417,7 @@ const Signup = () => {
                   ? "border-red-500 focus:ring-red-500"
                   : "border-gray-300 focus:ring-indigo-500"
               }`}
+              disabled={loading}
             />
           </div>
 
@@ -250,6 +434,7 @@ const Signup = () => {
                   ? "border-red-500 focus:ring-red-500"
                   : "border-gray-300 focus:ring-indigo-500"
               }`}
+              disabled={loading}
             >
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
@@ -267,12 +452,13 @@ const Signup = () => {
               type="password"
               placeholder="Create a password"
               value={password}
-              onChange={handlePasswordChange} // 🔹 Call function here
+              onChange={handlePasswordChange}
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "password")
                   ? "border-red-500 focus:ring-red-500"
                   : "border-gray-300 focus:ring-indigo-500"
               }`}
+              disabled={loading}
             />
           </div>
 
@@ -285,12 +471,13 @@ const Signup = () => {
               type="password"
               placeholder="Re-enter password"
               value={confirmPassword}
-              onChange={handleConfirmPasswordChange} // 🔹 Call function here
+              onChange={handleConfirmPasswordChange}
               className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 ${
                 errors.some((err) => err.field === "confirmPassword")
                   ? "border-red-500 focus:ring-red-500"
                   : "border-gray-300 focus:ring-green-600"
               }`}
+              disabled={loading}
             />
           </div>
 
@@ -301,12 +488,14 @@ const Signup = () => {
               id="terms"
               checked={agreeToTerms}
               onChange={() => setAgreeToTerms(!agreeToTerms)}
+              disabled={loading}
             />
             <label htmlFor="terms" className="ml-2 text-gray-700 text-sm">
               I agree to the
               <span
                 className="ml-1 text-indigo-600 font-semibold cursor-pointer underline decoration-transparent hover:decoration-indigo-600 transition-all duration-200"
                 onClick={() => setIsTermsModalOpen(true)}
+                aria-disabled={loading}
               >
                 Terms & Conditions
               </span>
@@ -330,6 +519,7 @@ const Signup = () => {
               <span
                 className="text-indigo-600 font-semibold cursor-pointer hover:underline"
                 onClick={() => router.push("/login")}
+                aria-disabled={loading}
               >
                 Login
               </span>
@@ -350,6 +540,7 @@ const Signup = () => {
               <button
                 onClick={() => setIsTermsModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700 transition text-lg"
+                disabled={loading}
               >
                 ✖
               </button>
@@ -441,6 +632,7 @@ const Signup = () => {
               <button
                 onClick={() => setIsTermsModalOpen(false)}
                 className="px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+                disabled={loading}
               >
                 OK
               </button>

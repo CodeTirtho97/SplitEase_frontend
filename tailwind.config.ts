@@ -10,6 +10,11 @@ const config: Config = {
         montserrat: ['Montserrat', 'sans-serif'],
       },
     },
+    animation: {
+        'gradient-shift': 'gradientShift 15s ease infinite',
+        float: 'float 3s ease-in-out infinite',
+        blink: 'blink 1s step-end infinite',
+      },
   },
   plugins: [],
 };

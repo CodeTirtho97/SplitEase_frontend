@@ -1,6 +1,6 @@
 "use client";
 import { useContext, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // Use usePathname for navigation detection
 import Image from "next/image";
 import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -19,6 +19,7 @@ import { ProfileContext } from "@/context/profileContext";
 
 export default function Profile() {
   const router = useRouter();
+  const pathname = usePathname(); // Detect navigation changes
 
   // ✅ Ensure ProfileContext is valid before accessing user data
   const profileContext = useContext(ProfileContext);
@@ -44,15 +45,16 @@ export default function Profile() {
     deletePayment,
   } = profileContext;
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Global loading for initial profile fetch
   const [isEditing, setIsEditing] = useState(false);
   const [updatedName, setUpdatedName] = useState(user?.fullName || "");
   const [updatedGender, setUpdatedGender] = useState(user?.gender || "other");
-  //const [profileImage, setProfileImage] = useState(user?.profilePic || null); // 🔥 Fix empty `src` issue
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  // ✅ Friend Search
+  // ✅ Friend Search (Local state for modal loading)
   const [friendName, setFriendName] = useState("");
   const [suggestedFriends, setSuggestedFriends] = useState<any[]>([]);
+  const [friendSearchLoading, setFriendSearchLoading] = useState(false); // Local loading for friend search
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   // ✅ Payment
@@ -74,25 +76,43 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  // useEffect(() => {
-  //   if (!user) {
-  //     fetchUserProfile().then(() => setLoading(false));
-  //   } else {
-  //     setLoading(false);
-  //   }
-  // }, [user]);
-
+  // Fetch or update user profile on mount, navigation, or context changes
   useEffect(() => {
-    if (!user) {
-      fetchUserProfile(); // ✅ Only fetch if user data is missing
-    }
-  }, [user]);
+    const loadUserProfile = async () => {
+      setLoading(true);
+      try {
+        if (!user) {
+          await fetchUserProfile(); // Fetch if user data is missing
+        } else {
+          // Sync state with latest user data
+          setUpdatedName(user.fullName || "");
+          setUpdatedGender(user.gender || "other");
+          if (user.profilePic && user.profilePic.trim() !== "") {
+            setProfileImage(user.profilePic);
+          } else {
+            setProfileImage(
+              user.gender?.toLowerCase() === "male"
+                ? "/avatar_male.png"
+                : user.gender?.toLowerCase() === "female"
+                ? "/avatar_female.png"
+                : "/avatar_trans.png"
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setToast({
+          message: "Failed to load profile. Please log in again.",
+          type: "error",
+        });
+        setTimeout(() => router.push("/login"), 3000); // Redirect to login if profile fetch fails
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    if (user?.fullName) {
-      setUpdatedName(user.fullName);
-    }
-  }, [user?.fullName]);
+    loadUserProfile();
+  }, [user, pathname, fetchUserProfile, router]); // Re-run when user, pathname, or fetchUserProfile changes
 
   useEffect(() => {
     if (toast) {
@@ -100,54 +120,6 @@ export default function Profile() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
-
-  // ✅ Fix Profile Picture Default Fallback
-  // const [profileImage, setProfileImage] = useState(() => {
-  //   return user?.profilePic
-  //     ? user.profilePic
-  //     : updatedGender.toLowerCase() === "male"
-  //     ? "/avatar_male.png"
-  //     : updatedGender.toLowerCase() === "female"
-  //     ? "/avatar_female.png"
-  //     : "/avatar_trans.png";
-  // });
-
-  // useEffect(() => {
-  //   if (!user?.profilePic) {
-  //     setProfileImage(
-  //       updatedGender.toLowerCase() === "male"
-  //         ? "/avatar_male.png"
-  //         : updatedGender.toLowerCase() === "female"
-  //         ? "/avatar_female.png"
-  //         : "/avatar_trans.png"
-  //     );
-  //   }
-  // }, [updatedGender]);
-
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.gender) {
-      setUpdatedGender(user.gender.toLowerCase()); // ✅ Sync updatedGender with latest user.gender
-    } else {
-      setUpdatedGender("other"); // ✅ Ensure gender is always set
-    }
-  }, [user?.gender]);
-
-  useEffect(() => {
-    if (user?.profilePic && user.profilePic.trim() !== "") {
-      setProfileImage(user.profilePic); // ✅ Use uploaded profile pic if available
-    } else if (updatedGender) {
-      // ✅ Use gender-based default avatar
-      setProfileImage(
-        updatedGender.toLowerCase() === "male"
-          ? "/avatar_male.png"
-          : updatedGender.toLowerCase() === "female"
-          ? "/avatar_female.png"
-          : "/avatar_trans.png"
-      );
-    }
-  }, [updatedGender, user?.profilePic]);
 
   // ✅ Handle Profile Image Upload
   const handleImageUpload = async (
@@ -183,8 +155,19 @@ export default function Profile() {
       try {
         const updatedImage = await uploadProfilePic(file); // ✅ Upload to backend
         await fetchUserProfile(); // ✅ Refresh user data
+        setToast({
+          message: "Profile picture updated successfully!",
+          type: "success",
+        });
       } catch (error) {
         setToast({ message: "Failed to upload image", type: "error" });
+        setProfileImage(
+          user?.gender?.toLowerCase() === "male"
+            ? "/avatar_male.png"
+            : user?.gender?.toLowerCase() === "female"
+            ? "/avatar_female.png"
+            : "/avatar_trans.png"
+        ); // Revert to default on error
       }
     }
   };
@@ -198,44 +181,32 @@ export default function Profile() {
             updatedGender.slice(1).toLowerCase()
           : "Other";
 
-      // console.log("Saving Profile:", {
-      //   fullName: updatedName,
-      //   gender: formattedGender,
-      // });
-
       await updateUserProfile({
         fullName: updatedName,
         gender: formattedGender,
       });
 
-      //console.log("Sending Update Request...");
-
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend
-
-      // console.log("Update Successful:", {
-      //   fullName: updatedName,
-      //   gender: formattedGender,
-      // });
 
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
-      //console.error("Profile Update Failed:", error);
       setToast({ message: "Failed to update profile!", type: "error" });
     }
   };
 
-  // ✅ Optimized Friend Search with Debouncing
+  // ✅ Optimized Friend Search with Debouncing (Local loading state)
   const handleFriendSearch = useCallback((name: string) => {
     setFriendName(name);
 
     if (name.length < 2) {
       setSuggestedFriends([]);
       setToast(null);
+      setFriendSearchLoading(false); // Reset local loading
       return;
     }
 
-    setLoading(true);
+    setFriendSearchLoading(true); // Set local loading for friend search
 
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
@@ -244,7 +215,6 @@ export default function Profile() {
         const friends = await searchFriend(name);
         setSuggestedFriends(friends);
 
-        // ✅ Only show toast if there are no results
         if (friends.length === 0) {
           setToast({ message: "No friends to add", type: "error" });
         } else {
@@ -257,7 +227,7 @@ export default function Profile() {
           type: "error",
         });
       } finally {
-        setLoading(false);
+        setFriendSearchLoading(false); // Reset local loading after search
       }
     }, 500);
   }, []);
@@ -291,14 +261,6 @@ export default function Profile() {
     }
   }, [showFriendToast]);
 
-  // if (loading) {
-  //   return (
-  //     <div className="h-screen flex justify-center items-center">
-  //       <p className="text-lg text-gray-600">Loading profile...</p>
-  //     </div>
-  //   );
-  // }
-
   // ✅ Add Payment API Call
   const handleAddPayment = async () => {
     if (!paymentType || !paymentDetails) {
@@ -306,15 +268,16 @@ export default function Profile() {
       return;
     }
 
+    setLoading(true); // Set global loading for this operation
     try {
       await addPayment({
         methodType: paymentType,
         accountDetails: paymentDetails,
       }); // ✅ Call Context Function
 
-      await fetchUserProfile(); // ✅ Ensure UI updates with new friends
+      const userData = await fetchUserProfile(); // ✅ Fetch updated user data
+      setToast({ message: "Payment method added!", type: "success" });
 
-      // setToast({ message: "Payment method added!", type: "success" });
       setIsAddPaymentModalOpen(false);
 
       setTimeout(() => {
@@ -325,6 +288,8 @@ export default function Profile() {
         message: "Unable to Add Payment! Try with some other Payment ID!",
         type: "error",
       });
+    } finally {
+      setLoading(false); // Stop global loading
     }
   };
 
@@ -339,6 +304,15 @@ export default function Profile() {
       }, 5000); // ✅ Keep toast visible for 5 seconds
     }
   }, [showPaymentToast]);
+
+  const handleCloseModal = () => {
+    setIsAddPaymentModalOpen(false);
+    // Reset payment fields after a small delay to ensure modal animation completes
+    setTimeout(() => {
+      setPaymentType(""); // Reset payment type
+      setPaymentDetails(""); // Reset payment details
+    }, 300); // Match the delay with your modal animation or UI transition
+  };
 
   // ✅ Handle Password Change
   const handleChangePassword = async () => {
@@ -360,34 +334,30 @@ export default function Profile() {
       return;
     }
 
+    setLoading(true); // Set global loading for this operation
     try {
-      // console.log("🔹 Initiating Password Update...");
-      // await updatePassword({
-      //   oldPassword,
-      //   newPassword,
-      //   confirmNewPassword: confirmPassword,
-      // });
+      await updatePassword({
+        oldPassword,
+        newPassword,
+        confirmNewPassword: confirmPassword,
+      });
 
-      //console.log("✅ Password Updated, Closing Modal...");
       setIsPasswordModalOpen(false);
 
       setTimeout(() => {
-        //console.log("🔹 Showing Success Toast...");
-        setToast({
-          message: "Password changed successfully!",
-          type: "success",
-        });
+        setShowPasswordToast(true); // ✅ Show toast AFTER modal is fully closed
       }, 300); // ✅ Ensures re-render completes before showing toast
 
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
-      console.error("❌ Password Update Failed:", error.message);
       setToast({
         message: error.message || "Failed to change password!",
         type: "error",
       });
+    } finally {
+      setLoading(false); // Stop global loading
     }
   };
 
@@ -407,6 +377,7 @@ export default function Profile() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleDeleteFriend = async (friendId: string) => {
+    setLoading(true); // Set global loading for this operation
     try {
       await deleteFriend(friendId);
       setToast({ message: "Friend removed successfully!", type: "success" });
@@ -414,10 +385,13 @@ export default function Profile() {
       await fetchUserProfile(); // ✅ Refresh UI
     } catch (error) {
       setToast({ message: "Failed to remove friend!", type: "error" });
+    } finally {
+      setLoading(false); // Stop global loading
     }
   };
 
   const handleDeletePayment = async (paymentId: string) => {
+    setLoading(true); // Set global loading for this operation
     try {
       await deletePayment(paymentId);
       setToast({ message: "Payment method removed!", type: "success" });
@@ -425,6 +399,8 @@ export default function Profile() {
       await fetchUserProfile(); // ✅ Refresh UI
     } catch (error) {
       setToast({ message: "Failed to remove payment method!", type: "error" });
+    } finally {
+      setLoading(false); // Stop global loading
     }
   };
 
@@ -440,6 +416,41 @@ export default function Profile() {
         return faCreditCard; // Default credit card icon
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-b from-gray-100 to-gray-200">
+        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
+          <svg
+            className="w-16 h-16 text-indigo-500 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            />
+          </svg>
+          <p className="mt-4 text-xl font-medium text-gray-700">
+            Loading Profile...
+          </p>
+          <p className="text-sm text-gray-500">
+            Please wait while we fetch your profile data securely.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 p-6">
@@ -554,17 +565,16 @@ export default function Profile() {
                 text="Save Changes"
                 onClick={handleSaveProfile}
                 className="text-white bg-green-500 hover:bg-green-600 w-full"
+                disabled={loading}
               />
             ) : (
               <Button
                 text="Edit Profile"
                 onClick={() => setIsEditing(true)}
                 className="text-white bg-blue-500 hover:bg-blue-600 w-full"
+                disabled={loading}
               />
             )}
-
-            {/* Toggle Password Change Form
-          <Button text={showPasswordFields ? "Cancel" : "Change Password"} onClick={() => setShowPasswordFields(!showPasswordFields)} className="bg-yellow-500 hover:bg-yellow-600 w-full" /> */}
 
             {/* Open Password Change Modal */}
             <Button
@@ -575,12 +585,11 @@ export default function Profile() {
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-yellow-500 hover:bg-yellow-600"
               } text-white`}
-              disabled={!user?.password}
+              disabled={!user?.password || loading}
             />
-
-            {/* <Button text="Logout" onClick={handleLogout} className="text-white bg-red-500 hover:bg-red-600 w-full" /> */}
           </div>
         </div>
+
         {/* Saved Contacts Card */}
         <div className="bg-white shadow-lg rounded-xl p-6 text-center border-t-4 border-green-500 relative">
           <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
@@ -588,7 +597,7 @@ export default function Profile() {
           </h3>
 
           {/* ✅ Show Contacts Dynamically */}
-          <div className="mt-4 max-h-40 overflow-y-auto border rounded-lg p-3 text-left">
+          <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.friends && user.friends.length > 0 ? (
               user.friends.map((friend: any, index: number) => (
                 <div
@@ -615,6 +624,7 @@ export default function Profile() {
                     onClick={() => handleDeleteFriend(friend._id)}
                     className="text-gray-400 hover:text-red-500 transition-all duration-300"
                     title="Delete Payment"
+                    disabled={loading}
                   >
                     <FontAwesomeIcon icon={faTimes} />
                   </button>
@@ -631,6 +641,7 @@ export default function Profile() {
           <button
             onClick={() => setIsAddContactModalOpen(true)}
             className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+            disabled={loading}
           >
             Add New Contact
           </button>
@@ -643,7 +654,7 @@ export default function Profile() {
           </h3>
 
           {/* ✅ Show Payments Dynamically */}
-          <div className="mt-4 max-h-40 overflow-y-auto border rounded-lg p-3 text-left">
+          <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.paymentMethods && user.paymentMethods.length > 0 ? (
               user.paymentMethods.map((method: any, index: number) => (
                 <div
@@ -656,7 +667,6 @@ export default function Profile() {
                       icon={getPaymentIcon(method.methodType)}
                       className="text-3xl text-indigo-500"
                     />
-                    {/* <p className="font-semibold">{method.methodType}</p> */}
                     <p className="text-sm text-gray-500">
                       {method.accountDetails}
                     </p>
@@ -667,6 +677,7 @@ export default function Profile() {
                     onClick={() => handleDeletePayment(method._id)}
                     className="text-gray-400 hover:text-red-500 transition-all duration-300"
                     title="Delete Payment"
+                    disabled={loading}
                   >
                     <FontAwesomeIcon icon={faTimes} />
                   </button>
@@ -683,6 +694,7 @@ export default function Profile() {
           <button
             onClick={() => setIsAddPaymentModalOpen(true)}
             className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+            disabled={loading}
           >
             Add Payment Method
           </button>
@@ -701,10 +713,11 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={friendName}
                 onChange={(e) => handleFriendSearch(e.target.value)}
+                disabled={loading}
               />
 
-              {/* Loading Indicator */}
-              {loading && (
+              {/* Local Loading Indicator (Only in modal) */}
+              {friendSearchLoading && (
                 <div className="flex justify-center mt-2">
                   <div className="w-5 h-5 border-4 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
                 </div>
@@ -718,6 +731,7 @@ export default function Profile() {
                       key={friend._id}
                       className="p-2 hover:bg-indigo-200 cursor-pointer"
                       onClick={() => handleAddFriend(friend._id)}
+                      //disabled={loading}
                     >
                       {friend.fullName} - {friend.email}
                     </li>
@@ -730,16 +744,25 @@ export default function Profile() {
                 <button
                   onClick={() => setIsAddContactModalOpen(false)}
                   className="text-gray-600"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
-                <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+                  onClick={() =>
+                    suggestedFriends.length > 0 &&
+                    handleAddFriend(suggestedFriends[0]._id)
+                  }
+                  disabled={loading || suggestedFriends.length === 0}
+                >
                   Add Friend
                 </button>
               </div>
             </div>
           </div>
         )}
+
         {/* Add Payment Method Modal */}
         {isAddPaymentModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -750,6 +773,7 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={paymentType}
                 onChange={(e) => setPaymentType(e.target.value)}
+                disabled={loading}
               >
                 <option value="">Select Payment Type</option>
                 <option value="UPI">UPI</option>
@@ -763,25 +787,29 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={paymentDetails}
                 onChange={(e) => setPaymentDetails(e.target.value)}
+                disabled={loading}
               />
 
               <div className="mt-4 flex justify-between">
                 <button
                   onClick={() => setIsAddPaymentModalOpen(false)}
                   className="text-gray-600"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleAddPayment}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+                  disabled={loading}
                 >
-                  Add Payment
+                  {loading ? "Adding..." : "Add Payment"}
                 </button>
               </div>
             </div>
           </div>
         )}
+
         {/* Password Change Modal */}
         {isPasswordModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -796,6 +824,7 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
+                disabled={loading}
               />
               <input
                 type="password"
@@ -803,6 +832,7 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
               />
               <input
                 type="password"
@@ -810,20 +840,23 @@ export default function Profile() {
                 className="border p-2 rounded w-full mt-3"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={loading}
               />
 
               <div className="mt-4 flex justify-between">
                 <button
                   onClick={() => setIsPasswordModalOpen(false)}
                   className="text-gray-600"
+                  disabled={loading}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleChangePassword}
                   className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                  disabled={loading}
                 >
-                  Update Password
+                  {loading ? "Updating..." : "Update Password"}
                 </button>
               </div>
             </div>
