@@ -135,8 +135,8 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
       try {
+        console.log("Google OAuth Success Response:", response); // Debug log
         const { credential } = response;
-        // Use googleAuth from AuthContext to redirect to backend
         const { user, token } = await handleGoogleCallback(); // API call to get token and user
         if (setToken && setUser) {
           // Type guard
@@ -149,12 +149,22 @@ export default function LoginPage() {
           router.push("/dashboard");
         }, 2000);
       } catch (error: any) {
+        console.error("Google Login Error:", error); // Debug log
         setShowToast({
           message: error.message || "Google Login failed!",
           type: "error",
         });
         setTimeout(() => setShowToast(null), 3000);
       }
+    }
+  };
+
+  // Handle Google Auth Error (Updated to match type `() => void`)
+  const handleGoogleError = () => {
+    if (typeof window !== "undefined") {
+      console.error("Google Login Failed"); // Log error internally without parameter
+      setShowToast({ message: "Google Login failed!", type: "error" });
+      setTimeout(() => setShowToast(null), 3000);
     }
   };
 
@@ -380,7 +390,7 @@ export default function LoginPage() {
           >
             <GoogleLoginComponent
               onSuccess={handleGoogleSuccess}
-              onError={() => console.log("Google Login Failed")}
+              onError={handleGoogleError} // Updated to match () => void
               useOneTap
             />
           </GoogleOAuthProvider>

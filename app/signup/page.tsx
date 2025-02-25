@@ -163,6 +163,7 @@ const Signup = () => {
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
       try {
+        console.log("Google OAuth Success Response:", response); // Debug log
         const { credential } = response;
         const { user, token } = await handleGoogleCallback(); // API call to get token and user
         if (setToken && setUser) {
@@ -179,12 +180,22 @@ const Signup = () => {
           setTimeout(() => router.push("/dashboard"), 2000);
         }, 2000);
       } catch (error: any) {
+        console.error("Google Signup Error:", error); // Debug log
         setShowToast({
           message: error.message || "Google Signup failed!",
           type: "error",
         });
         setTimeout(() => setShowToast(null), 3000);
       }
+    }
+  };
+
+  // Handle Google Auth Error (Updated to match type `() => void`)
+  const handleGoogleError = () => {
+    if (typeof window !== "undefined") {
+      console.error("Google Signup Failed"); // Log error internally without parameter
+      setShowToast({ message: "Google Signup failed!", type: "error" });
+      setTimeout(() => setShowToast(null), 3000);
     }
   };
 
@@ -409,7 +420,7 @@ const Signup = () => {
           >
             <GoogleLoginComponent
               onSuccess={handleGoogleSuccess}
-              onError={() => console.log("Google Signup Failed")}
+              onError={handleGoogleError} // Updated to match () => void
               useOneTap
             />
           </GoogleOAuthProvider>
