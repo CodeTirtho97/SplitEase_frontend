@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { signup, login } from "../utils/api/auth"; // Only import server-safe functions
@@ -141,4 +147,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+// Export useAuth hook
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
 };

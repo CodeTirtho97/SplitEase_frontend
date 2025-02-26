@@ -16,12 +16,19 @@ import {
   faLightbulb,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios"; // Assuming you’re using axios for API calls
+import Cookies from "js-cookie"; // Import Cookies for token persistence
+import { useAuth } from "@/context/authContext"; // Import useAuth
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<{ fullName: string } | null>(null); // Updated to store fullName
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    user,
+    token,
+    loading: authLoading,
+    error: authError,
+  } = useAuth() || {}; // Use useAuth for authentication state
+  const [dashboardLoading, setDashboardLoading] = useState(true); // Separate loading state for dashboard data
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   // State for dashboard data (use null for uninitialized, undefined for missing data)
   const [totalExpenses, setTotalExpenses] = useState<number | null>(null);
@@ -40,137 +47,111 @@ export default function Dashboard() {
   // ✅ Authentication and Initial Data Fetch with Enhanced Debugging and Correct Timing
   useEffect(() => {
     const fetchData = async () => {
+      if (!token || !user) {
+        console.log("No user or token found, redirecting to login...");
+        router.push("/login"); // Redirect if no token or user found
+        return;
+      }
+
+      setDashboardLoading(true);
+
       try {
-        const storedToken = localStorage.getItem("userToken");
-        if (!storedToken) {
-          //console.log("No user token found, redirecting to login...");
-          router.push("/login"); // Redirect if no token found
-          return;
-        }
-
-        // Fetch user data (assuming backend returns fullName)
-        //console.log("Fetching user profile from:", `${API_URL}/profile/me`);
-        const userResponse = await axios.get(`${API_URL}/profile/me`, {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        });
-        console.log("User response data:", userResponse.data);
-        setUser({ fullName: userResponse.data.fullName || "Test User" });
-
         // Fetch dashboard stats
-        //console.log("Fetching stats from:", `${API_URL}/stats`);
-        try {
-          const statsResponse = await axios.get(`${API_URL}/stats`, {
-            headers: { Authorization: `Bearer ${storedToken}` },
-          });
-          //console.log("Stats response data:", statsResponse.data);
-          const {
-            totalExpenses: expenses = 0,
-            pendingPayments = 0,
-            settledPayments = 0,
-            totalGroups = 0,
-            totalMembers = 0,
-            groupExpenses = 0,
-          } = statsResponse.data || {};
-
-          // Set state with non-zero values directly, preserving data
-          setTotalExpenses(expenses || null);
-          setPendingPayments(pendingPayments || null);
-          setSettledPayments(settledPayments || null);
-          setTotalGroups(totalGroups || null);
-          setTotalMembers(totalMembers || null);
-          setGroupExpenses(groupExpenses || null);
-
-          // Evaluate hasData immediately with API response data (before state updates)
-          const initialHasData =
-            expenses > 0 ||
-            pendingPayments > 0 ||
-            settledPayments > 0 ||
-            totalGroups > 0 ||
-            totalMembers > 0 ||
-            groupExpenses > 0;
-
-          // Fetch recent transactions
-          // console.log(
-          //   "Fetching transactions from:",
-          //   `${API_URL}/transactions/recent`
-          // );
-          try {
-            const transactionsResponse = await axios.get(
-              `${API_URL}/transactions/recent`,
-              {
-                headers: { Authorization: `Bearer ${storedToken}` },
-              }
-            );
-            // console.log(
-            //   "Transactions response data:",
-            //   transactionsResponse.data
-            // );
-            const transactions = transactionsResponse.data.transactions || [];
-            setRecentTransactions(transactions);
-
-            // Update hasData with transactions data
-            const finalHasData =
-              initialHasData ||
-              (transactions.length > 0 &&
-                transactions.some((txn: any) => txn.amount > 0));
-            setHasData(finalHasData);
-            //console.log("Final hasData set to:", finalHasData);
-          } catch (transactionsError: any) {
-            console.error("Transactions API error:", {
-              status: transactionsError.response?.status,
-              data: transactionsError.response?.data,
-              message: transactionsError.message,
-            });
-            if (transactionsError.response?.status === 500) {
-              setRecentTransactions([]); // Assume no transactions for new users
-              setHasData(initialHasData); // Use stats-based hasData if transactions fail
-            } else {
-              throw transactionsError; // Re-throw other errors
-            }
-          }
-        } catch (statsError: any) {
-          console.error("Stats API error:", {
-            status: statsError.response?.status,
-            data: statsError.response?.data,
-            message: statsError.message,
-          });
-          if (statsError.response?.status === 500) {
-            // Handle 500 error gracefully—assume no data for new users
-            setTotalExpenses(null);
-            setPendingPayments(null);
-            setSettledPayments(null);
-            setTotalGroups(null);
-            setTotalMembers(null);
-            setGroupExpenses(null);
-            setRecentTransactions([]);
-            setHasData(false);
-          } else {
-            throw statsError; // Re-throw other errors
-          }
-        }
-
-        setLoading(false);
-      } catch (error: any) {
-        console.error("Critical error fetching dashboard data:", {
-          status: error.response?.status,
-          data: error.response?.data,
-          message: error.message,
+        console.log("Fetching stats from:", `${API_URL}/stats`);
+        const statsResponse = await axios.get(`${API_URL}/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (error.response?.status === 401) {
-          router.push("/login"); // Redirect on unauthorized access
-        } else {
-          setError(
-            error.response?.data?.message || "Failed to load dashboard data"
+        console.log("Stats response data:", statsResponse.data);
+        const {
+          totalExpenses: expenses = 0,
+          pendingPayments = 0,
+          settledPayments = 0,
+          totalGroups = 0,
+          totalMembers = 0,
+          groupExpenses = 0,
+        } = statsResponse.data || {};
+
+        // Set state with non-zero values directly, preserving data
+        setTotalExpenses(expenses || null);
+        setPendingPayments(pendingPayments || null);
+        setSettledPayments(settledPayments || null);
+        setTotalGroups(totalGroups || null);
+        setTotalMembers(totalMembers || null);
+        setGroupExpenses(groupExpenses || null);
+
+        // Evaluate hasData immediately with API response data (before state updates)
+        const initialHasData =
+          expenses > 0 ||
+          pendingPayments > 0 ||
+          settledPayments > 0 ||
+          totalGroups > 0 ||
+          totalMembers > 0 ||
+          groupExpenses > 0;
+
+        // Fetch recent transactions
+        console.log(
+          "Fetching transactions from:",
+          `${API_URL}/transactions/recent`
+        );
+        try {
+          const transactionsResponse = await axios.get(
+            `${API_URL}/transactions/recent`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
           );
+          console.log("Transactions response data:", transactionsResponse.data);
+          const transactions = transactionsResponse.data.transactions || [];
+          setRecentTransactions(transactions);
+
+          // Update hasData with transactions data
+          const finalHasData =
+            initialHasData ||
+            (transactions.length > 0 &&
+              transactions.some((txn: any) => txn.amount > 0));
+          setHasData(finalHasData);
+          console.log("Final hasData set to:", finalHasData);
+        } catch (transactionsError: any) {
+          console.error("Transactions API error:", {
+            status: transactionsError.response?.status,
+            data: transactionsError.response?.data,
+            message: transactionsError.message,
+          });
+          if (transactionsError.response?.status === 500) {
+            setRecentTransactions([]); // Assume no transactions for new users
+            setHasData(initialHasData); // Use stats-based hasData if transactions fail
+          } else {
+            throw transactionsError; // Re-throw other errors
+          }
         }
-        setLoading(false);
+      } catch (statsError: any) {
+        console.error("Stats API error:", {
+          status: statsError.response?.status,
+          data: statsError.response?.data,
+          message: statsError.message,
+        });
+        if (statsError.response?.status === 500) {
+          // Handle 500 error gracefully—assume no data for new users
+          setTotalExpenses(null);
+          setPendingPayments(null);
+          setSettledPayments(null);
+          setTotalGroups(null);
+          setTotalMembers(null);
+          setGroupExpenses(null);
+          setRecentTransactions([]);
+          setHasData(false);
+        } else {
+          throw statsError; // Re-throw other errors
+        }
+      } finally {
+        setDashboardLoading(false);
       }
     };
 
     fetchData();
-  }, [router]);
+  }, [router, token, user]); // Add token and user as dependencies to re-run if they change
 
-  if (loading) {
+  if (authLoading || dashboardLoading) {
     return (
       <div className="flex min-h-screen mt-20 justify-center items-center">
         <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
@@ -206,7 +187,7 @@ export default function Dashboard() {
     );
   }
 
-  if (error) {
+  if (authError || dashboardError) {
     return (
       <div className="flex min-h-screen mt-20 justify-center items-center">
         <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-shake">
@@ -229,7 +210,8 @@ export default function Dashboard() {
             Error Loading Dashboard
           </p>
           <p className="text-sm text-gray-600">
-            {error}. Please try again or contact support if the issue persists.
+            {authError || dashboardError}. Please try again or contact support
+            if the issue persists.
           </p>
           <button
             onClick={() => window.location.reload()}
@@ -320,26 +302,6 @@ export default function Dashboard() {
                   className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
                 />
               </motion.div>
-
-              {/* Transactions Icon */}
-              {/* <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center p-4 bg-green-100 rounded-xl shadow-md hover:bg-green-200 transition-all duration-300"
-              >
-                <FontAwesomeIcon
-                  icon={faWallet}
-                  className="text-green-600 text-3xl mb-2 animate-bounce-slow"
-                />
-                <p className="text-gray-800 font-semibold">
-                  Track Transactions
-                </p>
-                <Button
-                  text="Go to Transactions"
-                  onClick={() => router.push("/transactions")}
-                  className="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
-                />
-              </motion.div> */}
             </div>
 
             {/* Inspirational Lightbulb */}
@@ -363,9 +325,6 @@ export default function Dashboard() {
   }
 
   // Existing dashboard content for users with data
-  // Extract first name from fullName (assuming fullName is "First Last")
-  //const firstName = user?.fullName.split(" ")[0] || "User";
-
   return (
     <div className="flex mt-20">
       {/* Sidebar */}
