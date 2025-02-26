@@ -164,11 +164,11 @@ const Signup = () => {
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
       try {
-        console.log("Google OAuth Success Response:", response); // Debug log
+        console.log("Google OAuth Success Response:", response);
         const { credential } = response;
-        const { user, token } = await handleGoogleCallback(); // API call to get token and user
+        const redirectUri = window.location.origin + "/auth/google/callback";
+        const { user, token } = await handleGoogleCallback({ redirectUri });
         if (setToken && setUser) {
-          // Type guard
           setToken(token);
           setUser(user);
         }
@@ -181,7 +181,7 @@ const Signup = () => {
           setTimeout(() => router.push("/dashboard"), 2000);
         }, 2000);
       } catch (error: any) {
-        console.error("Google Signup Error:", error); // Debug log
+        console.error("Google Signup Error:", error);
         setShowToast({
           message: error.message || "Google Signup failed!",
           type: "error",

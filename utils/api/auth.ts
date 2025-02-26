@@ -24,24 +24,29 @@ export const googleAuth = () => {
 };
 
 // 🔹 Handle Google OAuth Callback (Updated to use API call instead of URLSearchParams)
-export const handleGoogleCallback = async (): Promise<{ user: any; token: string }> => {
+export const handleGoogleCallback = async (options?: { redirectUri?: string }): Promise<{ user: any; token: string }> => {
   try {
+    const redirectUri = options?.redirectUri || (typeof window !== 'undefined' ? window.location.origin + '/auth/google/callback' : 'https://split-ease-v1-tirth.vercel.app/auth/google/callback');
     const response = await axios.get(`${API_URL}/auth/google/callback`, {
-      withCredentials: true, // Include cookies if needed for authentication
+      withCredentials: true, // Include cookies for authentication
+      headers: {
+        'Origin': typeof window !== 'undefined' ? window.location.origin : 'https://split-ease-v1-tirth.vercel.app',
+        'Redirect-Uri': redirectUri, // Explicitly pass the redirect URI
+      },
     });
     const { token, user } = response.data;
 
     if (token && user) {
-      if (typeof window !== "undefined") {
-        // Optionally set cookies on client-side for persistence
+      if (typeof window !== 'undefined') {
         Cookies.set("userToken", token, { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "strict" });
         Cookies.set("user", JSON.stringify(user), { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "strict" });
       }
       return { user, token };
     }
 
-    throw new Error("Google authentication failed!");
+    throw new Error("Google authentication failed! Invalid token or user data.");
   } catch (error: any) {
+    console.error("Google Callback Error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.message || "Google authentication failed!");
   }
 };
