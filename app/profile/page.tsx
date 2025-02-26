@@ -250,7 +250,7 @@ export default function Profile() {
           });
           router.push("/login");
         }
-      }, 2000); // Wait 2 seconds before redirecting
+      }, 5000); // Wait 5 seconds before redirecting
     }
   }, [user, loading]); // ✅ Only triggers when `user` and `loading` change
 
