@@ -149,13 +149,21 @@ export default function Profile() {
             );
           } else {
             console.log(
-              "User is null or undefined after fetch, redirecting to login"
+              "User is null or undefined after fetch, delaying redirect to allow retry"
             );
-            setToast({
-              message: "Failed to load profile. Please log in again.",
-              type: "error",
-            });
-            router.push("/login"); // Redirect only if user is still null after fetch
+            // Delay redirect to give more time for the user data to load or retry fetch
+            const timer = setTimeout(() => {
+              if (mounted && !user) {
+                // Only redirect if user is still null after delay
+                setToast({
+                  message: "Failed to load profile. Please log in again.",
+                  type: "error",
+                });
+                router.push("/login");
+              }
+            }, 2000); // Increase delay to 2 seconds to allow fetch to complete
+
+            return () => clearTimeout(timer); // Cleanup the timer on unmount
           }
         }
       } catch (error) {
@@ -217,7 +225,7 @@ export default function Profile() {
           });
           router.push("/login");
         }
-      }, 1000); // Delay 1 second to give fetchUserProfile time to complete
+      }, 2000); // Increase delay to 2 seconds to give fetchUserProfile more time
 
       return () => clearTimeout(timer); // Cleanup the timer on unmount
     }
@@ -923,8 +931,8 @@ export default function Profile() {
                 <button
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
                   onClick={() =>
-                    suggestedFriends.length > 0 &&
                     !loading &&
+                    suggestedFriends.length > 0 &&
                     handleAddFriend(suggestedFriends[0]._id || "")
                   }
                   disabled={loading || suggestedFriends.length === 0}
