@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useState, useEffect, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import {
@@ -8,25 +14,58 @@ import {
   updateProfile,
   changePassword,
   addPaymentMethod,
+  searchFriend,
+  addFriend,
+  deleteFriend,
+  deletePayment,
 } from "../utils/api/profile";
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Define PaymentMethod interface inline
+interface PaymentMethod {
+  methodType: string;
+  accountDetails: string;
+  _id?: string; // Optional MongoDB _id field
+}
+
+// Define User interface inline
+interface User {
+  _id?: string; // Optional MongoDB _id field
+  fullName: string;
+  email: string;
+  gender?: "Male" | "Female" | "Other"; // Optional, enum from schema
+  password?: string; // Optional, only for non-Google users
+  resetPasswordToken?: string; // Optional
+  resetPasswordExpires?: Date; // Optional
+  googleId?: string; // Optional, for Google OAuth users
+  profilePic: string; // Default is "", but can be updated
+  friends: string[]; // Array of ObjectId strings (simpler for API responses)
+  paymentMethods: PaymentMethod[]; // Array of payment methods
+  createdAt?: Date; // Optional, from timestamps
+  updatedAt?: Date; // Optional, from timestamps
+}
+
 interface ProfileContextType {
-  user: any;
+  user: User | null;
   fetchUserProfile: () => Promise<void>;
   updateUserProfile: (updatedData: {
     fullName?: string;
     gender?: string;
+  }) => Promise<User>;
+  uploadProfilePic: (imageFile: File) => Promise<string>;
+  updatePassword: (passwords: {
+    oldPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
   }) => Promise<void>;
-  uploadProfilePic: (imageFile: File) => Promise<void>;
-  updatePassword: (passwords: any) => Promise<void>;
   addPayment: (paymentData: {
     methodType: string;
     accountDetails: string;
-  }) => Promise<void>;
+  }) => Promise<User>;
   addFriend: (friendId: string) => Promise<void>;
-  searchFriend: (friendName: string) => Promise<any>;
+  searchFriend: (friendName: string) => Promise<User[]>;
   deleteFriend: (friendId: string) => Promise<void>;
   deletePayment: (paymentId: string) => Promise<void>;
 }
@@ -34,8 +73,9 @@ interface ProfileContextType {
 export const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const { token, loading: authLoading } = useAuth() || {}; // Use token and loading from AuthContext
 
   const [toast, setToast] = useState<{
     message: string;
@@ -50,22 +90,20 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [toast]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (): Promise<void> => {
+    if (!token) {
+      console.error("❌ No token found, redirecting to login...");
+      router.push("/login");
+      return;
+    }
+
     try {
       //console.log("🔄 Fetching Profile Data...");
-      const token = localStorage.getItem("userToken");
-      if (!token) {
-        console.error("❌ No token found, redirecting to login...");
-        router.push("/login");
-        return;
-      }
-
-      const data = await fetchProfile(token);
+      const data = await fetchProfile(token); // Use token from AuthContext
       //console.log("✅ Profile Data Received:", data);
-
       setUser(data); // ✅ Update state with fetched user data
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Profile Fetch Error!");
+      throw new Error(error.message || "Profile Fetch Error!");
     }
   };
 
@@ -73,21 +111,15 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const updateUserProfile = async (updatedData: {
     fullName?: string;
     gender?: string;
-  }) => {
+  }): Promise<User> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
       //console.log("🔄 Sending Update Request:", updatedData);
-
-      const response = await axios.put(
-        `${API_URL}/profile/update`,
-        updatedData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      //console.log("✅ Update Successful:", response.data);
-      return response.data;
+      const response = await updateProfile(updatedData, token); // Correct parameter order: updatedData first, then token
+      //console.log("✅ Update Successful:", response);
+      setUser(response); // Update user state with new data
+      return response;
     } catch (error: any) {
       console.error(
         "Profile Update Error:",
@@ -100,11 +132,10 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ Upload or Update Profile Picture
-  const uploadProfilePic = async (imageFile: File) => {
-    try {
-      const token = localStorage.getItem("userToken");
-      if (!token) throw new Error("User not authenticated!");
+  const uploadProfilePic = async (imageFile: File): Promise<string> => {
+    if (!token) throw new Error("User not authenticated!");
 
+    try {
       const formData = new FormData();
       formData.append("profilePic", imageFile);
 
@@ -115,11 +146,9 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
         },
       });
 
-      setUser((prevUser: any) => ({
-        ...prevUser,
-        profilePic: response.data.profilePic, // ✅ Update profile pic in context
-      }));
-
+      setUser((prevUser: User | null) =>
+        prevUser ? { ...prevUser, profilePic: response.data.profilePic } : null
+      ); // ✅ Update profile pic in context
       return response.data.profilePic; // ✅ Return updated image URL
     } catch (error: any) {
       console.error("Profile Picture Upload Error:", error);
@@ -134,25 +163,16 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     oldPassword: string;
     newPassword: string;
     confirmNewPassword: string;
-  }) => {
+  }): Promise<void> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) {
-        setToast({ message: "User not authenticated!", type: "error" });
-        return;
-      }
-
-      await changePassword(token, passwords); // ✅ Calls the correct API function from `utils/api/profile.ts`
-
+      const response = await changePassword(passwords, token); // Correct parameter order: passwords first, then token
       setToast({ message: "Password updated successfully!", type: "success" });
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to update password!"
       );
-      // setToast({
-      //   message: error.message || "Failed to update password!",
-      //   type: "error",
-      // });
     }
   };
 
@@ -160,80 +180,51 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const addPayment = async (paymentData: {
     methodType: string;
     accountDetails: string;
-  }) => {
-    try {
-      const token = localStorage.getItem("userToken");
-      if (!token) return;
+  }): Promise<User> => {
+    if (!token) throw new Error("User not authenticated!");
 
-      const updatedUser = await addPaymentMethod(token, paymentData); // ✅ API Call
+    try {
+      const updatedUser = await addPaymentMethod(paymentData, token); // Correct parameter order: paymentData first, then token
       setUser(updatedUser); // ✅ Update Context State with new payment methods
+      return updatedUser;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Add Payment Error:");
     }
   };
 
   // ✅ Search for a Friend by Name
-  const searchFriend = async (friendName: string) => {
+  const searchFriend = async (friendName: string): Promise<User[]> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) throw new Error("User not authenticated!");
-
-      const response = await axios.post(
-        `${API_URL}/profile/search-friends`, // ✅ FIXED: Ensure correct route
-        { friendName },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return response.data.friends || []; // ✅ Fix: Return empty array instead of null
+      const friends = await searchFriend(friendName); // Call without token, let profileAPI.ts handle it
+      return friends || []; // ✅ Fix: Return empty array instead of null
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to search friends"
       );
-
-      return [];
     }
   };
 
   // ✅ Add a Friend by ID
-  const addFriend = async (friendId: string) => {
+  const addFriend = async (friendId: string): Promise<void> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) throw new Error("User not authenticated!");
-
-      const response = await axios.post(
-        `${API_URL}/profile/add-friend`,
-        { friendId }, // ✅ Ensure correct payload
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const response = await addFriend(friendId); // Call without token, let profileAPI.ts handle it
       await fetchUserProfile(); // ✅ Refresh profile after adding
       setToast({ message: "Friend added successfully!", type: "success" });
-
-      return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to add friend");
-      //setToast({ message: "Failed to add friend!", type: "error" });
     }
   };
 
   // ✅ Delete a Friend by ID
-  const deleteFriend = async (friendId: string) => {
+  const deleteFriend = async (friendId: string): Promise<void> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) throw new Error("User not authenticated!");
-
-      const response = await axios.delete(
-        `${API_URL}/profile/delete-friend/${friendId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return response.data;
+      await deleteFriend(friendId); // Call without token, let profileAPI.ts handle it
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to delete friend"
@@ -242,19 +233,11 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // ✅ Delete a Payment by ID
-  const deletePayment = async (paymentId: string) => {
+  const deletePayment = async (paymentId: string): Promise<void> => {
+    if (!token) throw new Error("User not authenticated!");
+
     try {
-      const token = localStorage.getItem("userToken");
-      if (!token) throw new Error("User not authenticated!");
-
-      const response = await axios.delete(
-        `${API_URL}/profile/delete-payment/${paymentId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      return response.data;
+      await deletePayment(paymentId); // Call without token, let profileAPI.ts handle it
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to delete payment method"

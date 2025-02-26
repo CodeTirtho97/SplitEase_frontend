@@ -17,6 +17,30 @@ import {
 } from "@fortawesome/free-brands-svg-icons";
 import { ProfileContext } from "@/context/profileContext";
 
+// Define PaymentMethod interface inline
+interface PaymentMethod {
+  methodType: string;
+  accountDetails: string;
+  _id?: string; // Optional MongoDB _id field
+}
+
+// Define User interface inline
+interface User {
+  _id?: string; // Optional MongoDB _id field
+  fullName: string;
+  email: string;
+  gender?: "Male" | "Female" | "Other"; // Optional, enum from schema
+  password?: string; // Optional, only for non-Google users
+  resetPasswordToken?: string; // Optional
+  resetPasswordExpires?: Date; // Optional
+  googleId?: string; // Optional, for Google OAuth users
+  profilePic: string; // Default is "", but can be updated
+  friends: string[]; // Array of ObjectId strings (simpler for API responses)
+  paymentMethods: PaymentMethod[]; // Array of payment methods
+  createdAt?: Date; // Optional, from timestamps
+  updatedAt?: Date; // Optional, from timestamps
+}
+
 export default function Profile() {
   const router = useRouter();
   const pathname = usePathname(); // Detect navigation changes
@@ -31,7 +55,7 @@ export default function Profile() {
     );
   }
 
-  // ✅ Destructure profileContext
+  // ✅ Destructure profileContext with User type
   const {
     user,
     fetchUserProfile,
@@ -43,17 +67,40 @@ export default function Profile() {
     updatePassword,
     deleteFriend,
     deletePayment,
-  } = profileContext;
+  } = profileContext as {
+    user: User | null;
+    fetchUserProfile: () => Promise<void>;
+    updateUserProfile: (updatedData: {
+      fullName?: string;
+      gender?: string;
+    }) => Promise<User>;
+    uploadProfilePic: (imageFile: File) => Promise<string>;
+    searchFriend: (friendName: string) => Promise<User[]>;
+    addFriend: (friendId: string) => Promise<void>;
+    addPayment: (paymentData: {
+      methodType: string;
+      accountDetails: string;
+    }) => Promise<User>;
+    updatePassword: (passwords: {
+      oldPassword: string;
+      newPassword: string;
+      confirmNewPassword: string;
+    }) => Promise<void>;
+    deleteFriend: (friendId: string) => Promise<void>;
+    deletePayment: (paymentId: string) => Promise<void>;
+  };
 
   const [loading, setLoading] = useState(true); // Global loading for initial profile fetch
   const [isEditing, setIsEditing] = useState(false);
   const [updatedName, setUpdatedName] = useState(user?.fullName || "");
   const [updatedGender, setUpdatedGender] = useState(user?.gender || "other");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(
+    user?.profilePic || null
+  );
 
   // ✅ Friend Search (Local state for modal loading)
   const [friendName, setFriendName] = useState("");
-  const [suggestedFriends, setSuggestedFriends] = useState<any[]>([]);
+  const [suggestedFriends, setSuggestedFriends] = useState<User[]>([]);
   const [friendSearchLoading, setFriendSearchLoading] = useState(false); // Local loading for friend search
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -87,17 +134,14 @@ export default function Profile() {
           // Sync state with latest user data
           setUpdatedName(user.fullName || "");
           setUpdatedGender(user.gender || "other");
-          if (user.profilePic && user.profilePic.trim() !== "") {
-            setProfileImage(user.profilePic);
-          } else {
-            setProfileImage(
-              user.gender?.toLowerCase() === "male"
+          setProfileImage(
+            user.profilePic ||
+              (user.gender?.toLowerCase() === "male"
                 ? "/avatar_male.png"
                 : user.gender?.toLowerCase() === "female"
                 ? "/avatar_female.png"
-                : "/avatar_trans.png"
-            );
-          }
+                : "/avatar_trans.png")
+          );
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -181,7 +225,7 @@ export default function Profile() {
             updatedGender.slice(1).toLowerCase()
           : "Other";
 
-      await updateUserProfile({
+      const updatedUser = await updateUserProfile({
         fullName: updatedName,
         gender: formattedGender,
       });
@@ -196,41 +240,44 @@ export default function Profile() {
   };
 
   // ✅ Optimized Friend Search with Debouncing (Local loading state)
-  const handleFriendSearch = useCallback((name: string) => {
-    setFriendName(name);
+  const handleFriendSearch = useCallback(
+    (name: string) => {
+      setFriendName(name);
 
-    if (name.length < 2) {
-      setSuggestedFriends([]);
-      setToast(null);
-      setFriendSearchLoading(false); // Reset local loading
-      return;
-    }
-
-    setFriendSearchLoading(true); // Set local loading for friend search
-
-    if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-
-    debounceTimeout.current = setTimeout(async () => {
-      try {
-        const friends = await searchFriend(name);
-        setSuggestedFriends(friends);
-
-        if (friends.length === 0) {
-          setToast({ message: "No friends to add", type: "error" });
-        } else {
-          setToast(null); // ✅ Hide previous error
-        }
-      } catch (error) {
+      if (name.length < 2) {
         setSuggestedFriends([]);
-        setToast({
-          message: "No Friends found! Try again with some different name",
-          type: "error",
-        });
-      } finally {
-        setFriendSearchLoading(false); // Reset local loading after search
+        setToast(null);
+        setFriendSearchLoading(false); // Reset local loading
+        return;
       }
-    }, 500);
-  }, []);
+
+      setFriendSearchLoading(true); // Set local loading for friend search
+
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+      debounceTimeout.current = setTimeout(async () => {
+        try {
+          const friends = await searchFriend(name);
+          setSuggestedFriends(friends);
+
+          if (friends.length === 0) {
+            setToast({ message: "No friends to add", type: "error" });
+          } else {
+            setToast(null); // ✅ Hide previous error
+          }
+        } catch (error) {
+          setSuggestedFriends([]);
+          setToast({
+            message: "No Friends found! Try again with some different name",
+            type: "error",
+          });
+        } finally {
+          setFriendSearchLoading(false); // Reset local loading after search
+        }
+      }, 500);
+    },
+    [searchFriend]
+  );
 
   const handleAddFriend = async (friendId: string) => {
     try {
@@ -270,12 +317,12 @@ export default function Profile() {
 
     setLoading(true); // Set global loading for this operation
     try {
-      await addPayment({
+      const updatedUser = await addPayment({
         methodType: paymentType,
         accountDetails: paymentDetails,
       }); // ✅ Call Context Function
 
-      const userData = await fetchUserProfile(); // ✅ Fetch updated user data
+      await fetchUserProfile(); // ✅ Fetch updated user data
       setToast({ message: "Payment method added!", type: "success" });
 
       setIsAddPaymentModalOpen(false);
@@ -441,7 +488,7 @@ export default function Profile() {
               d="M4 12a8 8 0 018-8v8H4z"
             />
           </svg>
-          <p className="mt-4 text-xl font-medium text-gray-700">
+          <p className="mt-4 text-xl font-medium text-gray-600">
             Loading Profile...
           </p>
           <p className="text-sm text-gray-500">
@@ -505,7 +552,7 @@ export default function Profile() {
             />
           </div>
           <h2 className="text-xl font-semibold text-gray-800">
-            Welcome, {user?.fullName?.split(" ")[0] || "User"}!
+            Welcome, {user?.fullName.split(" ")[0] || "User"}!
           </h2>
 
           {/* Image Upload */}
@@ -599,7 +646,7 @@ export default function Profile() {
           {/* ✅ Show Contacts Dynamically */}
           <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.friends && user.friends.length > 0 ? (
-              user.friends.map((friend: any, index: number) => (
+              user.friends.map((friendId: string, index: number) => (
                 <div
                   key={index}
                   className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
@@ -612,18 +659,20 @@ export default function Profile() {
                   />
                   <div>
                     <p className="font-semibold">
-                      {friend.fullName || "Unknown"}
+                      {user.friends.find((f: string) => f === friendId) ||
+                        "Unknown"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {friend.email || "No email"}
+                      {user.friends.find((f: string) => f === friendId) ||
+                        "No email"}
                     </p>
                   </div>
 
                   {/* Delete Friend Button */}
                   <button
-                    onClick={() => handleDeleteFriend(friend._id)}
+                    onClick={() => handleDeleteFriend(friendId)}
                     className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                    title="Delete Payment"
+                    title="Delete Friend"
                     disabled={loading}
                   >
                     <FontAwesomeIcon icon={faTimes} />
@@ -656,33 +705,35 @@ export default function Profile() {
           {/* ✅ Show Payments Dynamically */}
           <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.paymentMethods && user.paymentMethods.length > 0 ? (
-              user.paymentMethods.map((method: any, index: number) => (
-                <div
-                  key={index}
-                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Dynamically Display Payment Icon */}
-                    <FontAwesomeIcon
-                      icon={getPaymentIcon(method.methodType)}
-                      className="text-3xl text-indigo-500"
-                    />
-                    <p className="text-sm text-gray-500">
-                      {method.accountDetails}
-                    </p>
-                  </div>
-
-                  {/* Delete Payment Button */}
-                  <button
-                    onClick={() => handleDeletePayment(method._id)}
-                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                    title="Delete Payment"
-                    disabled={loading}
+              user.paymentMethods.map(
+                (method: PaymentMethod, index: number) => (
+                  <div
+                    key={index}
+                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
                   >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                </div>
-              ))
+                    <div className="flex items-center gap-3">
+                      {/* Dynamically Display Payment Icon */}
+                      <FontAwesomeIcon
+                        icon={getPaymentIcon(method.methodType)}
+                        className="text-3xl text-indigo-500"
+                      />
+                      <p className="text-sm text-gray-500">
+                        {method.accountDetails}
+                      </p>
+                    </div>
+
+                    {/* Delete Payment Button */}
+                    <button
+                      onClick={() => handleDeletePayment(method._id || "")}
+                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                      title="Delete Payment"
+                      disabled={loading}
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                  </div>
+                )
+              )
             ) : (
               <p className="text-sm text-gray-500 cursor-default">
                 No payment methods added yet.
@@ -726,11 +777,11 @@ export default function Profile() {
               {/* Friend Suggestions Dropdown */}
               {suggestedFriends.length > 0 && (
                 <ul className="bg-gray-100 border border-gray-300 rounded mt-2">
-                  {suggestedFriends.map((friend) => (
+                  {suggestedFriends.map((friend: User) => (
                     <li
                       key={friend._id}
                       className="p-2 hover:bg-indigo-200 cursor-pointer"
-                      onClick={() => handleAddFriend(friend._id)}
+                      onClick={() => handleAddFriend(friend._id || "")}
                       //disabled={loading}
                     >
                       {friend.fullName} - {friend.email}
@@ -752,7 +803,7 @@ export default function Profile() {
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
                   onClick={() =>
                     suggestedFriends.length > 0 &&
-                    handleAddFriend(suggestedFriends[0]._id)
+                    handleAddFriend(suggestedFriends[0]._id || "")
                   }
                   disabled={loading || suggestedFriends.length === 0}
                 >

@@ -1,10 +1,19 @@
 import axios from "axios";
+import Cookies from "js-cookie"; // Using cookies instead of localStorage
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // 🔹 Fetch User Profile
-export const fetchProfile = async (token: string) => {
+export const fetchProfile = async (token?: string) => {
   try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
     const response = await axios.get(`${API_URL}/profile/me`, {
       headers: { Authorization: `Bearer ${token}` }, // Attach JWT token
     });
@@ -15,8 +24,16 @@ export const fetchProfile = async (token: string) => {
 };
 
 // ✅ Update Profile API
-export const updateProfile = async (token: string, updatedData: { fullName?: string; gender?: string }) => {
+export const updateProfile = async (updatedData: { fullName?: string; gender?: string }, token?: string,) => {
   try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
     const response = await axios.put(`${API_URL}/profile/update`, updatedData, {
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -28,10 +45,17 @@ export const updateProfile = async (token: string, updatedData: { fullName?: str
 
 // 🔹 Change Password API Call
 export const changePassword = async (
-  token: string,
-  passwords: { oldPassword: string; newPassword: string; confirmNewPassword: string }
+  passwords: { oldPassword: string; newPassword: string; confirmNewPassword: string }, token?: string
 ) => {
   try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
     //console.log("🔹 Sending Password Update Request...");
     
     const response = await axios.put(
@@ -51,8 +75,16 @@ export const changePassword = async (
 };
 
 // ✅ Add Payment Method API Call
-export const addPaymentMethod = async (token: string, paymentData: { methodType: string; accountDetails: string }) => {
+export const addPaymentMethod = async (paymentData: { methodType: string; accountDetails: string }, token?: string) => {
   try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
     const response = await axios.post(`${API_URL}/profile/add-payment`, paymentData, {
       headers: { Authorization: `Bearer ${token}` }, // Attach JWT token
     });
@@ -64,10 +96,15 @@ export const addPaymentMethod = async (token: string, paymentData: { methodType:
 };
 
 // 🔹 Search Friend by Name
-export const searchFriend = async (friendName: string) => {
+export const searchFriend = async (friendName: string, token?: string) => {
   try {
-    const token = localStorage.getItem("userToken");
-    if (!token) throw new Error("User not authenticated!");
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
 
     const response = await axios.post(
       `${API_URL}/profile/search-friends`,
@@ -84,10 +121,15 @@ export const searchFriend = async (friendName: string) => {
 };
 
 // 🔹 Add Friend API Call
-const addFriendAPI = async (friendId: string) => {
+export const addFriend = async (friendId: string, token?: string) => {
   try {
-    const token = localStorage.getItem("userToken");
-    if (!token) throw new Error("User not authenticated!");
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
 
     const response = await axios.post(
       `${API_URL}/profile/add-friend`,
@@ -103,4 +145,50 @@ const addFriendAPI = async (friendId: string) => {
   }
 };
 
-export { addFriendAPI as addFriend };
+// ✅ Delete a Friend by ID
+export const deleteFriend = async (friendId: string, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
+    const response = await axios.delete(
+      `${API_URL}/profile/delete-friend/${friendId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to delete friend");
+  }
+};
+
+// ✅ Delete a Payment by ID
+export const deletePayment = async (paymentId: string, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        throw new Error("User not authenticated!");
+      }
+    }
+
+    const response = await axios.delete(
+      `${API_URL}/profile/delete-payment/${paymentId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to delete payment method");
+  }
+};
