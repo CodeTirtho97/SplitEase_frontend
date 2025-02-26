@@ -227,7 +227,7 @@ export default function Profile() {
 
       const updatedUser = await updateUserProfile({
         fullName: updatedName,
-        gender: formattedGender,
+        gender: formattedGender as "Male" | "Female" | "Other", // Ensure type safety
       });
 
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend
@@ -241,7 +241,7 @@ export default function Profile() {
 
   // ✅ Optimized Friend Search with Debouncing (Local loading state)
   const handleFriendSearch = useCallback(
-    (name: string) => {
+    async (name: string) => {
       setFriendName(name);
 
       if (name.length < 2) {
@@ -258,17 +258,19 @@ export default function Profile() {
       debounceTimeout.current = setTimeout(async () => {
         try {
           const friends = await searchFriend(name);
-          setSuggestedFriends(friends);
+          setSuggestedFriends(friends || []);
 
           if (friends.length === 0) {
-            setToast({ message: "No friends to add", type: "error" });
+            setToast({ message: "No friends found", type: "error" });
           } else {
             setToast(null); // ✅ Hide previous error
           }
-        } catch (error) {
+        } catch (error: any) {
           setSuggestedFriends([]);
           setToast({
-            message: "No Friends found! Try again with some different name",
+            message:
+              error.message ||
+              "Failed to search friends! Try again with a different name",
             type: "error",
           });
         } finally {
@@ -330,9 +332,11 @@ export default function Profile() {
       setTimeout(() => {
         setShowPaymentToast(true); // ✅ Show toast AFTER modal is fully closed
       }, 300); // ✅ Small delay to allow re-render
-    } catch (error) {
+    } catch (error: any) {
       setToast({
-        message: "Unable to Add Payment! Try with some other Payment ID!",
+        message:
+          error.message ||
+          "Unable to add payment! Try with a different payment ID!",
         type: "error",
       });
     } finally {
@@ -597,7 +601,9 @@ export default function Profile() {
               className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center focus:ring-2 focus:ring-indigo-300 transition-all"
               value={updatedGender}
               disabled={!isEditing}
-              onChange={(e) => setUpdatedGender(e.target.value)}
+              onChange={(e) =>
+                setUpdatedGender(e.target.value as "male" | "female" | "other")
+              }
             >
               <option value="male">Male</option>
               <option value="female">Female</option>
@@ -623,16 +629,16 @@ export default function Profile() {
               />
             )}
 
-            {/* Open Password Change Modal */}
+            {/* Open Password Change Modal - Disabled only for Google OAuth users */}
             <Button
               text="Change Password"
               onClick={() => setIsPasswordModalOpen(true)}
               className={`w-full ${
-                !user?.password
+                user?.googleId
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-yellow-500 hover:bg-yellow-600"
               } text-white`}
-              disabled={!user?.password || loading}
+              disabled={!!user?.googleId || loading} // Disable only if googleId exists
             />
           </div>
         </div>
@@ -646,39 +652,39 @@ export default function Profile() {
           {/* ✅ Show Contacts Dynamically */}
           <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.friends && user.friends.length > 0 ? (
-              user.friends.map((friendId: string, index: number) => (
-                <div
-                  key={index}
-                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                >
-                  <Image
-                    src="/avatar_friend.png"
-                    alt="Friend Avatar"
-                    width={40}
-                    height={40}
-                  />
-                  <div>
-                    <p className="font-semibold">
-                      {user.friends.find((f: string) => f === friendId) ||
-                        "Unknown"}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {user.friends.find((f: string) => f === friendId) ||
-                        "No email"}
-                    </p>
-                  </div>
-
-                  {/* Delete Friend Button */}
-                  <button
-                    onClick={() => handleDeleteFriend(friendId)}
-                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                    title="Delete Friend"
-                    disabled={loading}
+              user.friends.map((friendId: string, index: number) => {
+                // Find friend details (assuming friendId is an ObjectId string)
+                const friendName =
+                  user.friends.find((f) => f === friendId) || "Unknown";
+                return (
+                  <div
+                    key={index}
+                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
                   >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                </div>
-              ))
+                    <Image
+                      src="/avatar_friend.png"
+                      alt="Friend Avatar"
+                      width={40}
+                      height={40}
+                    />
+                    <div>
+                      <p className="font-semibold">{friendName}</p>
+                      <p className="text-sm text-gray-500">No email</p>{" "}
+                      {/* Adjust if you have friend emails */}
+                    </div>
+
+                    {/* Delete Friend Button */}
+                    <button
+                      onClick={() => handleDeleteFriend(friendId)}
+                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                      title="Delete Friend"
+                      disabled={loading}
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                  </div>
+                );
+              })
             ) : (
               <p className="text-sm text-gray-500 cursor-default">
                 No contacts added yet.
