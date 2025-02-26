@@ -1,6 +1,6 @@
 "use client";
 import { useContext, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation"; // Removed usePathname to simplify and prevent unnecessary re-renders
+import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import Image from "next/image";
 import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -147,12 +147,14 @@ export default function Profile() {
                 : "/avatar_trans.png")
           );
         } else {
-          console.log("User is null or undefined after fetch");
+          console.log(
+            "User is null or undefined after fetch, redirecting to login"
+          );
           setToast({
             message: "Failed to load profile. Please log in again.",
             type: "error",
           });
-          setTimeout(() => router.push("/login"), 3000); // Redirect to login if no user data
+          router.push("/login"); // Immediate redirect instead of setTimeout
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -160,7 +162,7 @@ export default function Profile() {
           message: "Failed to load profile. Please log in again.",
           type: "error",
         });
-        setTimeout(() => router.push("/login"), 3000); // Redirect to login on fetch error
+        router.push("/login"); // Immediate redirect on error
       } finally {
         if (mounted) setLoading(false);
       }
@@ -200,10 +202,12 @@ export default function Profile() {
         setProfileImage(newProfileImage);
       }
     } else {
-      console.log("User is null, resetting state");
-      setUpdatedName("");
-      setUpdatedGender("other");
-      setProfileImage(null);
+      console.log("User is null, redirecting to login");
+      setToast({
+        message: "Session expired. Please log in again.",
+        type: "error",
+      });
+      router.push("/login"); // Redirect immediately if user becomes null
     }
   }, [user]); // Only update state when user changes from context, with change detection
 
@@ -888,7 +892,11 @@ export default function Profile() {
                     <li
                       key={friend._id}
                       className="p-2 hover:bg-indigo-200 cursor-pointer"
-                      onClick={() => handleAddFriend(friend._id || "")}
+                      onClick={
+                        loading
+                          ? undefined
+                          : () => handleAddFriend(friend._id || "")
+                      }
                     >
                       {friend.fullName} - {friend.email || "No email"}
                     </li>
