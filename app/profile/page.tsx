@@ -130,19 +130,18 @@ export default function Profile() {
       try {
         if (!user) {
           await fetchUserProfile(); // Fetch if user data is missing
-        } else {
-          // Sync state with latest user data
-          setUpdatedName(user.fullName || "");
-          setUpdatedGender(user.gender || "other");
-          setProfileImage(
-            user.profilePic ||
-              (user.gender?.toLowerCase() === "male"
-                ? "/avatar_male.png"
-                : user.gender?.toLowerCase() === "female"
-                ? "/avatar_female.png"
-                : "/avatar_trans.png")
-          );
         }
+        // Sync state with latest user data
+        setUpdatedName(user?.fullName || "");
+        setUpdatedGender(user?.gender || "other");
+        setProfileImage(
+          user?.profilePic ||
+            (user?.gender?.toLowerCase() === "male"
+              ? "/avatar_male.png"
+              : user?.gender?.toLowerCase() === "female"
+              ? "/avatar_female.png"
+              : "/avatar_trans.png")
+        );
       } catch (error) {
         console.error("Error fetching user profile:", error);
         setToast({
@@ -221,17 +220,20 @@ export default function Profile() {
     try {
       const formattedGender =
         updatedGender && updatedGender.trim() !== ""
-          ? updatedGender.charAt(0).toUpperCase() +
-            updatedGender.slice(1).toLowerCase()
+          ? ((updatedGender.charAt(0).toUpperCase() +
+              updatedGender.slice(1).toLowerCase()) as
+              | "Male"
+              | "Female"
+              | "Other")
           : "Other";
 
       const updatedUser = await updateUserProfile({
         fullName: updatedName,
-        gender: formattedGender as "Male" | "Female" | "Other", // Ensure type safety
+        gender: formattedGender,
       });
 
-      await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend
-
+      await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend to ensure UI updates
+      setUpdatedGender(updatedUser.gender || "other"); // Sync updatedGender with the latest user data
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
@@ -258,6 +260,7 @@ export default function Profile() {
       debounceTimeout.current = setTimeout(async () => {
         try {
           const friends = await searchFriend(name);
+          console.log("Friend search response:", friends);
           setSuggestedFriends(friends || []);
 
           if (friends.length === 0) {
@@ -266,6 +269,10 @@ export default function Profile() {
             setToast(null); // ✅ Hide previous error
           }
         } catch (error: any) {
+          console.error(
+            "Friend search error:",
+            error.response?.data || error.message
+          );
           setSuggestedFriends([]);
           setToast({
             message:
@@ -324,7 +331,7 @@ export default function Profile() {
         accountDetails: paymentDetails,
       }); // ✅ Call Context Function
 
-      await fetchUserProfile(); // ✅ Fetch updated user data
+      await fetchUserProfile(); // ✅ Fetch updated user data to ensure UI sync and prevent hydration issues
       setToast({ message: "Payment method added!", type: "success" });
 
       setIsAddPaymentModalOpen(false);
@@ -333,6 +340,10 @@ export default function Profile() {
         setShowPaymentToast(true); // ✅ Show toast AFTER modal is fully closed
       }, 300); // ✅ Small delay to allow re-render
     } catch (error: any) {
+      console.error(
+        "Payment addition error:",
+        error.response?.data || error.message
+      );
       setToast({
         message:
           error.message ||
@@ -653,9 +664,7 @@ export default function Profile() {
           <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
             {user?.friends && user.friends.length > 0 ? (
               user.friends.map((friendId: string, index: number) => {
-                // Find friend details (assuming friendId is an ObjectId string)
-                const friendName =
-                  user.friends.find((f) => f === friendId) || "Unknown";
+                // Placeholder for friend details (assuming friendId is an ObjectId string)
                 return (
                   <div
                     key={index}
@@ -668,9 +677,11 @@ export default function Profile() {
                       height={40}
                     />
                     <div>
-                      <p className="font-semibold">{friendName}</p>
+                      <p className="font-semibold">
+                        {friendId || "Unknown Friend"}
+                      </p>
                       <p className="text-sm text-gray-500">No email</p>{" "}
-                      {/* Adjust if you have friend emails */}
+                      {/* Adjust if you fetch friend details */}
                     </div>
 
                     {/* Delete Friend Button */}
@@ -790,7 +801,7 @@ export default function Profile() {
                       onClick={() => handleAddFriend(friend._id || "")}
                       //disabled={loading}
                     >
-                      {friend.fullName} - {friend.email}
+                      {friend.fullName} - {friend.email || "No email"}
                     </li>
                   ))}
                 </ul>
