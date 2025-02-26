@@ -237,22 +237,26 @@ export default function Profile() {
     }
   }, [user]);
 
+  const hasRedirected = useRef(false);
+
   useEffect(() => {
-    if (loading) return; // 🚀 Wait for loading to finish before deciding anything
+    if (loading || hasRedirected.current) return; // 🚀 Prevent redirecting while still fetching
 
     if (!user) {
-      console.log("User is still null, waiting before redirecting...");
+      console.log("User is null, waiting before redirecting...");
+
       setTimeout(() => {
-        if (!user && !loading) {
+        if (!user && !loading && !hasRedirected.current) {
+          hasRedirected.current = true; // 🚀 Ensure only one redirect happens
           setToast({
             message: "Session expired. Please log in again.",
             type: "error",
           });
           router.push("/login");
         }
-      }, 5000); // Wait 5 seconds before redirecting
+      }, 3000); // ⏳ Wait 3 seconds before redirecting to give fetchUserProfile enough time
     }
-  }, [user, loading]); // ✅ Only triggers when `user` and `loading` change
+  }, [user, loading]);
 
   useEffect(() => {
     if (toast) {
