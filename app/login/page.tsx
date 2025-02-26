@@ -117,12 +117,12 @@ export default function LoginPage() {
       }
 
       setShowToast({ message: "Login successful!", type: "success" });
-
       setTimeout(() => {
         setShowToast(null);
         router.push("/dashboard");
       }, 2000);
     } catch (error: any) {
+      console.error("Login Error:", error); // Debug log
       setShowToast({
         message: error.response?.data?.message || "Login failed!",
         type: "error",
@@ -159,10 +159,10 @@ export default function LoginPage() {
     }
   };
 
-  // Handle Google Auth Error (Updated to match type `() => void`)
+  // Handle Google Auth Error
   const handleGoogleError = () => {
     if (typeof window !== "undefined") {
-      console.error("Google Login Failed"); // Log error internally without parameter
+      console.error("Google Login Failed"); // Log error internally
       setShowToast({ message: "Google Login failed!", type: "error" });
       setTimeout(() => setShowToast(null), 3000);
     }
@@ -203,6 +203,7 @@ export default function LoginPage() {
           setIsLoading(false);
         }, 2000);
       } catch (error) {
+        console.error("Forgot Password Error:", error); // Debug log
         setTimeout(() => {
           setResetMessage("❌ Email Not Registered!");
           setIsLoading(false);
@@ -390,7 +391,7 @@ export default function LoginPage() {
           >
             <GoogleLoginComponent
               onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError} // Updated to match () => void
+              onError={handleGoogleError}
               useOneTap
             />
           </GoogleOAuthProvider>

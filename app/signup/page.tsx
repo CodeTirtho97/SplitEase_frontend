@@ -127,6 +127,7 @@ const Signup = () => {
         setTimeout(() => router.push("/dashboard"), 2000);
       }, 2000);
     } catch (error: any) {
+      console.error("Signup Error:", error); // Debug log
       setShowToast({
         message: error.response?.data?.message || "Signup failed!",
         type: "error",
@@ -190,10 +191,10 @@ const Signup = () => {
     }
   };
 
-  // Handle Google Auth Error (Updated to match type `() => void`)
+  // Handle Google Auth Error
   const handleGoogleError = () => {
     if (typeof window !== "undefined") {
-      console.error("Google Signup Failed"); // Log error internally without parameter
+      console.error("Google Signup Failed"); // Log error internally
       setShowToast({ message: "Google Signup failed!", type: "error" });
       setTimeout(() => setShowToast(null), 3000);
     }
@@ -420,7 +421,7 @@ const Signup = () => {
           >
             <GoogleLoginComponent
               onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError} // Updated to match () => void
+              onError={handleGoogleError}
               useOneTap
             />
           </GoogleOAuthProvider>
