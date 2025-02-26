@@ -238,14 +238,21 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (!user && !loading) {
-      setToast({
-        message: "Session expired. Please log in again.",
-        type: "error",
-      });
-      router.push("/login");
+    if (loading) return; // 🚀 Wait for loading to finish before deciding anything
+
+    if (!user) {
+      console.log("User is still null, waiting before redirecting...");
+      setTimeout(() => {
+        if (!user && !loading) {
+          setToast({
+            message: "Session expired. Please log in again.",
+            type: "error",
+          });
+          router.push("/login");
+        }
+      }, 2000); // Wait 2 seconds before redirecting
     }
-  }, [user, loading]); // ✅ Added `loading` to dependencies
+  }, [user, loading]); // ✅ Only triggers when `user` and `loading` change
 
   useEffect(() => {
     if (toast) {
