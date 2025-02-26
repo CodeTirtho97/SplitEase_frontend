@@ -122,12 +122,17 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
+  const isFetched = useRef(false); // Prevent redundant fetch calls
+
   // Fetch user profile on mount, delay redirects until fetch completes
   useEffect(() => {
     let mounted = true;
     console.log("Profile component mounted");
 
     const loadUserProfile = async () => {
+      if (isFetched.current) return; // 🚀 Prevent multiple API calls
+      isFetched.current = true; // ✅ Mark as fetched to prevent infinite loop
+
       setLoading(true);
       try {
         await fetchUserProfile(); // Fetch initial user data
@@ -186,11 +191,12 @@ export default function Profile() {
       mounted = false; // Cleanup to prevent state updates after unmount
       console.log("Profile component unmounted");
     };
-  }, [fetchUserProfile, router]); // Only run on mount
+  }, [router]); // Only run on mount
 
   // Sync state with user changes from context, but only if user exists and data changes
   useEffect(() => {
     console.log("User updated in Profile component:", user);
+    if (!user) return; // 🚀 Prevent unnecessary re-renders when user is null
     if (user) {
       const newName = user.fullName || "";
       const newGender =
@@ -229,7 +235,17 @@ export default function Profile() {
 
       return () => clearTimeout(timer); // Cleanup the timer on unmount
     }
-  }, [user, loading]); // Added loading to dependencies to check if fetch is still in progress
+  }, [user]);
+
+  useEffect(() => {
+    if (!user && !loading) {
+      setToast({
+        message: "Session expired. Please log in again.",
+        type: "error",
+      });
+      router.push("/login");
+    }
+  }, [user, loading]); // ✅ Added `loading` to dependencies
 
   useEffect(() => {
     if (toast) {
