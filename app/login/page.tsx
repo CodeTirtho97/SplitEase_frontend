@@ -340,6 +340,52 @@ export default function LoginPage() {
             d="M0,160L48,176C96,192,192,224,288,208C384,192,480,128,576,117.3C672,107,768,149,864,160C960,171,1056,149,1152,138.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           />
         </svg>
+        {typeof window !== "undefined" && (
+          <>
+            <div className="absolute top-20 left-10 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-indigo-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-40 left-60 animate-float">
+              <FontAwesomeIcon
+                icon={faLock}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-60 right-20 animate-float-fast">
+              <FontAwesomeIcon
+                icon={faGoogle}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-20 left-20 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faEnvelope}
+                className="text-green-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-40 right-40 animate-float">
+              <FontAwesomeIcon
+                icon={faExclamationCircle}
+                className="text-red-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute top-10 right-60 animate-float-fast">
+              <FontAwesomeIcon
+                icon={faUser}
+                className="text-indigo-400 text-4xl opacity-20"
+              />
+            </div>
+            <div className="absolute bottom-10 left-60 animate-float-slow">
+              <FontAwesomeIcon
+                icon={faLock}
+                className="text-purple-400 text-4xl opacity-20"
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Custom Toast Notification */}
@@ -386,15 +432,17 @@ export default function LoginPage() {
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
         {typeof window !== "undefined" && (
-          <GoogleOAuthProvider
-            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-          >
-            <GoogleLoginComponent
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              useOneTap
-            />
-          </GoogleOAuthProvider>
+          <div className="min-w-full border text-indigo-700 border-indigo-700 bg-violet-300 hover:bg-indigo-700 hover:text-white">
+            <GoogleOAuthProvider
+              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+            >
+              <GoogleLoginComponent
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+              />
+            </GoogleOAuthProvider>
+          </div>
         )}
 
         {/* Divider */}
