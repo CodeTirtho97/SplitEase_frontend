@@ -123,15 +123,17 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  // Fetch or update user profile on mount only, preventing infinite loops
+  // Fetch user profile on mount only, preventing infinite loops
   useEffect(() => {
     let mounted = true;
+    console.log("Profile component mounted");
 
     const loadUserProfile = async () => {
       setLoading(true);
       try {
         await fetchUserProfile(); // Fetch initial user data
         if (mounted && user) {
+          console.log("User fetched:", user);
           setUpdatedName(user.fullName || "");
           setUpdatedGender(
             (user.gender?.toLowerCase() as "male" | "female" | "other") ||
@@ -145,6 +147,8 @@ export default function Profile() {
                 ? "/avatar_female.png"
                 : "/avatar_trans.png")
           );
+        } else {
+          console.log("User is null or undefined after fetch");
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -162,27 +166,37 @@ export default function Profile() {
 
     return () => {
       mounted = false; // Cleanup to prevent state updates after unmount
+      console.log("Profile component unmounted");
     };
   }, [fetchUserProfile, router]); // Only run on mount
 
-  // Sync state with user changes from context, but only if necessary
+  // Sync state with user changes from context, but only if user exists and data changes
   useEffect(() => {
     console.log("User updated in Profile component:", user);
     if (user) {
-      setUpdatedName(user.fullName || "");
-      setUpdatedGender(
-        (user.gender?.toLowerCase() as "male" | "female" | "other") || "other"
-      );
-      setProfileImage(
+      const newName = user.fullName || "";
+      const newGender =
+        (user.gender?.toLowerCase() as "male" | "female" | "other") || "other";
+      const newProfileImage =
         user.profilePic ||
-          (user.gender?.toLowerCase() === "male"
-            ? "/avatar_male.png"
-            : user.gender?.toLowerCase() === "female"
-            ? "/avatar_female.png"
-            : "/avatar_trans.png")
-      );
+        (user.gender?.toLowerCase() === "male"
+          ? "/avatar_male.png"
+          : user.gender?.toLowerCase() === "female"
+          ? "/avatar_female.png"
+          : "/avatar_trans.png");
+
+      // Only update state if values have actually changed to prevent unnecessary re-renders
+      if (
+        updatedName !== newName ||
+        updatedGender !== newGender ||
+        profileImage !== newProfileImage
+      ) {
+        setUpdatedName(newName);
+        setUpdatedGender(newGender);
+        setProfileImage(newProfileImage);
+      }
     }
-  }, [user]); // Only update state when user changes from context
+  }, [user]); // Only update state when user changes from context, with change detection
 
   useEffect(() => {
     if (toast) {
@@ -230,6 +244,7 @@ export default function Profile() {
           type: "success",
         });
       } catch (error) {
+        console.error("Error uploading profile picture:", error);
         setToast({ message: "Failed to upload image", type: "error" });
         setProfileImage(
           user?.gender?.toLowerCase() === "male"
@@ -260,6 +275,7 @@ export default function Profile() {
       });
 
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend to ensure UI updates
+      console.log("Profile updated, new user data:", updatedUser);
       setUpdatedGender(
         (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
           "other"
@@ -267,6 +283,7 @@ export default function Profile() {
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
+      console.error("Error updating profile:", error);
       setToast({ message: "Failed to update profile!", type: "error" });
     }
   };
@@ -331,6 +348,7 @@ export default function Profile() {
         setShowFriendToast(true); // ✅ Show toast AFTER modal is fully closed
       }, 300); // ✅ Small delay to allow re-render
     } catch (error) {
+      console.error("Error adding friend:", error);
       setToast({ message: "Failed to add friend!", type: "error" });
     }
   };
@@ -364,6 +382,7 @@ export default function Profile() {
 
       // Ensure user is defined before updating state
       if (updatedUser) {
+        console.log("Payment added, new user data:", updatedUser);
         setUpdatedName(updatedUser.fullName || "");
         setUpdatedGender(
           (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
@@ -463,6 +482,7 @@ export default function Profile() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (error: any) {
+      console.error("Error changing password:", error);
       setToast({
         message: error.message || "Failed to change password!",
         type: "error",
@@ -496,6 +516,7 @@ export default function Profile() {
 
       await fetchUserProfile(); // ✅ Refresh UI
     } catch (error) {
+      console.error("Error deleting friend:", error);
       setToast({ message: "Failed to remove friend!", type: "error" });
     } finally {
       setLoading(false); // Stop global loading
@@ -510,6 +531,7 @@ export default function Profile() {
 
       await fetchUserProfile(); // ✅ Refresh UI
     } catch (error) {
+      console.error("Error deleting payment:", error);
       setToast({ message: "Failed to remove payment method!", type: "error" });
     } finally {
       setLoading(false); // Stop global loading
