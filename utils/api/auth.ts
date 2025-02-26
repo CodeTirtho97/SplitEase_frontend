@@ -29,10 +29,7 @@ export const handleGoogleCallback = async (options?: { redirectUri?: string }): 
     const redirectUri = options?.redirectUri || (typeof window !== 'undefined' ? window.location.origin + '/auth/google/callback' : 'https://split-ease-v1-tirth.vercel.app/auth/google/callback');
     const response = await axios.get(`${API_URL}/auth/google/callback`, {
       withCredentials: true, // Include cookies for authentication
-      headers: {
-        'Origin': typeof window !== 'undefined' ? window.location.origin : 'https://split-ease-v1-tirth.vercel.app',
-        'Redirect-Uri': redirectUri, // Explicitly pass the redirect URI
-      },
+      // Do not set 'Origin' header manually; let the browser handle it
     });
     const { token, user } = response.data;
 
