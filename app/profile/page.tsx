@@ -93,7 +93,9 @@ export default function Profile() {
   const [loading, setLoading] = useState(true); // Global loading for initial profile fetch
   const [isEditing, setIsEditing] = useState(false);
   const [updatedName, setUpdatedName] = useState(user?.fullName || "");
-  const [updatedGender, setUpdatedGender] = useState(user?.gender || "other");
+  const [updatedGender, setUpdatedGender] = useState(
+    user?.gender?.toLowerCase() || "other"
+  );
   const [profileImage, setProfileImage] = useState<string | null>(
     user?.profilePic || null
   );
@@ -128,12 +130,10 @@ export default function Profile() {
     const loadUserProfile = async () => {
       setLoading(true);
       try {
-        if (!user) {
-          await fetchUserProfile(); // Fetch if user data is missing
-        }
+        await fetchUserProfile(); // Fetch if user data is missing or to ensure latest data
         // Sync state with latest user data
         setUpdatedName(user?.fullName || "");
-        setUpdatedGender(user?.gender || "other");
+        setUpdatedGender(user?.gender?.toLowerCase() || "other");
         setProfileImage(
           user?.profilePic ||
             (user?.gender?.toLowerCase() === "male"
@@ -233,7 +233,7 @@ export default function Profile() {
       });
 
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend to ensure UI updates
-      setUpdatedGender(updatedUser.gender || "other"); // Sync updatedGender with the latest user data
+      setUpdatedGender(updatedUser.gender?.toLowerCase() || "other"); // Sync updatedGender with the latest user data
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
@@ -330,6 +330,20 @@ export default function Profile() {
         methodType: paymentType,
         accountDetails: paymentDetails,
       }); // ✅ Call Context Function
+
+      // Ensure user is defined before updating state
+      if (updatedUser) {
+        setUpdatedName(updatedUser.fullName || ""); // Sync name to prevent undefined errors
+        setUpdatedGender(updatedUser.gender?.toLowerCase() || "other");
+        setProfileImage(
+          updatedUser.profilePic ||
+            (updatedUser.gender?.toLowerCase() === "male"
+              ? "/avatar_male.png"
+              : updatedUser.gender?.toLowerCase() === "female"
+              ? "/avatar_female.png"
+              : "/avatar_trans.png")
+        );
+      }
 
       await fetchUserProfile(); // ✅ Fetch updated user data to ensure UI sync and prevent hydration issues
       setToast({ message: "Payment method added!", type: "success" });
@@ -515,7 +529,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 p-6">
+    <div
+      className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 p-6"
+      suppressHydrationWarning
+    >
       {/* Headings Section */}
       <div className="text-center mb-8 mt-20">
         <h1 className="text-5xl font-extrabold text-gray-800 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
@@ -567,7 +584,7 @@ export default function Profile() {
             />
           </div>
           <h2 className="text-xl font-semibold text-gray-800">
-            Welcome, {user?.fullName.split(" ")[0] || "User"}!
+            Welcome, {user?.fullName ? user.fullName.split(" ")[0] : "User"}!
           </h2>
 
           {/* Image Upload */}
@@ -661,7 +678,10 @@ export default function Profile() {
           </h3>
 
           {/* ✅ Show Contacts Dynamically */}
-          <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
+          <div
+            className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
+            suppressHydrationWarning
+          >
             {user?.friends && user.friends.length > 0 ? (
               user.friends.map((friendId: string, index: number) => {
                 // Placeholder for friend details (assuming friendId is an ObjectId string)
@@ -720,8 +740,11 @@ export default function Profile() {
           </h3>
 
           {/* ✅ Show Payments Dynamically */}
-          <div className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left">
-            {user?.paymentMethods && user.paymentMethods.length > 0 ? (
+          <div
+            className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
+            suppressHydrationWarning
+          >
+            {user && user.paymentMethods && user.paymentMethods.length > 0 ? (
               user.paymentMethods.map(
                 (method: PaymentMethod, index: number) => (
                   <div
@@ -799,7 +822,6 @@ export default function Profile() {
                       key={friend._id}
                       className="p-2 hover:bg-indigo-200 cursor-pointer"
                       onClick={() => handleAddFriend(friend._id || "")}
-                      //disabled={loading}
                     >
                       {friend.fullName} - {friend.email || "No email"}
                     </li>
