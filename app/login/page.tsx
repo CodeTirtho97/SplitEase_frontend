@@ -119,7 +119,7 @@ export default function LoginPage() {
       setShowToast({ message: "Login successful!", type: "success" });
       setTimeout(() => {
         setShowToast(null);
-        router.push("/profile");
+        router.push("/dashboard");
       }, 2000);
     } catch (error: any) {
       console.error("Login Error:", error); // Debug log
@@ -146,7 +146,7 @@ export default function LoginPage() {
         setShowToast({ message: "Login successful!", type: "success" });
         setTimeout(() => {
           setShowToast(null);
-          router.push("/profile");
+          router.push("/dashboard");
         }, 2000);
       } catch (error: any) {
         console.error("Google Login Error:", error); // Debug log
