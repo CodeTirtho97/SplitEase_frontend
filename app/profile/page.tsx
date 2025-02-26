@@ -1,6 +1,6 @@
 "use client";
 import { useContext, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Use usePathname for navigation detection
+import { useRouter } from "next/navigation"; // Removed usePathname to simplify and prevent unnecessary re-renders
 import Image from "next/image";
 import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -43,7 +43,6 @@ interface User {
 
 export default function Profile() {
   const router = useRouter();
-  const pathname = usePathname(); // Detect navigation changes
 
   // ✅ Ensure ProfileContext is valid before accessing user data
   const profileContext = useContext(ProfileContext);
@@ -149,6 +148,11 @@ export default function Profile() {
           );
         } else {
           console.log("User is null or undefined after fetch");
+          setToast({
+            message: "Failed to load profile. Please log in again.",
+            type: "error",
+          });
+          setTimeout(() => router.push("/login"), 3000); // Redirect to login if no user data
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -156,7 +160,7 @@ export default function Profile() {
           message: "Failed to load profile. Please log in again.",
           type: "error",
         });
-        setTimeout(() => router.push("/login"), 3000); // Redirect to login if profile fetch fails
+        setTimeout(() => router.push("/login"), 3000); // Redirect to login on fetch error
       } finally {
         if (mounted) setLoading(false);
       }
@@ -195,6 +199,11 @@ export default function Profile() {
         setUpdatedGender(newGender);
         setProfileImage(newProfileImage);
       }
+    } else {
+      console.log("User is null, resetting state");
+      setUpdatedName("");
+      setUpdatedGender("other");
+      setProfileImage(null);
     }
   }, [user]); // Only update state when user changes from context, with change detection
 
