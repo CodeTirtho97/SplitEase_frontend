@@ -123,14 +123,15 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  // Fetch or update user profile on mount, navigation, or context changes
+  // Fetch or update user profile on mount only, preventing infinite loops
   useEffect(() => {
+    let mounted = true;
+
     const loadUserProfile = async () => {
       setLoading(true);
       try {
         await fetchUserProfile(); // Fetch initial user data
-        // Sync state with latest user data only once, avoiding infinite loops
-        if (user) {
+        if (mounted && user) {
           setUpdatedName(user.fullName || "");
           setUpdatedGender(
             (user.gender?.toLowerCase() as "male" | "female" | "other") ||
@@ -153,15 +154,18 @@ export default function Profile() {
         });
         setTimeout(() => router.push("/login"), 3000); // Redirect to login if profile fetch fails
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    // Only run on mount or when pathname changes, not on user changes
     loadUserProfile();
-  }, [pathname, fetchUserProfile, router]); // Removed user from dependencies to prevent re-runs on user updates
 
-  // Sync state with user changes only when necessary (e.g., after API updates)
+    return () => {
+      mounted = false; // Cleanup to prevent state updates after unmount
+    };
+  }, [fetchUserProfile, router]); // Only run on mount, not on pathname or user changes
+
+  // Sync state with user changes from context, but only if necessary
   useEffect(() => {
     if (user) {
       setUpdatedName(user.fullName || "");
@@ -177,7 +181,7 @@ export default function Profile() {
             : "/avatar_trans.png")
       );
     }
-  }, [user]); // Only update state when user changes from context
+  }, [user]); // Only update state when user changes, but check for stability
 
   useEffect(() => {
     if (toast) {
