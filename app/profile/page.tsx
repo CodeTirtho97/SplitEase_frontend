@@ -163,10 +163,11 @@ export default function Profile() {
     return () => {
       mounted = false; // Cleanup to prevent state updates after unmount
     };
-  }, [fetchUserProfile, router]); // Only run on mount, not on pathname or user changes
+  }, [fetchUserProfile, router]); // Only run on mount
 
   // Sync state with user changes from context, but only if necessary
   useEffect(() => {
+    console.log("User updated in Profile component:", user);
     if (user) {
       setUpdatedName(user.fullName || "");
       setUpdatedGender(
@@ -181,7 +182,7 @@ export default function Profile() {
             : "/avatar_trans.png")
       );
     }
-  }, [user]); // Only update state when user changes, but check for stability
+  }, [user]); // Only update state when user changes from context
 
   useEffect(() => {
     if (toast) {
