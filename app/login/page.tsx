@@ -135,7 +135,7 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
       try {
-        console.log("Google OAuth Success Response:", response); // Debug log
+        //console.log("Google OAuth Success Response:", response); // Debug log
         const { credential } = response;
         const { user, token } = await handleGoogleCallback(); // API call to get token and user
         if (setToken && setUser) {
