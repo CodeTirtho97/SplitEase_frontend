@@ -122,64 +122,37 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  const isFetched = useRef(false); // Prevent redundant fetch calls
+  const isFetched = useRef(false);
 
-  // Fetch user profile on mount, delay redirects until fetch completes
   useEffect(() => {
     let mounted = true;
     console.log("Profile component mounted");
 
     const loadUserProfile = async () => {
       if (isFetched.current) return; // 🚀 Prevent multiple API calls
-      isFetched.current = true; // ✅ Mark as fetched to prevent infinite loop
+      isFetched.current = true; // ✅ Mark as fetched
 
       setLoading(true);
       try {
-        await fetchUserProfile(); // Fetch initial user data
-        if (mounted) {
+        await fetchUserProfile(); // ✅ Wait for fetch to complete
+        if (mounted && user) {
           console.log("User after fetch:", user);
-          if (user) {
-            setUpdatedName(user.fullName || "");
-            setUpdatedGender(
-              (user.gender?.toLowerCase() as "male" | "female" | "other") ||
-                "other"
-            );
-            setProfileImage(
-              user.profilePic ||
-                (user.gender?.toLowerCase() === "male"
-                  ? "/avatar_male.png"
-                  : user.gender?.toLowerCase() === "female"
-                  ? "/avatar_female.png"
-                  : "/avatar_trans.png")
-            );
-          } else {
-            console.log(
-              "User is null or undefined after fetch, delaying redirect to allow retry"
-            );
-            // Delay redirect to give more time for the user data to load or retry fetch
-            const timer = setTimeout(() => {
-              if (mounted && !user) {
-                // Only redirect if user is still null after delay
-                setToast({
-                  message: "Failed to load profile. Please log in again.",
-                  type: "error",
-                });
-                router.push("/login");
-              }
-            }, 2000); // Increase delay to 2 seconds to allow fetch to complete
-
-            return () => clearTimeout(timer); // Cleanup the timer on unmount
-          }
+          setUpdatedName(user.fullName || "");
+          setUpdatedGender(
+            (user.gender?.toLowerCase() as "male" | "female" | "other") ||
+              "other"
+          );
+          setProfileImage(
+            user.profilePic ||
+              (user.gender?.toLowerCase() === "male"
+                ? "/avatar_male.png"
+                : user.gender?.toLowerCase() === "female"
+                ? "/avatar_female.png"
+                : "/avatar_trans.png")
+          );
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        if (mounted) {
-          setToast({
-            message: "Failed to load profile. Please log in again.",
-            type: "error",
-          });
-          router.push("/login"); // Redirect on error
-        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -188,64 +161,43 @@ export default function Profile() {
     loadUserProfile();
 
     return () => {
-      mounted = false; // Cleanup to prevent state updates after unmount
+      mounted = false;
       console.log("Profile component unmounted");
     };
-  }, [router]); // Only run on mount
+  }, []);
 
   // Sync state with user changes from context, but only if user exists and data changes
   useEffect(() => {
-    console.log("User updated in Profile component:", user);
-    if (!user) return; // 🚀 Prevent unnecessary re-renders when user is null
-    if (user) {
-      const newName = user.fullName || "";
-      const newGender =
-        (user.gender?.toLowerCase() as "male" | "female" | "other") || "other";
-      const newProfileImage =
-        user.profilePic ||
-        (user.gender?.toLowerCase() === "male"
-          ? "/avatar_male.png"
-          : user.gender?.toLowerCase() === "female"
-          ? "/avatar_female.png"
-          : "/avatar_trans.png");
+    if (!user || isFetched.current) return; // 🚀 Run only on first mount when user is available
 
-      // Only update state if values have actually changed to prevent unnecessary re-renders
-      if (
-        updatedName !== newName ||
-        updatedGender !== newGender ||
-        profileImage !== newProfileImage
-      ) {
-        setUpdatedName(newName);
-        setUpdatedGender(newGender);
-        setProfileImage(newProfileImage);
-      }
-    } else {
-      console.log("User is null, delaying redirect to allow fetch");
-      // Delay redirect to allow fetchUserProfile to complete, but only if not already redirected
-      const timer = setTimeout(() => {
-        if (!loading) {
-          // Only redirect if loading is complete and user is still null
-          setToast({
-            message: "Session expired. Please log in again.",
-            type: "error",
-          });
-          router.push("/login");
-        }
-      }, 2000); // Increase delay to 2 seconds to give fetchUserProfile more time
+    const newName = user.fullName || "";
+    const newGender =
+      (user.gender?.toLowerCase() as "male" | "female" | "other") || "other";
+    const newProfileImage =
+      user.profilePic ||
+      (user.gender?.toLowerCase() === "male"
+        ? "/avatar_male.png"
+        : user.gender?.toLowerCase() === "female"
+        ? "/avatar_female.png"
+        : "/avatar_trans.png");
 
-      return () => clearTimeout(timer); // Cleanup the timer on unmount
-    }
-  }, [user]);
+    // ✅ Update only if values have changed (avoids redundant renders)
+    setUpdatedName(newName);
+    setUpdatedGender(newGender);
+    setProfileImage(newProfileImage);
+
+    isFetched.current = true; // ✅ Prevents unnecessary future updates
+  }, [user]); // ✅ Empty dependency array ensures this runs only once
 
   const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (loading || hasRedirected.current) return; // 🚀 Prevent redirecting while still fetching
+    if (loading || hasRedirected.current) return; // 🚀 Prevent redirecting while fetching
 
     if (!user) {
       console.log("User is null, waiting before redirecting...");
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         if (!user && !loading && !hasRedirected.current) {
           hasRedirected.current = true; // 🚀 Ensure only one redirect happens
           setToast({
@@ -254,9 +206,11 @@ export default function Profile() {
           });
           router.push("/login");
         }
-      }, 3000); // ⏳ Wait 3 seconds before redirecting to give fetchUserProfile enough time
+      }, 3000); // ⏳ Allow 3 seconds for fetch to complete
+
+      return () => clearTimeout(timer); // Cleanup on unmount
     }
-  }, [user, loading]);
+  }, [user, loading]); // ✅ Only triggers when user or loading changes
 
   useEffect(() => {
     if (toast) {
