@@ -431,17 +431,19 @@ export default function LoginPage() {
         </p>
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
-        {typeof window !== "undefined" && (
-          <GoogleOAuthProvider
-            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-          >
-            <GoogleLoginComponent
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              useOneTap
-            />
-          </GoogleOAuthProvider>
-        )}
+        <div className="flex justify-center">
+          {typeof window !== "undefined" && (
+            <GoogleOAuthProvider
+              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+            >
+              <GoogleLoginComponent
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+              />
+            </GoogleOAuthProvider>
+          )}
+        </div>
 
         {/* Divider */}
         <div className="relative flex items-center my-6">
