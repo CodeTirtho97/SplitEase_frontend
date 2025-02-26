@@ -415,7 +415,7 @@ const Signup = () => {
         </p>
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
-        <div className="flex justify-center">
+        <div className="flex justify-center min-w-full border border-indigo-500">
           {typeof window !== "undefined" && (
             <GoogleOAuthProvider
               clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
