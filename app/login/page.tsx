@@ -432,17 +432,15 @@ export default function LoginPage() {
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
         {typeof window !== "undefined" && (
-          <div className="min-w-full border text-indigo-700 border-indigo-700 bg-violet-300 hover:bg-indigo-700 hover:text-white">
-            <GoogleOAuthProvider
-              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-            >
-              <GoogleLoginComponent
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-              />
-            </GoogleOAuthProvider>
-          </div>
+          <GoogleOAuthProvider
+            clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+          >
+            <GoogleLoginComponent
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap
+            />
+          </GoogleOAuthProvider>
         )}
 
         {/* Divider */}
