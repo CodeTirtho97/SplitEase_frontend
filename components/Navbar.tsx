@@ -4,72 +4,41 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/Button";
-
-// Utility function to listen for storage changes
-const useStorageListener = (key: any, callback: any) => {
-  useEffect(() => {
-    const handleStorageChange = (event: any) => {
-      if (event.key === key) {
-        callback(event.newValue);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [key, callback]);
-};
+import { useAuth } from "@/context/authContext"; // Import useAuth from AuthContext
+import Cookies from "js-cookie"; // Import Cookies for token persistence
 
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname(); // Get the current route
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+  const { user, token, logout, loading: authLoading } = useAuth() || {}; // Use useAuth for authentication state
   const [showToast, setShowToast] = useState<{
     message: string;
     type: "success" | "error";
   } | null>(null);
 
-  // Check authentication on mount and update on localStorage changes
+  // State to track login status (derived from AuthContext)
+  const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+
+  // Update login status when token or user changes from AuthContext
   useEffect(() => {
-    const userToken = localStorage.getItem("userToken");
-    setIsLoggedIn(!!userToken);
+    setIsLoggedIn(!!token);
+  }, [token]); // Re-run when token changes
 
-    // Use a custom effect to monitor localStorage changes and pathname
-    const checkAuthState = () => {
-      const token = localStorage.getItem("userToken");
-      setIsLoggedIn(!!token);
-    };
-
-    // Monitor localStorage changes (same as useStorageListener, but simpler here)
-    const handleStorageChange = (event: any) => {
-      if (event.key === "userToken") {
-        checkAuthState();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    // Optionally, monitor pathname changes to re-evaluate state
-    const handlePopState = () => checkAuthState();
-    window.addEventListener("popstate", handlePopState);
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [pathname]); // Re-run when pathname changes to handle navigation
-
-  // Logout function
+  // Logout function using AuthContext
   const handleLogout = () => {
-    localStorage.removeItem("userToken"); // Clear token
-    setIsLoggedIn(false);
-    router.push("/login"); // Redirect to login page
-    setShowToast({ message: "Logged out successfully!", type: "success" });
-    setTimeout(() => {
-      setShowToast(null);
-      router.push("/login"); // Redirect to login
-    }, 2000);
+    if (logout) {
+      logout(); // Use AuthContext logout to clear state and cookies
+      setShowToast({ message: "Logged out successfully!", type: "success" });
+      setTimeout(() => {
+        setShowToast(null);
+        router.push("/login"); // Redirect to login after logout
+      }, 2000);
+    }
   };
+
+  if (authLoading) {
+    return null; // Or a loading spinner if desired
+  }
 
   return (
     <nav className="backdrop-blur-md bg-white/80 shadow-md fixed w-full top-0 left-0 px-6 py-4 z-50 h-16">
@@ -164,6 +133,17 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <div
+          className={`fixed top-20 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg transition-all duration-300 ${
+            showToast.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          {showToast.message}
+        </div>
+      )}
     </nav>
   );
 }
