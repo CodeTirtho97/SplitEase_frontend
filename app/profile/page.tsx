@@ -122,7 +122,7 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  // Fetch user profile on mount only, preventing infinite loops
+  // Fetch user profile on mount, delay redirects until fetch completes
   useEffect(() => {
     let mounted = true;
     console.log("Profile component mounted");
@@ -131,38 +131,42 @@ export default function Profile() {
       setLoading(true);
       try {
         await fetchUserProfile(); // Fetch initial user data
-        if (mounted && user) {
-          console.log("User fetched:", user);
-          setUpdatedName(user.fullName || "");
-          setUpdatedGender(
-            (user.gender?.toLowerCase() as "male" | "female" | "other") ||
-              "other"
-          );
-          setProfileImage(
-            user.profilePic ||
-              (user.gender?.toLowerCase() === "male"
-                ? "/avatar_male.png"
-                : user.gender?.toLowerCase() === "female"
-                ? "/avatar_female.png"
-                : "/avatar_trans.png")
-          );
-        } else {
-          console.log(
-            "User is null or undefined after fetch, redirecting to login"
-          );
+        if (mounted) {
+          console.log("User after fetch:", user);
+          if (user) {
+            setUpdatedName(user.fullName || "");
+            setUpdatedGender(
+              (user.gender?.toLowerCase() as "male" | "female" | "other") ||
+                "other"
+            );
+            setProfileImage(
+              user.profilePic ||
+                (user.gender?.toLowerCase() === "male"
+                  ? "/avatar_male.png"
+                  : user.gender?.toLowerCase() === "female"
+                  ? "/avatar_female.png"
+                  : "/avatar_trans.png")
+            );
+          } else {
+            console.log(
+              "User is null or undefined after fetch, redirecting to login"
+            );
+            setToast({
+              message: "Failed to load profile. Please log in again.",
+              type: "error",
+            });
+            router.push("/login"); // Redirect only if user is still null after fetch
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        if (mounted) {
           setToast({
             message: "Failed to load profile. Please log in again.",
             type: "error",
           });
-          router.push("/login"); // Immediate redirect instead of setTimeout
+          router.push("/login"); // Redirect on error
         }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        setToast({
-          message: "Failed to load profile. Please log in again.",
-          type: "error",
-        });
-        router.push("/login"); // Immediate redirect on error
       } finally {
         if (mounted) setLoading(false);
       }
@@ -202,14 +206,22 @@ export default function Profile() {
         setProfileImage(newProfileImage);
       }
     } else {
-      console.log("User is null, redirecting to login");
-      setToast({
-        message: "Session expired. Please log in again.",
-        type: "error",
-      });
-      router.push("/login"); // Redirect immediately if user becomes null
+      console.log("User is null, delaying redirect to allow fetch");
+      // Delay redirect to allow fetchUserProfile to complete, but only if not already redirected
+      const timer = setTimeout(() => {
+        if (!loading) {
+          // Only redirect if loading is complete and user is still null
+          setToast({
+            message: "Session expired. Please log in again.",
+            type: "error",
+          });
+          router.push("/login");
+        }
+      }, 1000); // Delay 1 second to give fetchUserProfile time to complete
+
+      return () => clearTimeout(timer); // Cleanup the timer on unmount
     }
-  }, [user]); // Only update state when user changes from context, with change detection
+  }, [user, loading]); // Added loading to dependencies to check if fetch is still in progress
 
   useEffect(() => {
     if (toast) {
@@ -754,39 +766,34 @@ export default function Profile() {
             suppressHydrationWarning
           >
             {user?.friends && user.friends.length > 0 ? (
-              user.friends.map((friendId: string, index: number) => {
-                // Placeholder for friend details (assuming friendId is an ObjectId string)
-                return (
-                  <div
-                    key={index}
-                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                  >
-                    <Image
-                      src="/avatar_friend.png"
-                      alt="Friend Avatar"
-                      width={40}
-                      height={40}
-                    />
-                    <div>
-                      <p className="font-semibold">
-                        {friendId || "Unknown Friend"}
-                      </p>
-                      <p className="text-sm text-gray-500">No email</p>{" "}
-                      {/* Adjust if you fetch friend details */}
-                    </div>
-
-                    {/* Delete Friend Button */}
-                    <button
-                      onClick={() => handleDeleteFriend(friendId)}
-                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                      title="Delete Friend"
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
+              user.friends.map((friendId: string, index: number) => (
+                <div
+                  key={index}
+                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
+                >
+                  <Image
+                    src="/avatar_friend.png"
+                    alt="Friend Avatar"
+                    width={40}
+                    height={40}
+                  />
+                  <div>
+                    <p className="font-semibold">
+                      {friendId || "Unknown Friend"}
+                    </p>
+                    <p className="text-sm text-gray-500">No email</p>{" "}
+                    {/* Adjust if you fetch friend details */}
                   </div>
-                );
-              })
+                  <button
+                    onClick={() => handleDeleteFriend(friendId)}
+                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                    title="Delete Friend"
+                    disabled={loading}
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
+                </div>
+              ))
             ) : (
               <p className="text-sm text-gray-500 cursor-default">
                 No contacts added yet.
@@ -832,8 +839,6 @@ export default function Profile() {
                         {method.accountDetails}
                       </p>
                     </div>
-
-                    {/* Delete Payment Button */}
                     <button
                       onClick={() => handleDeletePayment(method._id || "")}
                       className="text-gray-400 hover:text-red-500 transition-all duration-300"
@@ -891,7 +896,9 @@ export default function Profile() {
                   {suggestedFriends.map((friend: User) => (
                     <li
                       key={friend._id}
-                      className="p-2 hover:bg-indigo-200 cursor-pointer"
+                      className={`p-2 hover:bg-indigo-200 cursor-pointer ${
+                        loading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                       onClick={
                         loading
                           ? undefined
@@ -917,6 +924,7 @@ export default function Profile() {
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
                   onClick={() =>
                     suggestedFriends.length > 0 &&
+                    !loading &&
                     handleAddFriend(suggestedFriends[0]._id || "")
                   }
                   disabled={loading || suggestedFriends.length === 0}
