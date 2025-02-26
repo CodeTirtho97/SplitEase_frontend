@@ -92,13 +92,11 @@ export default function Profile() {
 
   const [loading, setLoading] = useState(true); // Global loading for initial profile fetch
   const [isEditing, setIsEditing] = useState(false);
-  const [updatedName, setUpdatedName] = useState(user?.fullName || "");
-  const [updatedGender, setUpdatedGender] = useState(
-    user?.gender?.toLowerCase() || "other"
-  );
-  const [profileImage, setProfileImage] = useState<string | null>(
-    user?.profilePic || null
-  );
+  const [updatedName, setUpdatedName] = useState("");
+  const [updatedGender, setUpdatedGender] = useState<
+    "male" | "female" | "other"
+  >("other");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
   // ✅ Friend Search (Local state for modal loading)
   const [friendName, setFriendName] = useState("");
@@ -130,18 +128,23 @@ export default function Profile() {
     const loadUserProfile = async () => {
       setLoading(true);
       try {
-        await fetchUserProfile(); // Fetch if user data is missing or to ensure latest data
-        // Sync state with latest user data
-        setUpdatedName(user?.fullName || "");
-        setUpdatedGender(user?.gender?.toLowerCase() || "other");
-        setProfileImage(
-          user?.profilePic ||
-            (user?.gender?.toLowerCase() === "male"
-              ? "/avatar_male.png"
-              : user?.gender?.toLowerCase() === "female"
-              ? "/avatar_female.png"
-              : "/avatar_trans.png")
-        );
+        await fetchUserProfile(); // Fetch initial user data
+        // Sync state with latest user data only once, avoiding infinite loops
+        if (user) {
+          setUpdatedName(user.fullName || "");
+          setUpdatedGender(
+            (user.gender?.toLowerCase() as "male" | "female" | "other") ||
+              "other"
+          );
+          setProfileImage(
+            user.profilePic ||
+              (user.gender?.toLowerCase() === "male"
+                ? "/avatar_male.png"
+                : user.gender?.toLowerCase() === "female"
+                ? "/avatar_female.png"
+                : "/avatar_trans.png")
+          );
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
         setToast({
@@ -154,8 +157,27 @@ export default function Profile() {
       }
     };
 
+    // Only run on mount or when pathname changes, not on user changes
     loadUserProfile();
-  }, [user, pathname, fetchUserProfile, router]); // Re-run when user, pathname, or fetchUserProfile changes
+  }, [pathname, fetchUserProfile, router]); // Removed user from dependencies to prevent re-runs on user updates
+
+  // Sync state with user changes only when necessary (e.g., after API updates)
+  useEffect(() => {
+    if (user) {
+      setUpdatedName(user.fullName || "");
+      setUpdatedGender(
+        (user.gender?.toLowerCase() as "male" | "female" | "other") || "other"
+      );
+      setProfileImage(
+        user.profilePic ||
+          (user.gender?.toLowerCase() === "male"
+            ? "/avatar_male.png"
+            : user.gender?.toLowerCase() === "female"
+            ? "/avatar_female.png"
+            : "/avatar_trans.png")
+      );
+    }
+  }, [user]); // Only update state when user changes from context
 
   useEffect(() => {
     if (toast) {
@@ -233,7 +255,10 @@ export default function Profile() {
       });
 
       await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend to ensure UI updates
-      setUpdatedGender(updatedUser.gender?.toLowerCase() || "other"); // Sync updatedGender with the latest user data
+      setUpdatedGender(
+        (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
+          "other"
+      ); // Sync updatedGender with the latest user data
       setIsEditing(false);
       setToast({ message: "Profile updated successfully!", type: "success" });
     } catch (error) {
@@ -310,10 +335,11 @@ export default function Profile() {
     if (showFriendToast) {
       setToast({ message: "Friend added successfully!", type: "success" });
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setToast(null);
         setShowFriendToast(false); // ✅ Reset showToast state
       }, 5000); // ✅ Keep toast visible for 5 seconds
+      return () => clearTimeout(timer);
     }
   }, [showFriendToast]);
 
@@ -333,8 +359,11 @@ export default function Profile() {
 
       // Ensure user is defined before updating state
       if (updatedUser) {
-        setUpdatedName(updatedUser.fullName || ""); // Sync name to prevent undefined errors
-        setUpdatedGender(updatedUser.gender?.toLowerCase() || "other");
+        setUpdatedName(updatedUser.fullName || "");
+        setUpdatedGender(
+          (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
+            "other"
+        );
         setProfileImage(
           updatedUser.profilePic ||
             (updatedUser.gender?.toLowerCase() === "male"
@@ -374,10 +403,11 @@ export default function Profile() {
     if (showPaymentToast) {
       setToast({ message: "Payment added successfully!", type: "success" });
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setToast(null);
         setShowPaymentToast(false); // ✅ Reset showToast state
       }, 5000); // ✅ Keep toast visible for 5 seconds
+      return () => clearTimeout(timer);
     }
   }, [showPaymentToast]);
 
@@ -441,10 +471,11 @@ export default function Profile() {
     if (showPasswordToast) {
       setToast({ message: "Password changed successfully!", type: "success" });
 
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setToast(null);
         setShowPasswordToast(false); // ✅ Reset showToast state
       }, 5000); // ✅ Keep toast visible for 5 seconds
+      return () => clearTimeout(timer);
     }
   }, [showPasswordToast]);
 
