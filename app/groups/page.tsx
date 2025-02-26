@@ -22,10 +22,12 @@ import {
   calculateOwes,
 } from "@/utils/api/group";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
 
 export default function Groups() {
   const router = useRouter();
   const { groups, refreshGroups, friends, refreshFriends } = useGroups();
+  const { token, loading: authLoading } = useAuth() || {}; // Use useAuth for authentication state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,14 +42,9 @@ export default function Groups() {
   // Fetch Who Owes Whom Data (Client-side only)
   useEffect(() => {
     const fetchOwesData = async () => {
-      if (selectedGroup && typeof window !== "undefined") {
+      if (selectedGroup && typeof window !== "undefined" && token) {
         try {
-          const token = Cookies.get("userToken");
-          if (!token) {
-            console.warn("User not authenticated, cannot calculate owes.");
-            return;
-          }
-          const owesData = await calculateOwes(selectedGroup._id, token); // Pass token
+          const owesData = await calculateOwes(selectedGroup._id, token); // Use token from AuthContext
           setOwesList(owesData);
         } catch (error) {
           console.error("Error calculating owes:", error);
@@ -56,7 +53,7 @@ export default function Groups() {
     };
 
     fetchOwesData();
-  }, [selectedGroup]);
+  }, [selectedGroup, token]);
 
   const [newGroup, setNewGroup] = useState({
     name: "",
@@ -95,20 +92,17 @@ export default function Groups() {
 
   // Fetch friends when modal opens (Client-side only)
   useEffect(() => {
-    if (isModalOpen && typeof window !== "undefined") {
-      refreshFriends(); // Calls the API only when modal opens
+    if (isModalOpen && typeof window !== "undefined" && token) {
+      refreshFriends(); // Calls the API only when modal opens, using token from groupContext
     }
-  }, [isModalOpen, refreshFriends]);
+  }, [isModalOpen, refreshFriends, token]);
 
   // Fetch groups on page load (Client-side only)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = Cookies.get("userToken");
-      if (token) {
-        refreshGroups();
-      }
+    if (typeof window !== "undefined" && token) {
+      refreshGroups(); // Use token from AuthContext via groupContext
     }
-  }, [refreshGroups]);
+  }, [refreshGroups, token]);
 
   // Log groups for debugging (Client-side only)
   useEffect(() => {
@@ -141,17 +135,14 @@ export default function Groups() {
 
   // ✅ Create New Group (Client-side only)
   const handleAddGroup = async () => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && token) {
       if (!newGroup.name.trim() || newGroup.members.length === 0) {
         setToast({ message: "Group name & members required!", type: "error" });
         return;
       }
 
       try {
-        const token = Cookies.get("userToken");
-        if (!token) throw new Error("User not authenticated!");
-
-        await createNewGroup(newGroup, token);
+        await createNewGroup(newGroup, token); // Use token from AuthContext
         setIsModalOpen(false);
         refreshGroups();
         setToast({ message: "Group created successfully!", type: "success" });
@@ -181,7 +172,7 @@ export default function Groups() {
   };
 
   const handleSaveGroup = async () => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && token) {
       if (newMembers.length < 1) {
         setToast({
           message:
@@ -191,9 +182,6 @@ export default function Groups() {
         return;
       }
 
-      const token = Cookies.get("userToken");
-      if (!token) throw new Error("User not authenticated!");
-
       const updatedData = {
         description: groupDescription,
         completed: completedStatus,
@@ -201,7 +189,7 @@ export default function Groups() {
       };
 
       try {
-        await updateGroup(selectedGroup._id, updatedData, token);
+        await updateGroup(selectedGroup._id, updatedData, token); // Use token from AuthContext
         setIsEditModalOpen(false);
         refreshGroups();
         setToast({ message: "Group updated successfully!", type: "success" });
@@ -221,12 +209,9 @@ export default function Groups() {
   };
 
   const handleConfirmDelete = async () => {
-    if (typeof window !== "undefined" && selectedGroup) {
+    if (typeof window !== "undefined" && selectedGroup && token) {
       try {
-        const token = Cookies.get("userToken");
-        if (!token) throw new Error("User not authenticated!");
-
-        await removeGroup(selectedGroup._id, token);
+        await removeGroup(selectedGroup._id, token); // Use token from AuthContext
         setIsDeleteModalOpen(false);
         refreshGroups();
         setToast({ message: "Group deleted successfully!", type: "success" });
@@ -238,7 +223,7 @@ export default function Groups() {
 
   // ✅ Fetch Group Transactions and "Who Owes Whom" when viewing a group (Client-side only)
   const handleViewGroup = async (group: any) => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && token) {
       if (!group || !group._id) {
         console.error("Invalid group selected:", group);
         setToast({ message: "Invalid group selected!", type: "error" });
@@ -249,13 +234,10 @@ export default function Groups() {
       setIsViewModalOpen(true);
 
       try {
-        const token = Cookies.get("userToken");
-        if (!token) throw new Error("User not authenticated!");
-
-        const transactions = await fetchGroupTransactions(group._id, token);
+        const transactions = await fetchGroupTransactions(group._id, token); // Use token from AuthContext
         setGroupTransactions(transactions || { completed: [], pending: [] });
 
-        const owes = await calculateOwes(group._id, token);
+        const owes = await calculateOwes(group._id, token); // Use token from AuthContext
         setOwesList(owes || []);
       } catch (error: any) {
         console.error("Error fetching transactions:", error.message || error);
@@ -265,6 +247,41 @@ export default function Groups() {
       }
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen bg-gray-100 pt-20 justify-center items-center">
+        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
+          <svg
+            className="w-16 h-16 text-indigo-500 animate-spin"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            />
+          </svg>
+          <p className="mt-4 text-xl font-medium text-gray-700">
+            Loading Groups...
+          </p>
+          <p className="text-sm text-gray-500">
+            Please wait while we fetch your groups securely.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -400,180 +417,6 @@ export default function Groups() {
             )}
           </div>
 
-          {isEditModalOpen && selectedGroup && (
-            <div
-              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
-              suppressHydrationWarning
-            >
-              <div className="bg-white p-8 rounded-lg shadow-lg w-[700px] max-w-2xl flex flex-col gap-6 relative">
-                <h2 className="text-xl font-bold text-center">Edit Group</h2>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="block text-gray-700 font-semibold">
-                        Group Name
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedGroup.name}
-                        disabled
-                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold">
-                        Group Type
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedGroup.type}
-                        disabled
-                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold">
-                        Group Description
-                      </label>
-                      <textarea
-                        value={groupDescription}
-                        onChange={(e) => setGroupDescription(e.target.value)}
-                        className="w-full border p-2 rounded"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={completedStatus}
-                        onChange={(e) => setCompletedStatus(e.target.checked)}
-                        className="w-5 h-5"
-                      />
-                      <label className="text-gray-700 font-semibold">
-                        Completed
-                      </label>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="block text-gray-700 font-semibold">
-                        Group Creator
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedGroup.createdBy?.fullName || "Unknown"}
-                        disabled
-                        className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-700 font-semibold">
-                        Group Members
-                      </label>
-                      <select
-                        onChange={(e) => {
-                          const newMemberId = e.target.value;
-                          if (
-                            newMemberId &&
-                            !newMembers.includes(newMemberId) &&
-                            newMemberId !== selectedGroup.createdBy._id
-                          )
-                            setNewMembers([...newMembers, newMemberId]);
-                        }}
-                        className="w-full border p-2 rounded mb-3"
-                        disabled={
-                          friends.length === 0 ||
-                          friends.every(
-                            (friend) =>
-                              friend._id === selectedGroup.createdBy._id ||
-                              newMembers.includes(friend._id)
-                          )
-                        }
-                      >
-                        {friends.length > 0 &&
-                        !friends.some(
-                          (friend) =>
-                            friend._id !== selectedGroup.createdBy._id &&
-                            !newMembers.includes(friend._id)
-                        ) ? (
-                          <option value="">No new friends to add</option>
-                        ) : (
-                          <>
-                            <option value="">Add a new member...</option>
-                            {friends
-                              .filter(
-                                (friend) =>
-                                  friend._id !== selectedGroup.createdBy._id &&
-                                  !newMembers.includes(friend._id)
-                              )
-                              .map((friend) => (
-                                <option key={friend._id} value={friend._id}>
-                                  {friend.fullName}
-                                </option>
-                              ))}
-                          </>
-                        )}
-                      </select>
-                      <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
-                        {newMembers.length > 0 ? (
-                          newMembers.map((memberId, index) => {
-                            const friend = friends.find(
-                              (f) => f._id === memberId
-                            );
-                            return (
-                              friend && (
-                                <span
-                                  key={index}
-                                  className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
-                                >
-                                  <span>{friend.fullName}</span>
-                                  <button
-                                    type="button"
-                                    className="text-white ml-2"
-                                    onClick={() => {
-                                      if (newMembers.length <= 1) {
-                                        setToast({
-                                          message:
-                                            "A group must have at least 2 members (including the creator)!",
-                                          type: "error",
-                                        });
-                                        return;
-                                      }
-                                      setNewMembers(
-                                        newMembers.filter((m) => m !== memberId)
-                                      );
-                                    }}
-                                  >
-                                    {"❌"}
-                                  </button>
-                                </span>
-                              )
-                            );
-                          })
-                        ) : (
-                          <p className="text-gray-500 text-sm italic">
-                            No members selected.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between mt-4">
-                  <Button
-                    text="Cancel"
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md"
-                  />
-                  <Button
-                    text="Save Changes"
-                    onClick={handleSaveGroup}
-                    className="bg-green-500 text-white px-4 py-2 rounded-md"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Completed Groups */}
           <div className="bg-white shadow-lg rounded-lg p-6">
             <h2 className="text-lg font-semibold text-gray-700 mb-4">
@@ -624,374 +467,351 @@ export default function Groups() {
                 ))
             )}
           </div>
+        </div>
 
-          {/* Delete Confirmation Modal (Client-side only) */}
-          {isDeleteModalOpen &&
-            selectedGroup &&
-            typeof window !== "undefined" && (
-              <div
-                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
-                suppressHydrationWarning
-              >
-                <div className="bg-white p-6 rounded-lg shadow-lg text-center transition-all transform scale-95 animate-fadeIn">
-                  <h2 className="text-xl font-semibold text-red-600">
-                    Delete Group
-                  </h2>
-                  <p className="text-gray-700 mt-3">
-                    Are you sure you want to delete{" "}
-                    <strong className="text-red-500">
-                      {selectedGroup.name || "this group"}
-                    </strong>
-                    ?
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    This action <span className="font-bold">cannot</span> be
-                    undone.
-                  </p>
-                  <div className="mt-4 bg-gray-100 p-4 rounded-md text-sm">
-                    <p>
-                      <strong>Type:</strong> {selectedGroup.type || "Unknown"}
-                    </p>
-                    <p>
-                      <strong>Created By:</strong>{" "}
-                      {typeof selectedGroup.createdBy === "object"
-                        ? selectedGroup.createdBy.fullName
-                        : "Unknown"}
-                    </p>
-                  </div>
-                  <div className="flex justify-center gap-4 mt-6">
-                    <Button
-                      text="Cancel"
-                      onClick={() => setIsDeleteModalOpen(false)}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-md transition"
-                    />
-                    <Button
-                      text="Delete"
-                      onClick={handleConfirmDelete}
-                      className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md transition"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-          {/* Create Group Modal (Client-side only) */}
-          {isModalOpen && typeof window !== "undefined" && (
+        {/* Delete Confirmation Modal (Client-side only) */}
+        {isDeleteModalOpen &&
+          selectedGroup &&
+          typeof window !== "undefined" && (
             <div
               className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
               suppressHydrationWarning
             >
-              <div className="bg-white p-6 rounded-lg shadow-lg w-[750px] max-w-[750px] flex flex-col gap-6 relative transition-all transform scale-95 animate-fadeIn">
-                <div className="flex justify-center mb-4">
-                  <Image
-                    src={avatarMap[newGroup.type]}
-                    alt={`${newGroup.type} Group Avatar`}
-                    width={80}
-                    height={80}
-                    className="rounded-full border-2 border-gray-300 shadow-lg"
-                  />
-                </div>
-                <h2 className="text-xl text-center font-semibold mb-4">
-                  Create a New Group
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center transition-all transform scale-95 animate-fadeIn">
+                <h2 className="text-xl font-semibold text-red-600">
+                  Delete Group
                 </h2>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      placeholder="Group Name *"
-                      value={newGroup.name}
-                      onChange={(e) =>
-                        setNewGroup({ ...newGroup, name: e.target.value })
-                      }
-                      className="w-full border p-2 rounded mb-3"
-                      required
-                    />
-                    <textarea
-                      placeholder="Group Description (optional)"
-                      value={newGroup.description}
-                      onChange={(e) =>
-                        setNewGroup({
-                          ...newGroup,
-                          description: e.target.value,
-                        })
-                      }
-                      className="w-full border p-2 rounded mb-3"
-                    />
-                    <select
-                      value={newGroup.type}
-                      onChange={handleGroupTypeChange}
-                      className="w-full border p-2 rounded mb-3"
-                      required
-                    >
-                      <option value="Travel">Travel/Trip</option>
-                      <option value="Household">Household</option>
-                      <option value="Event">Event/Party</option>
-                      <option value="Work">Work/Office</option>
-                      <option value="Friends">Friends/Family</option>
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-700 mb-2">
-                      Select Members
-                    </h3>
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        if (
-                          e.target.value &&
-                          !newGroup.members.includes(e.target.value)
-                        )
-                          setNewGroup((prevGroup) => ({
-                            ...prevGroup,
-                            members: [...prevGroup.members, e.target.value],
-                          }));
-                      }}
-                      className="w-full border p-2 rounded mb-3"
-                    >
-                      <option value="">Select a friend...</option>
-                      {friends.length > 0 ? (
-                        friends
-                          .filter(
-                            (friend) => !newGroup.members.includes(friend._id)
-                          )
-                          .map((friend) => (
-                            <option key={friend._id} value={friend._id}>
-                              {friend.fullName}
-                            </option>
-                          ))
-                      ) : (
-                        <option disabled>No friends found</option>
-                      )}
-                    </select>
-                    <h3 className="font-semibold text-gray-700 mt-2">
-                      Selected Members{" "}
-                      {newGroup.members.length > 0
-                        ? `(${newGroup.members.length})`
-                        : ""}
-                    </h3>
-                    <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
-                      {newGroup.members.length > 0 ? (
-                        newGroup.members.map((memberId, index) => {
-                          const friend = friends.find(
-                            (f) => f._id === memberId
-                          );
-                          return (
-                            friend && (
-                              <span
-                                key={index}
-                                className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
-                              >
-                                <span>{friend.fullName}</span>
-                                <button
-                                  type="button"
-                                  className="text-white ml-2"
-                                  onClick={() =>
-                                    setNewGroup((prevGroup) => ({
-                                      ...prevGroup,
-                                      members: prevGroup.members.filter(
-                                        (id) => id !== memberId
-                                      ),
-                                    }))
-                                  }
-                                >
-                                  {"❌"}
-                                </button>
-                              </span>
-                            )
-                          );
-                        })
-                      ) : (
-                        <p className="text-gray-500 text-sm italic">
-                          No members selected.
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                <p className="text-gray-700 mt-3">
+                  Are you sure you want to delete{" "}
+                  <strong className="text-red-500">
+                    {selectedGroup.name || "this group"}
+                  </strong>
+                  ?
+                </p>
+                <p className="text-sm text-gray-500 mt-1">
+                  This action <span className="font-bold">cannot</span> be
+                  undone.
+                </p>
+                <div className="mt-4 bg-gray-100 p-4 rounded-md text-sm">
+                  <p>
+                    <strong>Type:</strong> {selectedGroup.type || "Unknown"}
+                  </p>
+                  <p>
+                    <strong>Created By:</strong>{" "}
+                    {typeof selectedGroup.createdBy === "object"
+                      ? selectedGroup.createdBy.fullName
+                      : "Unknown"}
+                  </p>
                 </div>
-                <div className="flex justify-between mt-4">
+                <div className="flex justify-center gap-4 mt-6">
                   <Button
                     text="Cancel"
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-white bg-red-500 hover:bg-red-600 transition-all duration-300 ease-in-out px-6 py-3 rounded-md w-[45%]"
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-md transition"
                   />
                   <Button
-                    text="Create Group"
-                    onClick={handleAddGroup}
-                    className="text-white bg-green-500 hover:bg-green-600 transition-all duration-300 ease-in-out px-6 py-3 rounded-md w-[45%]"
+                    text="Delete"
+                    onClick={handleConfirmDelete}
+                    className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-md transition"
                   />
                 </div>
               </div>
             </div>
           )}
 
-          {/* View Group Modal (Client-side only) */}
-          {isViewModalOpen &&
-            selectedGroup &&
-            typeof window !== "undefined" && (
-              <div
-                className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
-                suppressHydrationWarning
-              >
-                <div className="bg-white p-8 rounded-lg shadow-lg w-[900px] max-w-5xl h-auto flex flex-col md:flex-row gap-8">
-                  <div className="flex-1 p-6">
-                    <div className="flex items-center gap-4">
-                      <Image
-                        src={
-                          selectedGroup?.avatar ||
-                          avatarMap[selectedGroup?.type] ||
-                          "/friends_group.png"
-                        }
-                        alt="Group Avatar"
-                        width={80}
-                        height={80}
-                        className="rounded-full border-2 shadow-lg"
-                      />
-                      <div>
-                        <h2 className="text-xl font-bold">
-                          {selectedGroup.name}
-                        </h2>
-                        <p className="text-gray-500 text-sm">
-                          {selectedGroup.type} Group
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <h3 className="font-semibold text-gray-700">
-                        Group Details
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {selectedGroup.description ||
-                          "No description provided."}
-                      </p>
-                    </div>
-                    <div className="mt-2">
-                      <h3 className="font-semibold text-gray-700">
-                        Group Owner
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {selectedGroup.createdBy?.fullName || "Unknown"}
-                      </p>
-                    </div>
-                    <h3 className="font-semibold text-gray-700 mt-4">
-                      Members ({selectedGroup?.members?.length || 0})
-                    </h3>
-                    <div className="flex flex-col text-start gap-2 mt-1 max-h-[200px] overflow-y-auto">
-                      {selectedGroup?.members?.map(
-                        (member: any, index: number) => (
-                          <span
-                            key={index}
-                            className="bg-white text-blue-600 px-3 py-1 rounded-md text-sm"
-                          >
-                            {member.fullName || "Unknown"}
-                          </span>
+        {/* Create Group Modal (Client-side only) */}
+        {isModalOpen && typeof window !== "undefined" && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+            suppressHydrationWarning
+          >
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[750px] max-w-[750px] flex flex-col gap-6 relative transition-all transform scale-95 animate-fadeIn">
+              <div className="flex justify-center mb-4">
+                <Image
+                  src={avatarMap[newGroup.type]}
+                  alt={`${newGroup.type} Group Avatar`}
+                  width={80}
+                  height={80}
+                  className="rounded-full border-2 border-gray-300 shadow-lg"
+                />
+              </div>
+              <h2 className="text-xl text-center font-semibold mb-4">
+                Create a New Group
+              </h2>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Group Name *"
+                    value={newGroup.name}
+                    onChange={(e) =>
+                      setNewGroup({ ...newGroup, name: e.target.value })
+                    }
+                    className="w-full border p-2 rounded mb-3"
+                    required
+                  />
+                  <textarea
+                    placeholder="Group Description (optional)"
+                    value={newGroup.description}
+                    onChange={(e) =>
+                      setNewGroup({ ...newGroup, description: e.target.value })
+                    }
+                    className="w-full border p-2 rounded mb-3"
+                  />
+                  <select
+                    value={newGroup.type}
+                    onChange={(e) =>
+                      setNewGroup({ ...newGroup, type: e.target.value })
+                    }
+                    className="w-full border p-2 rounded mb-3"
+                    required
+                  >
+                    <option value="Travel">Travel/Trip</option>
+                    <option value="Household">Household</option>
+                    <option value="Event">Event/Party</option>
+                    <option value="Work">Work/Office</option>
+                    <option value="Friends">Friends/Family</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-700 mb-2">
+                    Select Members
+                  </h3>
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (
+                        e.target.value &&
+                        !newGroup.members.includes(e.target.value)
+                      )
+                        setNewGroup((prevGroup) => ({
+                          ...prevGroup,
+                          members: [...prevGroup.members, e.target.value],
+                        }));
+                    }}
+                    className="w-full border p-2 rounded mb-3"
+                  >
+                    <option value="">Select a friend...</option>
+                    {friends.length > 0 ? (
+                      friends
+                        .filter(
+                          (friend) => !newGroup.members.includes(friend._id)
                         )
-                      )}
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-3">
-                      <div className="bg-gray-100 p-3 rounded-md text-center">
-                        <h4 className="text-gray-700 font-semibold">
-                          Start Date
-                        </h4>
-                        <p className="text-sm">
-                          {new Date(
-                            selectedGroup.createdAt
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="mt-2">
-                        <h3 className="font-semibold text-gray-700">
-                          Group Status
-                        </h3>
-                        <p
-                          className={`text-sm font-semibold ${
-                            selectedGroup.completed
-                              ? "text-green-600"
-                              : "text-blue-500"
-                          }`}
-                        >
-                          {selectedGroup.completed
-                            ? "✅ Completed"
-                            : "🟢 Active"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-center mt-10 bottom-2">
-                      <Button
-                        text="Close"
-                        onClick={() => setIsViewModalOpen(false)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-lg text-lg"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 p-6 flex flex-col gap-6 bg-gray-50 rounded-lg">
-                    <div>
-                      <h3 className="font-semibold text-gray-700">
-                        Pending Transactions ({groupTransactions.pending.length}
-                        )
-                      </h3>
-                      {groupTransactions.pending.length > 0 ? (
-                        groupTransactions.pending.map(
-                          (txn: any, index: number) => (
-                            <div
+                        .map((friend) => (
+                          <option key={friend._id} value={friend._id}>
+                            {friend.fullName}
+                          </option>
+                        ))
+                    ) : (
+                      <option disabled>No friends found</option>
+                    )}
+                  </select>
+                  <h3 className="font-semibold text-gray-700 mt-2">
+                    Selected Members{" "}
+                    {newGroup.members.length > 0
+                      ? `(${newGroup.members.length})`
+                      : ""}
+                  </h3>
+                  <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
+                    {newGroup.members.length > 0 ? (
+                      newGroup.members.map((memberId, index) => {
+                        const friend = friends.find((f) => f._id === memberId);
+                        return (
+                          friend && (
+                            <span
                               key={index}
-                              className="flex justify-between border-b py-2 text-yellow-600"
+                              className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
                             >
-                              <span className="text-gray-600">
-                                {txn.sender?.fullName || "Unknown"} →{" "}
-                                {txn.receiver?.fullName || "Unknown"}
-                              </span>
-                              <span className="font-bold">
-                                ₹{txn.amount.toLocaleString()}
-                              </span>
-                            </div>
+                              <span>{friend.fullName}</span>
+                              <button
+                                type="button"
+                                className="text-white ml-2"
+                                onClick={() =>
+                                  setNewGroup((prevGroup) => ({
+                                    ...prevGroup,
+                                    members: prevGroup.members.filter(
+                                      (id) => id !== memberId
+                                    ),
+                                  }))
+                                }
+                              >
+                                {"❌"}
+                              </button>
+                            </span>
                           )
-                        )
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          No pending transactions found.
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-700">
-                        Who Owes Whom ({owesList.length})
-                      </h3>
-                      {owesList.length > 0 ? (
-                        <ul className="text-gray-600">
-                          {owesList.map((entry, index) => (
-                            <li key={index} className="border-b py-2">
-                              {entry.from} owes {entry.to}{" "}
-                              <span className="font-bold">
-                                ₹{entry.amount.toLocaleString()}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          All payments settled!
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <button
-                        onClick={() => router.push("/expenses")}
-                        className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 text-lg"
-                      >
-                        Check Expenses
-                      </button>
-                      <button
-                        onClick={() => router.push("/payments")}
-                        className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg"
-                      >
-                        Settle Payments
-                      </button>
-                    </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-gray-500 text-sm italic">
+                        No members selected.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
-        </div>
+              <div className="flex justify-between mt-4">
+                <Button
+                  text="Cancel"
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-white bg-red-500 hover:bg-red-600 transition-all duration-300 ease-in-out px-6 py-3 rounded-md w-[45%]"
+                />
+                <Button
+                  text="Create Group"
+                  onClick={handleAddGroup}
+                  className="text-white bg-green-500 hover:bg-green-600 transition-all duration-300 ease-in-out px-6 py-3 rounded-md w-[45%]"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Group Modal (Client-side only) */}
+        {isViewModalOpen && selectedGroup && typeof window !== "undefined" && (
+          <div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+            suppressHydrationWarning
+          >
+            <div className="bg-white p-8 rounded-lg shadow-lg w-[900px] max-w-5xl h-auto flex flex-col md:flex-row gap-8">
+              <div className="flex-1 p-6">
+                <div className="flex items-center gap-4">
+                  <Image
+                    src={
+                      selectedGroup?.avatar ||
+                      avatarMap[selectedGroup?.type] ||
+                      "/friends_group.png"
+                    }
+                    alt="Group Avatar"
+                    width={80}
+                    height={80}
+                    className="rounded-full border-2 shadow-lg"
+                  />
+                  <div>
+                    <h2 className="text-xl font-bold">{selectedGroup.name}</h2>
+                    <p className="text-gray-500 text-sm">
+                      {selectedGroup.type} Group
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <h3 className="font-semibold text-gray-700">Group Details</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedGroup.description || "No description provided."}
+                  </p>
+                </div>
+                <div className="mt-2">
+                  <h3 className="font-semibold text-gray-700">Group Owner</h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedGroup.createdBy?.fullName || "Unknown"}
+                  </p>
+                </div>
+                <h3 className="font-semibold text-gray-700 mt-4">
+                  Members ({selectedGroup?.members?.length || 0})
+                </h3>
+                <div className="flex flex-col text-start gap-2 mt-1 max-h-[200px] overflow-y-auto">
+                  {selectedGroup?.members?.map((member: any, index: number) => (
+                    <span
+                      key={index}
+                      className="bg-white text-blue-600 px-3 py-1 rounded-md text-sm"
+                    >
+                      {member.fullName || "Unknown"}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="bg-gray-100 p-3 rounded-md text-center">
+                    <h4 className="text-gray-700 font-semibold">Start Date</h4>
+                    <p className="text-sm">
+                      {new Date(selectedGroup.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="mt-2">
+                    <h3 className="font-semibold text-gray-700">
+                      Group Status
+                    </h3>
+                    <p
+                      className={`text-sm font-semibold ${
+                        selectedGroup.completed
+                          ? "text-green-600"
+                          : "text-blue-500"
+                      }`}
+                    >
+                      {selectedGroup.completed ? "✅ Completed" : "🟢 Active"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex justify-center mt-10 bottom-2">
+                  <Button
+                    text="Close"
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="bg-red-500 hover:bg-red-600 text-white px-8 py-2 rounded-lg text-lg"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 p-6 flex flex-col gap-6 bg-gray-50 rounded-lg">
+                <div>
+                  <h3 className="font-semibold text-gray-700">
+                    Pending Transactions ({groupTransactions.pending.length})
+                  </h3>
+                  {groupTransactions.pending.length > 0 ? (
+                    groupTransactions.pending.map((txn: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex justify-between border-b py-2 text-yellow-600"
+                      >
+                        <span className="text-gray-600">
+                          {txn.sender?.fullName || "Unknown"} →{" "}
+                          {txn.receiver?.fullName || "Unknown"}
+                        </span>
+                        <span className="font-bold">
+                          ₹{txn.amount.toLocaleString()}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      No pending transactions found.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700">
+                    Who Owes Whom ({owesList.length})
+                  </h3>
+                  {owesList.length > 0 ? (
+                    <ul className="text-gray-600">
+                      {owesList.map((entry, index) => (
+                        <li key={index} className="border-b py-2">
+                          {entry.from} owes {entry.to}{" "}
+                          <span className="font-bold">
+                            ₹{entry.amount.toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-gray-500 italic">
+                      All payments settled!
+                    </p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => router.push("/expenses")}
+                    className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 text-lg"
+                  >
+                    Check Expenses
+                  </button>
+                  <button
+                    onClick={() => router.push("/payments")}
+                    className="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 text-lg"
+                  >
+                    Settle Payments
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

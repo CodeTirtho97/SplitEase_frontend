@@ -6,7 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // ✅ Fetch User's Groups
 export const fetchUserGroups = async (token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) {
@@ -19,8 +19,9 @@ export const fetchUserGroups = async (token?: string) => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
-    return response.data.groups;
+    return response.data.groups || [];
   } catch (error: any) {
+    console.error("Error fetching groups:", error.response?.data?.message || error.message);
     throw new Error(error.response?.data?.message || "Failed to fetch groups");
   }
 };
@@ -28,7 +29,7 @@ export const fetchUserGroups = async (token?: string) => {
 // ✅ Fetch Single Group Details
 export const fetchGroupDetails = async (groupId: string, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
@@ -42,7 +43,7 @@ export const fetchGroupDetails = async (groupId: string, token?: string) => {
 
     return response.data.group;
   } catch (error: any) {
-    console.error("Error fetching group details:", error);
+    console.error("Error fetching group details:", error.response?.data?.message || error.message);
     throw new Error(error.response?.data?.message || "Failed to fetch group details");
   }
 };
@@ -50,7 +51,7 @@ export const fetchGroupDetails = async (groupId: string, token?: string) => {
 // ✅ Create a New Group
 export const createNewGroup = async (groupData: any, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
@@ -69,19 +70,15 @@ export const createNewGroup = async (groupData: any, token?: string) => {
 // ✅ Update Group (Edit Description, Members, Completion Status)
 export const updateGroup = async (groupId: string, updatedData: any, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
     }
 
-    const response = await axios.put(
-      `${API_URL}/groups/edit/${groupId}`,
-      updatedData,
-      {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      }
-    );
+    const response = await axios.put(`${API_URL}/groups/edit/${groupId}`, updatedData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
 
     return response.data.updatedGroup;
   } catch (error: any) {
@@ -93,7 +90,7 @@ export const updateGroup = async (groupId: string, updatedData: any, token?: str
 // ✅ Delete Group
 export const removeGroup = async (groupId: string, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
@@ -112,7 +109,7 @@ export const removeGroup = async (groupId: string, token?: string) => {
 // ✅ Fetch Group Transactions (Last 5 Completed & Top 5 Pending)
 export const fetchGroupTransactions = async (groupId: string, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
@@ -133,9 +130,8 @@ export const fetchGroupTransactions = async (groupId: string, token?: string) =>
     return { completed, pending };
   } catch (error: any) {
     if (error.response?.status === 404) {
-      return { completed: [], pending: [] }; // Graceful return
+      return { completed: [], pending: [] }; // Graceful return for 404
     }
-
     console.error("Unexpected error fetching transactions:", error.message);
     return { completed: [], pending: [] };
   }
@@ -144,7 +140,7 @@ export const fetchGroupTransactions = async (groupId: string, token?: string) =>
 // ✅ Calculate Who Owes Whom (Based on Both Completed and Pending Transactions)
 export const calculateOwes = async (groupId: string, token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) throw new Error("User not authenticated!");
@@ -203,7 +199,7 @@ export const calculateOwes = async (groupId: string, token?: string) => {
 // ✅ Fetch User's Friends (From Group API)
 export const fetchUserFriends = async (token?: string) => {
   try {
-    // Get token from cookies instead of localStorage
+    // Use provided token or fall back to cookies if not provided
     if (!token) {
       token = Cookies.get("userToken");
       if (!token) {

@@ -9,7 +9,7 @@ import {
   removeGroup,
   fetchGroupDetails,
 } from "@/utils/api/group";
-import Cookies from "js-cookie"; // Optional: Added for potential future persistence, but not used here
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
 
 interface Friend {
   _id: string;
@@ -52,27 +52,43 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
   const [groups, setGroups] = useState<Group[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
+  const { token } = useAuth() || {}; // Use token from AuthContext
 
-  // ✅ Fetch Groups from API (Server-safe, async)
+  // ✅ Fetch Groups from API with token (Server-safe, async)
   const refreshGroups = async () => {
+    if (!token) {
+      console.warn("User not authenticated, returning empty groups list.");
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const userGroups = await fetchUserGroups();
+      const userGroups = await fetchUserGroups(token);
       setGroups(userGroups);
     } catch (error) {
       console.error("Error fetching groups:", error);
+      setGroups([]); // Handle error gracefully
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Fetch Friends from API (Server-safe, async)
+  // ✅ Fetch Friends from API with token (Server-safe, async)
   const refreshFriends = async () => {
+    if (!token) {
+      console.warn("User not authenticated, returning empty friends list.");
+      setFriends([]);
+      return;
+    }
+
     try {
-      const friendsList = await fetchUserFriends();
+      const friendsList = await fetchUserFriends(token);
       setFriends(friendsList);
     } catch (error) {
       console.error("Error fetching friends:", error);
+      setFriends([]); // Handle error gracefully
     }
   };
 
@@ -82,22 +98,25 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
       refreshFriends();
       refreshGroups();
     }
-  }, []);
+  }, [token]); // Re-run when token changes
 
   // ✅ Add a New Group (Server-safe, async)
   const addGroup = async (groupData: Omit<Group, "_id" | "createdAt">) => {
+    if (!token) throw new Error("User not authenticated!");
     try {
-      const newGroup = await createNewGroup(groupData);
+      const newGroup = await createNewGroup(groupData, token);
       setGroups((prevGroups) => [...prevGroups, newGroup]);
     } catch (error) {
       console.error("Error creating group:", error);
+      throw error;
     }
   };
 
   // ✅ Edit a Group (Server-safe, async)
   const editGroup = async (groupId: string, updatedData: Partial<Group>) => {
+    if (!token) throw new Error("User not authenticated!");
     try {
-      const updatedGroup = await updateGroup(groupId, updatedData);
+      const updatedGroup = await updateGroup(groupId, updatedData, token);
       setGroups((prevGroups) =>
         prevGroups.map((group) =>
           group._id === groupId ? updatedGroup : group
@@ -105,25 +124,29 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
       );
     } catch (error) {
       console.error("Error updating group:", error);
+      throw error;
     }
   };
 
   // ✅ Delete a Group (Server-safe, async)
   const deleteGroup = async (groupId: string) => {
+    if (!token) throw new Error("User not authenticated!");
     try {
-      await removeGroup(groupId);
+      await removeGroup(groupId, token);
       setGroups((prevGroups) =>
         prevGroups.filter((group) => group._id !== groupId)
       );
     } catch (error) {
       console.error("Error deleting group:", error);
+      throw error;
     }
   };
 
   // ✅ Fetch Group Details (Server-safe, async)
   const getGroupDetails = async (groupId: string): Promise<Group | null> => {
+    if (!token) throw new Error("User not authenticated!");
     try {
-      return await fetchGroupDetails(groupId);
+      return await fetchGroupDetails(groupId, token);
     } catch (error) {
       console.error("Error fetching group details:", error);
       return null;
