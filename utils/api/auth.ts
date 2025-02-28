@@ -32,7 +32,10 @@ export const login = async (credentials: { email: string; password: string }) =>
 // 🔹 Google OAuth Redirect
 export const googleAuth = () => {
   if (typeof window !== "undefined") {
-    const redirectUri = encodeURIComponent(window.location.origin + "/auth/google/callback");
+    // Use the exact URI that's registered in Google Cloud Console
+    const redirectUri = encodeURIComponent(
+      "https://split-ease-v1-tirth.vercel.app/auth/google/callback"
+    );
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login?redirect_uri=${redirectUri}`;
   }
 };
