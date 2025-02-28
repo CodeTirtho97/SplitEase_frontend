@@ -36,7 +36,7 @@ export const googleAuth = () => {
     const callbackUrl = `${window.location.origin}/auth/google/callback`;
     
     // Redirect to Google login with specified callback
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
   }
 };
 
