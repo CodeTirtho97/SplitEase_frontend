@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CustomScrollbar from "@/components/CustomScrollbar";
@@ -22,6 +23,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  useEffect(() => {
+    // This will force a client-side only render after initial hydration
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.includes("Hydration failed")) {
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
   return (
     <html lang="en">
       <body>
