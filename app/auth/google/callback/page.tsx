@@ -14,61 +14,58 @@ export default function GoogleCallbackPage() {
 
   useEffect(() => {
     async function processCallback() {
+      console.log("Window location:", window.location.href);
+      console.log("Available cookies:", document.cookie);
+      console.log("Search params:", window.location.search);
       try {
-        // Check if we already have user and token in context
-        if (user && token) {
-          router.push("/dashboard");
-          return;
-        }
+        setIsLoading(true);
 
-        // Get authentication data from cookies
+        // Try to get authentication data from cookies first
         const authToken = Cookies.get("googleAuthToken");
         const authUserString = Cookies.get("googleAuthUser");
 
-        if (authToken && authUserString && setToken && setUser) {
+        // If cookies are available, use them
+        if (authToken && authUserString) {
           try {
-            // Parse the user data from the cookie
             const authUser = JSON.parse(authUserString);
 
-            // Store in persistent cookies for session
-            Cookies.set("token", authToken, {
-              expires: 7,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-            });
-
-            Cookies.set("user", authUserString, {
-              expires: 7,
-              secure: process.env.NODE_ENV === "production",
-              sameSite: "lax",
-            });
-
-            // Remove temporary cookies
-            Cookies.remove("googleAuthToken");
-            Cookies.remove("googleAuthUser");
-
-            // Update auth context
-            setToken(authToken);
-            setUser(authUser);
-
-            // Show success message
-            setSuccess(true);
-
-            // Redirect to dashboard after a delay
-            setTimeout(() => {
-              router.push("/dashboard");
-            }, 1500);
-
+            // Set persistent cookies and auth context, then redirect
+            handleSuccessfulAuth(authToken, authUser);
             return;
           } catch (e) {
-            console.error("Error parsing user data:", e);
-            setError("Failed to process authentication data");
+            console.error("Error parsing cookie user data:", e);
           }
-        } else {
-          setError("No authentication data found");
         }
 
-        // If we reach here, redirect to login after delay
+        // After trying to get cookies
+        console.log("Auth token from cookie:", authToken);
+        console.log("Auth user from cookie:", authUserString);
+
+        // If cookies aren't available, try URL parameters
+        const params = new URLSearchParams(window.location.search);
+        const urlToken = params.get("token");
+        const encodedUserData = params.get("userData");
+
+        // After trying to get URL params
+        console.log("Token from URL:", urlToken);
+        console.log("User data from URL:", encodedUserData);
+
+        if (urlToken && encodedUserData) {
+          try {
+            // Decode the base64 encoded user data
+            const decodedUserData = atob(encodedUserData);
+            const authUser = JSON.parse(decodedUserData);
+
+            // Set persistent cookies and auth context, then redirect
+            handleSuccessfulAuth(urlToken, authUser);
+            return;
+          } catch (e) {
+            console.error("Error parsing URL user data:", e);
+          }
+        }
+
+        // If we reach here, no auth data was found
+        setError("No authentication data found");
         setTimeout(() => {
           router.push("/login");
         }, 3000);
@@ -81,6 +78,34 @@ export default function GoogleCallbackPage() {
       } finally {
         setIsLoading(false);
       }
+    }
+
+    // Helper function to handle successful authentication
+    function handleSuccessfulAuth(token: string, user: any) {
+      // Store in persistent cookies
+      Cookies.set("token", token, {
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      Cookies.set("user", JSON.stringify(user), {
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      // Update auth context
+      setToken(token);
+      setUser(user);
+
+      // Show success message
+      setSuccess(true);
+
+      // Redirect to dashboard after a delay
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
     }
 
     processCallback();
