@@ -32,7 +32,7 @@ const GoogleOAuthProvider = dynamic(
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setUser, setToken, loading, error, logout } =
+  const { setUser, setToken, user, token, loading, error, logout } =
     useContext(AuthContext) || {};
   const [form, setForm] = useState({
     email: "",
@@ -143,26 +143,27 @@ export default function LoginPage() {
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
       try {
-        //console.log("Google OAuth Success Response:", response); // Debug log
         const { credential } = response;
-        const { user, token } = await handleGoogleCallback(); // API call to get token and user
+        const { user, token } = await handleGoogleCallback();
+
         if (setToken && setUser) {
-          // Type guard
           setToken(token);
           setUser(user);
         }
+
         setShowToast({ message: "Login successful!", type: "success" });
-        setTimeout(() => {
-          setShowToast(null);
-          router.push("/dashboard");
-        }, 2000);
+
+        // Important: Wait for state updates with a Promise
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        // Force the router navigation
+        window.location.href = "/dashboard";
       } catch (error: any) {
-        console.error("Google Login Error:", error); // Debug log
+        console.error("Google Login Error:", error);
         setShowToast({
           message: error.message || "Google Login failed!",
           type: "error",
         });
-        setTimeout(() => setShowToast(null), 3000);
       }
     }
   };
@@ -270,6 +271,17 @@ export default function LoginPage() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    // Check if user is authenticated and should be redirected
+    if (user && token) {
+      const timer = setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, token, router]);
 
   return (
     <div
