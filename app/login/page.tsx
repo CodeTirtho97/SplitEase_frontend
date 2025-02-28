@@ -139,6 +139,18 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    if (typeof window !== "undefined") {
+      // Specify the callback URL
+      const callbackUrl = `${window.location.origin}/auth/google/callback`;
+
+      // Redirect to your backend's Google login route
+      window.location.href = `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/api/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
+    }
+  };
+
   // Handle Google Auth Success (Updated to use API-based callback)
   const handleGoogleSuccess = async (response: any) => {
     if (typeof window !== "undefined") {
@@ -454,24 +466,16 @@ export default function LoginPage() {
             <GoogleOAuthProvider
               clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
             >
-              <div className="w-full">
-                <button
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      import("../../utils/api/auth").then((module) => {
-                        module.googleAuth();
-                      });
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
-                >
-                  <FontAwesomeIcon
-                    icon={faGoogle}
-                    className="text-indigo-500 text-lg"
-                  />
-                  Continue with Google
-                </button>
-              </div>
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
+              >
+                <FontAwesomeIcon
+                  icon={faGoogle}
+                  className="text-indigo-500 text-lg"
+                />
+                Continue with Google
+              </button>
             </GoogleOAuthProvider>
           )}
         </div>
