@@ -1,3 +1,4 @@
+// In app/auth/google/callback/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,71 +8,79 @@ import Cookies from "js-cookie";
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
-  const { setUser, setToken, user, token } = useAuth() || {};
+  const { setUser, setToken } = useAuth() || {};
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function processCallback() {
-      console.log("Window location:", window.location.href);
-      console.log("Available cookies:", document.cookie);
-      console.log("Search params:", window.location.search);
       try {
         setIsLoading(true);
 
-        // Try to get authentication data from cookies first
-        const authToken = Cookies.get("googleAuthToken");
-        const authUserString = Cookies.get("googleAuthUser");
+        // Debug logging
+        console.log("Window location:", window.location.href);
+        console.log("Available cookies:", document.cookie);
+        console.log("Search params:", window.location.search);
 
-        // If cookies are available, use them
-        if (authToken && authUserString) {
-          try {
-            const authUser = JSON.parse(authUserString);
-
-            // Set persistent cookies and auth context, then redirect
-            handleSuccessfulAuth(authToken, authUser);
-            return;
-          } catch (e) {
-            console.error("Error parsing cookie user data:", e);
-          }
-        }
-
-        // After trying to get cookies
-        console.log("Auth token from cookie:", authToken);
-        console.log("Auth user from cookie:", authUserString);
-
-        // If cookies aren't available, try URL parameters
+        // Get data from URL parameters
         const params = new URLSearchParams(window.location.search);
         const urlToken = params.get("token");
         const encodedUserData = params.get("userData");
 
-        // After trying to get URL params
         console.log("Token from URL:", urlToken);
         console.log("User data from URL:", encodedUserData);
 
-        if (urlToken && encodedUserData) {
+        if (urlToken && encodedUserData && setToken && setUser) {
           try {
             // Decode the base64 encoded user data
             const decodedUserData = atob(encodedUserData);
-            const authUser = JSON.parse(decodedUserData);
+            console.log("Decoded user data:", decodedUserData);
 
-            // Set persistent cookies and auth context, then redirect
-            handleSuccessfulAuth(urlToken, authUser);
+            const authUser = JSON.parse(decodedUserData);
+            console.log("Parsed user object:", authUser);
+
+            // Store in persistent cookies
+            Cookies.set("token", urlToken, {
+              expires: 7,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
+
+            Cookies.set("user", JSON.stringify(authUser), {
+              expires: 7,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
+
+            // Update auth context
+            setToken(urlToken);
+            setUser(authUser);
+
+            // Show success message
+            setSuccess(true);
+
+            // Redirect to dashboard after a delay
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1500);
+
             return;
-          } catch (e) {
-            console.error("Error parsing URL user data:", e);
+          } catch (e: any) {
+            console.error("Error processing authentication data:", e);
+            setError(`Error processing authentication data: ${e.message}`);
           }
+        } else {
+          setError("No authentication data found in URL parameters");
         }
 
-        // If we reach here, no auth data was found
-        setError("No authentication data found");
+        // If we reach here, no auth data was found or there was an error
         setTimeout(() => {
           router.push("/login");
         }, 3000);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error in Google callback:", err);
-        setError("Authentication failed");
+        setError(`Authentication failed: ${err.message}`);
         setTimeout(() => {
           router.push("/login");
         }, 3000);
@@ -80,36 +89,8 @@ export default function GoogleCallbackPage() {
       }
     }
 
-    // Helper function to handle successful authentication
-    function handleSuccessfulAuth(token: string, user: any) {
-      // Store in persistent cookies
-      Cookies.set("token", token, {
-        expires: 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      });
-
-      Cookies.set("user", JSON.stringify(user), {
-        expires: 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-      });
-
-      // Update auth context
-      setToken(token);
-      setUser(user);
-
-      // Show success message
-      setSuccess(true);
-
-      // Redirect to dashboard after a delay
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1500);
-    }
-
     processCallback();
-  }, [router, setToken, setUser, user, token]);
+  }, [router, setToken, setUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-50 to-purple-50">
@@ -118,7 +99,7 @@ export default function GoogleCallbackPage() {
           <>
             <div className="w-16 h-16 border-4 border-t-indigo-600 border-r-transparent border-b-indigo-600 border-l-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <h2 className="text-xl font-semibold text-gray-800">
-              Completing login...
+              Processing authentication...
             </h2>
             <p className="text-gray-600 mt-2">
               Please wait while we securely sign you in.
@@ -127,10 +108,11 @@ export default function GoogleCallbackPage() {
         ) : error ? (
           <>
             <div className="text-red-500 text-5xl mb-4">⚠️</div>
-            <h2 className="text-xl font-semibold text-red-600">{error}</h2>
-            <p className="text-gray-600 mt-2">
-              Redirecting you back to login...
-            </p>
+            <h2 className="text-xl font-semibold text-red-600">
+              Authentication Error
+            </h2>
+            <p className="text-gray-600 mt-2">{error}</p>
+            <p className="text-gray-500 mt-4">Redirecting to login page...</p>
           </>
         ) : (
           <>
@@ -139,7 +121,7 @@ export default function GoogleCallbackPage() {
               Login successful!
             </h2>
             <p className="text-gray-600 mt-2">
-              Redirecting you to dashboard...
+              Redirecting to your dashboard...
             </p>
           </>
         )}
