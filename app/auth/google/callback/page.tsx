@@ -77,7 +77,7 @@ export default function GoogleCallbackPage() {
           try {
             // Fetch user data using the token and userId
             const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/profile/${urlUserId}`,
+              `${process.env.NEXT_PUBLIC_API_URL}/profile/${urlUserId}`,
               {
                 headers: {
                   Authorization: `Bearer ${urlToken}`,

@@ -147,7 +147,7 @@ export default function LoginPage() {
       // Redirect to your backend's Google login route
       window.location.href = `${
         process.env.NEXT_PUBLIC_API_URL
-      }/api/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
+      }/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
     }
   };
 
