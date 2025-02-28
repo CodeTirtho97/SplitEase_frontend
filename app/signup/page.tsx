@@ -18,19 +18,19 @@ import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
 // Dynamically import Google OAuth components
-const GoogleLoginComponent = dynamic(
-  () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-  { ssr: false }
-);
-const GoogleOAuthProvider = dynamic(
-  () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
-  { ssr: false }
-);
+// const GoogleLoginComponent = dynamic(
+//   () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
+//   { ssr: false }
+// );
+// const GoogleOAuthProvider = dynamic(
+//   () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
+//   { ssr: false }
+// );
 
 const Signup = () => {
   const router = useRouter();
   const pathname = usePathname();
-  const { setUser, setToken, user, loading, error } =
+  const { setUser, setToken, user, token, loading, error } =
     useContext(AuthContext) || {}; // Include loading and error
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -55,6 +55,12 @@ const Signup = () => {
     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
       password
     );
+
+  useEffect(() => {
+    if (user && token) {
+      router.push("/dashboard");
+    }
+  }, [user, token, router]);
 
   // Handle Submit (Server-safe)
   const handleSubmit = async (e: React.FormEvent) => {
@@ -415,7 +421,7 @@ const Signup = () => {
         </p>
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           {typeof window !== "undefined" && (
             <GoogleOAuthProvider
               clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
@@ -427,6 +433,27 @@ const Signup = () => {
               />
             </GoogleOAuthProvider>
           )}
+        </div> */}
+
+        {/* Google Sign-In Button */}
+        <div className="flex justify-center">
+          <div className="w-full">
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/login`;
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
+              disabled={loading}
+            >
+              <FontAwesomeIcon
+                icon={faGoogle}
+                className="text-indigo-500 text-lg"
+              />
+              Continue with Google
+            </button>
+          </div>
         </div>
 
         {/* OR Separator */}

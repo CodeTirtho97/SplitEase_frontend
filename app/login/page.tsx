@@ -458,20 +458,20 @@ export default function LoginPage() {
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
         <div className="flex justify-center">
           {typeof window !== "undefined" && (
-            <GoogleOAuthProvider
-              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+            // <GoogleOAuthProvider
+            //   clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
+            // >
+            <button
+              onClick={handleGoogleLogin}
+              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
             >
-              <button
-                onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
-              >
-                <FontAwesomeIcon
-                  icon={faGoogle}
-                  className="text-indigo-500 text-lg"
-                />
-                Continue with Google
-              </button>
-            </GoogleOAuthProvider>
+              <FontAwesomeIcon
+                icon={faGoogle}
+                className="text-indigo-500 text-lg"
+              />
+              Continue with Google
+            </button>
+            // </GoogleOAuthProvider>
           )}
         </div>
 
