@@ -52,8 +52,8 @@ export const handleGoogleCallback = async (options?: { redirectUri?: string }): 
     
     if (token && user) {
       if (typeof window !== 'undefined') {
-        Cookies.set("token", token, { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
-        Cookies.set("user", JSON.stringify(user), { expires: 7, secure: process.env.NODE_ENV === "production", sameSite: "lax" });
+        Cookies.set("token", token, { expires: 7, secure: true, sameSite: "lax" });
+        Cookies.set("user", JSON.stringify(user), { expires: 7, secure: true, sameSite: "lax" });
       }
       return { user, token };
     }
