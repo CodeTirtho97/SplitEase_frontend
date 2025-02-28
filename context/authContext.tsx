@@ -41,16 +41,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const storedToken = Cookies.get("token");
 
         if (storedUser && storedToken) {
-          setUser(JSON.parse(storedUser));
-          setToken(storedToken);
+          try {
+            setUser(JSON.parse(storedUser));
+            setToken(storedToken);
+          } catch (e) {
+            console.error("Error parsing stored user data:", e);
+            Cookies.remove("user");
+            Cookies.remove("token");
+          }
         }
       };
 
       loadFromCookies();
-
-      // Listen for cookie changes (optional, as Cookies doesn't natively support storage events)
-      // Note: You might need a custom solution or library for cookie change events
-      // For simplicity, we'll rely on the initial load and state updates
     }
   }, []);
 

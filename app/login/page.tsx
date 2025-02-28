@@ -141,13 +141,8 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     if (typeof window !== "undefined") {
-      // Specify the callback URL
-      const callbackUrl = `${window.location.origin}/auth/google/callback`;
-
       // Redirect to your backend's Google login route
-      window.location.href = `${
-        process.env.NEXT_PUBLIC_API_URL
-      }/auth/google/login?redirect_uri=${encodeURIComponent(callbackUrl)}`;
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
     }
   };
 

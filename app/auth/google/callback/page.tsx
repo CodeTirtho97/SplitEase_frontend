@@ -8,119 +8,67 @@ import Cookies from "js-cookie";
 export default function GoogleCallbackPage() {
   const router = useRouter();
   const { setUser, setToken, user, token } = useAuth() || {};
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function processCallback() {
       try {
-        setIsLoading(true);
-
         // Check if we already have user and token in context
         if (user && token) {
           router.push("/dashboard");
           return;
         }
 
-        // Try to parse the JSON response if it's displayed on the page
-        const responseText = document.body.textContent;
-        if (
-          responseText &&
-          responseText.includes('"token"') &&
-          responseText.includes('"user"')
-        ) {
+        // Get authentication data from cookies
+        const authToken = Cookies.get("googleAuthToken");
+        const authUserString = Cookies.get("googleAuthUser");
+
+        if (authToken && authUserString && setToken && setUser) {
           try {
-            // Try to find valid JSON in the page content
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const responseData = JSON.parse(jsonMatch[0]);
+            // Parse the user data from the cookie
+            const authUser = JSON.parse(authUserString);
 
-              if (responseData.token && responseData.user) {
-                // Store in cookies
-                Cookies.set("token", responseData.token, {
-                  expires: 7,
-                  secure: process.env.NODE_ENV === "production",
-                  sameSite: "lax",
-                });
+            // Store in persistent cookies for session
+            Cookies.set("token", authToken, {
+              expires: 7,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
 
-                Cookies.set("user", JSON.stringify(responseData.user), {
-                  expires: 7,
-                  secure: process.env.NODE_ENV === "production",
-                  sameSite: "lax",
-                });
+            Cookies.set("user", authUserString, {
+              expires: 7,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+            });
 
-                // Update auth context
-                if (setToken && setUser) {
-                  setToken(responseData.token);
-                  setUser(responseData.user);
-                }
+            // Remove temporary cookies
+            Cookies.remove("googleAuthToken");
+            Cookies.remove("googleAuthUser");
 
-                // Redirect to dashboard
-                setTimeout(() => {
-                  router.push("/dashboard");
-                }, 1000);
+            // Update auth context
+            setToken(authToken);
+            setUser(authUser);
 
-                return;
-              }
-            }
+            // Show success message
+            setSuccess(true);
+
+            // Redirect to dashboard after a delay
+            setTimeout(() => {
+              router.push("/dashboard");
+            }, 1500);
+
+            return;
           } catch (e) {
-            console.error("Error parsing JSON:", e);
+            console.error("Error parsing user data:", e);
+            setError("Failed to process authentication data");
           }
+        } else {
+          setError("No authentication data found");
         }
 
-        // If we reached here, try to get data from query parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get("token");
-        const urlUserId = urlParams.get("userId");
-
-        if (urlToken && urlUserId) {
-          try {
-            // Fetch user data using the token and userId
-            const response = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/profile/${urlUserId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${urlToken}`,
-                },
-              }
-            );
-
-            if (response.ok) {
-              const userData = await response.json();
-
-              // Store in cookies
-              Cookies.set("token", urlToken, {
-                expires: 7,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-              });
-
-              Cookies.set("user", JSON.stringify(userData), {
-                expires: 7,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-              });
-
-              // Update auth context
-              if (setToken && setUser) {
-                setToken(urlToken);
-                setUser(userData);
-              }
-
-              // Redirect to dashboard
-              setTimeout(() => {
-                router.push("/dashboard");
-              }, 1000);
-
-              return;
-            }
-          } catch (e) {
-            console.error("Error fetching user data:", e);
-          }
-        }
-
-        // If all else fails, show error and redirect to login
-        setError("Could not process authentication response");
+        // If we reach here, redirect to login after delay
         setTimeout(() => {
           router.push("/login");
         }, 3000);

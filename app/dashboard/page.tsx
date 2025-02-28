@@ -24,6 +24,8 @@ export default function Dashboard() {
   const {
     user,
     token,
+    setToken,
+    setUser,
     loading: authLoading,
     error: authError,
   } = useAuth() || {}; // Use useAuth for authentication state
@@ -47,10 +49,33 @@ export default function Dashboard() {
   // ✅ Authentication and Initial Data Fetch with Enhanced Debugging and Correct Timing
   useEffect(() => {
     const fetchData = async () => {
+      // First, check if we have auth context
       if (!token || !user) {
-        console.log("No user or token found, redirecting to login...");
-        router.push("/login"); // Redirect if no token or user found
-        return;
+        // Check if we have cookies from Google auth
+        const cookieToken = Cookies.get("token");
+        const cookieUserString = Cookies.get("user");
+
+        if (cookieToken && cookieUserString && setToken && setUser) {
+          try {
+            // Parse user data and set up auth context
+            const cookieUser = JSON.parse(cookieUserString);
+            setToken(cookieToken);
+            setUser(cookieUser);
+
+            // Continue to fetch dashboard data
+            // The useEffect will run again with the new auth context
+            return;
+          } catch (e) {
+            console.error("Error parsing cookie user data:", e);
+            router.push("/login");
+            return;
+          }
+        } else {
+          // No auth data found, redirect to login
+          console.log("No user or token found, redirecting to login...");
+          router.push("/login");
+          return;
+        }
       }
 
       setDashboardLoading(true);
@@ -149,7 +174,7 @@ export default function Dashboard() {
     };
 
     fetchData();
-  }, [router, token, user]); // Add token and user as dependencies to re-run if they change
+  }, [router, token, user, setToken, setUser]); // Add token and user as dependencies to re-run if they change
 
   if (authLoading || dashboardLoading) {
     return (
