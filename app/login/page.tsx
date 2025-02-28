@@ -456,20 +456,24 @@ export default function LoginPage() {
         </p>
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
-        <div className="flex justify-center">
+        <div className="flex justify-center w-full">
           {typeof window !== "undefined" && (
             // <GoogleOAuthProvider
             //   clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
             // >
             <button
               onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
+              className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 font-semibold shadow-sm hover:shadow-md hover:border-indigo-300 hover:bg-gray-50 active:scale-98 transition-all duration-300 relative overflow-hidden group"
+              disabled={loading}
             >
+              <span className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
               <FontAwesomeIcon
                 icon={faGoogle}
-                className="text-indigo-500 text-lg"
+                className="text-indigo-600 text-xl group-hover:text-indigo-700 group-hover:scale-110 transition-transform duration-300"
               />
-              Continue with Google
+              <span className="relative text-base tracking-wide group-hover:tracking-wider transition-all duration-300">
+                Continue with Google
+              </span>
             </button>
             // </GoogleOAuthProvider>
           )}
