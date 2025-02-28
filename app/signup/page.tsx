@@ -441,7 +441,7 @@ const Signup = () => {
             <button
               onClick={() => {
                 if (typeof window !== "undefined") {
-                  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/login`;
+                  window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
                 }
               }}
               className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
