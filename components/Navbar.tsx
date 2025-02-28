@@ -25,14 +25,34 @@ export default function Navbar() {
   }, [token]); // Re-run when token changes
 
   // Logout function using AuthContext
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (logout) {
-      logout(); // Use AuthContext logout to clear state and cookies
-      setShowToast({ message: "Logged out successfully!", type: "success" });
-      setTimeout(() => {
-        setShowToast(null);
-        router.push("/login"); // Redirect to login after logout
-      }, 2000);
+      try {
+        // First, call the logout function from AuthContext
+        await logout();
+
+        // Manually clear cookies to ensure immediate effect
+        Cookies.remove("token");
+        Cookies.remove("user");
+
+        // Show success toast
+        setShowToast({ message: "Logged out successfully!", type: "success" });
+
+        // Force reset isLoggedIn state to ensure immediate UI update
+        setIsLoggedIn(false);
+
+        // Wait a moment for state to update before redirecting
+        setTimeout(() => {
+          // Use window.location for a hard redirect that clears React Router state
+          window.location.href = "/login";
+        }, 1000);
+      } catch (error) {
+        console.error("Logout error:", error);
+        setShowToast({
+          message: "Logout failed. Please try again.",
+          type: "error",
+        });
+      }
     }
   };
 

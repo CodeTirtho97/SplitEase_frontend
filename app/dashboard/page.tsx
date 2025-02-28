@@ -46,6 +46,23 @@ export default function Dashboard() {
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"; // Fallback to default
 
+  useEffect(() => {
+    // Immediately redirect if no auth token is found
+    if (!token && !Cookies.get("token")) {
+      router.replace("/login");
+    }
+  }, []);
+
+  useEffect(() => {
+    // Check for auth token
+    const hasToken = !!token || !!Cookies.get("token");
+
+    if (!hasToken) {
+      // No token means not logged in, redirect to login
+      router.replace("/login");
+    }
+  }, [token, router]);
+
   // ✅ Authentication and Initial Data Fetch with Enhanced Debugging and Correct Timing
   useEffect(() => {
     const fetchData = async () => {

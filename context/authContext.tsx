@@ -121,8 +121,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(null);
     setLoading(false);
     setError(null);
+
+    Cookies.remove("token");
+    Cookies.remove("user");
+    Cookies.remove("rememberedEmail");
+
+    // Clear any localStorage items if you're using them
     if (typeof window !== "undefined") {
-      router.push("/login");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     }
   };
 
