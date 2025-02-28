@@ -46,12 +46,15 @@ export default function LoginPage() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+  //const [setLoading] = useState(false);
 
   // Forgot Password State
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(false);
+
+  const [Loading, setLoading] = useState(false);
 
   // Load remembered email from cookies on client-side only
   useEffect(() => {
@@ -76,6 +79,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors([]);
+    setShowToast(null);
 
     const newErrors: { field: string; message: string }[] = [];
 
@@ -95,9 +99,13 @@ export default function LoginPage() {
     if (newErrors.length > 0) {
       setErrors(newErrors);
       setShowToast({ message: newErrors[0].message, type: "error" });
-      setTimeout(() => setShowToast(null), 3000);
+      // setTimeout(() => setShowToast(null), 3000);
       return;
     }
+
+    // Set loading state
+    const localLoading = true;
+    setLoading(true);
 
     try {
       const response = await login(form);
@@ -110,17 +118,15 @@ export default function LoginPage() {
         Cookies.set("rememberedEmail", form.email, {
           expires: 7,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          sameSite: "lax",
         });
       } else if (typeof window !== "undefined") {
         Cookies.remove("rememberedEmail");
       }
 
       setShowToast({ message: "Login successful!", type: "success" });
-      setTimeout(() => {
-        setShowToast(null);
-        router.push("/dashboard");
-      }, 2000);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      router.push("/dashboard");
     } catch (error: any) {
       console.error("Login Error:", error); // Debug log
       setShowToast({
@@ -128,6 +134,8 @@ export default function LoginPage() {
         type: "error",
       });
       setTimeout(() => setShowToast(null), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -180,8 +188,6 @@ export default function LoginPage() {
     }
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-
   // Handle Forgot Password (Client-side only)
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const emailValue = e.target.value.trim().toLowerCase();
@@ -191,7 +197,7 @@ export default function LoginPage() {
 
   const handlePasswordReset = async () => {
     if (typeof window !== "undefined") {
-      setIsLoading(true);
+      setLoading(true);
       setResetMessage("");
 
       try {
@@ -200,13 +206,13 @@ export default function LoginPage() {
         );
         setTimeout(() => {
           setResetMessage("✅ Reset Link sent. Check your email!");
-          setIsLoading(false);
+          setLoading(false);
         }, 2000);
       } catch (error) {
         console.error("Forgot Password Error:", error); // Debug log
         setTimeout(() => {
           setResetMessage("❌ Email Not Registered!");
-          setIsLoading(false);
+          setLoading(false);
         }, 2000);
       }
     }
@@ -436,11 +442,24 @@ export default function LoginPage() {
             <GoogleOAuthProvider
               clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
             >
-              <GoogleLoginComponent
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-              />
+              <div className="w-full">
+                <button
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      import("../../utils/api/auth").then((module) => {
+                        module.googleAuth();
+                      });
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-2.5 text-gray-700 font-medium hover:bg-gray-500 hover:text-white transition-all"
+                >
+                  <FontAwesomeIcon
+                    icon={faGoogle}
+                    className="text-indigo-500 text-lg"
+                  />
+                  Continue with Google
+                </button>
+              </div>
             </GoogleOAuthProvider>
           )}
         </div>
@@ -554,20 +573,20 @@ export default function LoginPage() {
               value={resetEmail}
               onChange={handleEmailChange}
               className="w-full p-2 border rounded-lg mt-4"
-              disabled={loading || isLoading}
+              disabled={loading || Loading}
             />
 
             {/* Reset Password Button */}
             <button
               onClick={handlePasswordReset}
-              disabled={!isEmailValid || isLoading || loading}
+              disabled={!isEmailValid || Loading || loading}
               className={`w-full py-2 mt-6 text-white rounded-lg transition-all ${
-                !isEmailValid || isLoading || loading
+                !isEmailValid || Loading || loading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
-              {isLoading ? (
+              {Loading ? (
                 <div className="flex items-center justify-center">
                   <svg
                     className="animate-spin h-5 w-5 mr-2 text-white"

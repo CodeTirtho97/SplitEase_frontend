@@ -61,12 +61,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         Cookies.set("user", JSON.stringify(user), {
           expires: 7,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          sameSite: "lax",
         });
         Cookies.set("token", token, {
           expires: 7,
           secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
+          sameSite: "lax",
         });
       } else {
         Cookies.remove("user");
