@@ -153,80 +153,6 @@ const FeatureCard = ({
   </motion.div>
 );
 
-// Step Card Component
-interface StepCardProps {
-  number: string;
-  title: string;
-  description?: string;
-  icon: React.ReactNode;
-  color: string;
-  bg: string;
-  delay: number;
-}
-
-const StepCard = ({
-  number,
-  title,
-  description,
-  icon,
-  color,
-  bg,
-  delay,
-}: StepCardProps) => (
-  <motion.div
-    initial={{ opacity: 0, x: -50 }}
-    whileInView={{ opacity: 1, x: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.6, delay }}
-    className={`flex items-center p-6 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 ${
-      bg === "indigo-50/70"
-        ? "bg-indigo-50/70"
-        : bg === "purple-50/70"
-        ? "bg-purple-50/70"
-        : "bg-green-50/70"
-    }`}
-  >
-    <div
-      className={`flex items-center justify-center h-12 w-12 rounded-full bg-${color} text-white font-bold text-lg mr-4`}
-    >
-      {number}
-    </div>
-    <div className="flex-1">
-      <div className="flex items-center">
-        <span
-          className={`text-2xl mr-3 ${
-            color === "indigo-600"
-              ? "text-indigo-600"
-              : color === "purple-600"
-              ? "text-purple-600"
-              : "text-green-600"
-          }`}
-        >
-          {icon}
-        </span>
-        <h3
-          className={`text-xl font-bold ${
-            color === "indigo-600"
-              ? "text-indigo-600"
-              : color === "purple-600"
-              ? "text-purple-600"
-              : "text-green-600"
-          }`}
-        >
-          {title}
-        </h3>
-      </div>
-      {description && <p className="text-gray-600 mt-1">{description}</p>}
-    </div>
-    <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg ml-4">
-      {/* Placeholder for step screenshot/illustration */}
-      <div className="w-full h-full flex items-center justify-center text-gray-400">
-        <span>Step {number}</span>
-      </div>
-    </div>
-  </motion.div>
-);
-
 export default function Home() {
   const [appName, setAppName] = useState("");
   const fullName = "SplitEase";
@@ -262,15 +188,15 @@ export default function Home() {
   }
 
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen text-gray-900 overflow-x-hidden bg-gradient-to-br from-white via-indigo-50 to-purple-50">
+    <main className="relative flex flex-col items-center justify-center min-h-screen text-gray-900 overflow-x-hidden bg-gradient-to-br from-indigo-100 via-indigo-50 to-purple-100">
       {/* Animated Particles Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-full h-full opacity-20">
+        <div className="absolute w-full h-full opacity-30">
           {/* This would be replaced with a proper particle animation library */}
           {Array.from({ length: 30 }).map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-gradient-to-r from-indigo-300 to-purple-300"
+              className="absolute rounded-full bg-gradient-to-r from-indigo-400 to-purple-400"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
@@ -345,7 +271,7 @@ export default function Home() {
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 
                   text-white px-8 py-4 rounded-xl shadow-xl transition duration-300 
                   hover:shadow-[0px_0px_25px_rgba(128,0,255,0.5)] font-bold text-lg"
               >
@@ -541,28 +467,53 @@ export default function Home() {
       {/* Social Proof Section */}
       <section
         id="social-proof"
-        className="w-full py-12 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50"
+        className="w-full py-16 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50"
       >
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-70">
+          <div className="text-center mb-8">
+            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 shadow-sm">
+              Trusted by Users
+            </span>
+            <h3 className="text-2xl font-bold mt-4 mb-2 text-gray-800">
+              Join a community of expense sharers
+            </h3>
+          </div>
+          <div className="flex flex-wrap justify-center items-center gap-8">
             {[
-              "Company A",
-              "Company B",
-              "Company C",
-              "Company D",
-              "Company E",
-            ].map((company, i) => (
+              {
+                stat: "10,000+",
+                label: "Active Users",
+                icon: "👥",
+              },
+              {
+                stat: "₹50M+",
+                label: "Expenses Tracked",
+                icon: "💰",
+              },
+              {
+                stat: "4.8/5",
+                label: "App Store Rating",
+                icon: "⭐",
+              },
+              {
+                stat: "2,500+",
+                label: "Active Groups",
+                icon: "👨‍👩‍👧‍👦",
+              },
+            ].map((item, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="flex items-center justify-center h-12"
+                className="flex flex-col items-center p-6 bg-white rounded-xl shadow-sm"
               >
-                <span className="text-xl font-bold text-gray-500">
-                  {company}
+                <span className="text-3xl mb-2">{item.icon}</span>
+                <span className="text-2xl font-bold text-indigo-700">
+                  {item.stat}
                 </span>
+                <span className="text-gray-600 text-sm">{item.label}</span>
               </motion.div>
             ))}
           </div>
@@ -690,7 +641,7 @@ export default function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="w-full py-20 bg-gradient-to-b from-indigo-600 to-purple-800 text-white relative overflow-hidden">
+      <section className="w-full py-20 bg-gradient-to-r from-purple-600 to-indigo-700 text-white relative overflow-hidden">
         {/* Background decorations */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-purple-300 -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
@@ -722,38 +673,6 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="w-full py-8 bg-gray-900 text-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <span className="text-xl font-bold">SplitEase</span>
-              <span className="text-sm ml-2">© 2025</span>
-            </div>
-            <div className="flex space-x-6">
-              <Link
-                href="/privacy"
-                className="text-gray-300 hover:text-white transition"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                className="text-gray-300 hover:text-white transition"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-300 hover:text-white transition"
-              >
-                Contact Us
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </main>
   );
 }
