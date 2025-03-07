@@ -18,11 +18,48 @@ export default function Navbar() {
 
   // State to track login status (derived from AuthContext)
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Update login status when token or user changes from AuthContext
   useEffect(() => {
     setIsLoggedIn(!!token);
   }, [token]); // Re-run when token changes
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        mobileMenuOpen &&
+        !target.closest(".mobile-menu") &&
+        !target.closest(".menu-button")
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
+
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   // Logout function using AuthContext
   const handleLogout = async () => {
@@ -41,6 +78,9 @@ export default function Navbar() {
         // Force reset isLoggedIn state to ensure immediate UI update
         setIsLoggedIn(false);
 
+        // Close mobile menu if open
+        setMobileMenuOpen(false);
+
         // Wait a moment for state to update before redirecting
         setTimeout(() => {
           // Use window.location for a hard redirect that clears React Router state
@@ -56,19 +96,39 @@ export default function Navbar() {
     }
   };
 
+  // Hide toast after 3 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
+
   if (authLoading) {
-    return null; // Or a loading spinner if desired
+    return (
+      <div className="h-16 w-full backdrop-blur-md bg-white/80 shadow-md fixed top-0 left-0 z-50 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
   }
 
   return (
-    <nav className="backdrop-blur-md bg-white/80 shadow-md fixed w-full top-0 left-0 px-6 py-4 z-50 h-16">
-      <div className="flex justify-between items-center max-w-6xl mx-auto">
+    <nav className="backdrop-blur-md bg-white/80 shadow-md fixed w-full top-0 left-0 px-4 sm:px-6 py-4 z-50">
+      <div className="flex justify-between items-center max-w-6xl mx-auto h-8">
         {/* Logo & App Name */}
-        <div className="flex items-center space-x-3">
-          <Image src="/logo.png" alt="SplitEase Logo" width={40} height={40} />
+        <div className="flex items-center space-x-2 sm:space-x-3 z-20">
+          <Image
+            src="/logo.png"
+            alt="SplitEase Logo"
+            width={36}
+            height={36}
+            className="w-8 h-8 sm:w-10 sm:h-10"
+          />
           <Link
             href="/"
-            className={`text-3xl font-extrabold tracking-tight ${
+            className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
               isLoggedIn ? "pointer-events-none opacity-50" : "text-gray-900"
             }`}
           >
@@ -76,8 +136,8 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Navigation Links */}
-        <div className="flex space-x-6">
+        {/* Desktop Navigation Links */}
+        <div className="hidden md:flex space-x-6">
           {isLoggedIn ? (
             <>
               {/* Dashboard Link */}
@@ -151,6 +211,93 @@ export default function Navbar() {
               </Link>
             </>
           )}
+        </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          className="menu-button md:hidden z-20 p-2 focus:outline-none"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+        >
+          <div className="w-6 h-5 flex flex-col justify-between relative">
+            <span
+              className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                mobileMenuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
+            ></span>
+            <span
+              className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                mobileMenuOpen ? "opacity-0" : "opacity-100"
+              }`}
+            ></span>
+            <span
+              className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
+            ></span>
+          </div>
+        </button>
+
+        {/* Mobile Menu */}
+        <div
+          className={`mobile-menu fixed inset-0 bg-white/95 backdrop-blur-lg z-10 flex flex-col pt-24 px-6 transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          } md:hidden`}
+        >
+          <div className="flex flex-col space-y-6 items-center">
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
+                    pathname === "/dashboard"
+                      ? "bg-indigo-100 text-indigo-700"
+                      : "text-gray-800 hover:bg-gray-100"
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
+                    pathname === "/profile"
+                      ? "bg-gray-200 text-gray-800"
+                      : "text-gray-800 hover:bg-gray-100"
+                  }`}
+                >
+                  Profile
+                </Link>
+                <Button
+                  text="Sign Out"
+                  onClick={handleLogout}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-lg text-lg font-medium transition shadow-md mt-4"
+                />
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
+                    pathname === "/login"
+                      ? "bg-purple-100 text-purple-700"
+                      : "text-gray-800 hover:bg-gray-100"
+                  }`}
+                >
+                  Login
+                </Link>
+                <Link href="/signup" className="w-full">
+                  <button
+                    className={`w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 
+                      text-white py-4 rounded-lg text-lg font-medium transition shadow-md ${
+                        pathname === "/signup" ? "ring-2 ring-indigo-500" : ""
+                      }`}
+                  >
+                    Sign Up
+                  </button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
