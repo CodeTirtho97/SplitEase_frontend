@@ -136,6 +136,10 @@ export default function Profile() {
   const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
   const [profileFetchError, setProfileFetchError] = useState(false);
 
+  const [updatingOperation, setUpdatingOperation] = useState<string | null>(
+    null
+  );
+
   // Fixed useEffect for profile loading
   useEffect(() => {
     let mounted = true;
@@ -366,6 +370,7 @@ export default function Profile() {
 
   const handleAddFriend = async (friendId: string) => {
     try {
+      setUpdatingOperation("Adding contact...");
       await addFriend(friendId);
       setSuggestedFriends((prev) => prev.filter((f) => f._id !== friendId));
 
@@ -379,6 +384,8 @@ export default function Profile() {
     } catch (error) {
       console.error("Error adding friend:", error);
       setToast({ message: "Failed to add friend!", type: "error" });
+    } finally {
+      setUpdatingOperation(null);
     }
   };
 
@@ -402,7 +409,7 @@ export default function Profile() {
       return;
     }
 
-    setLoading(true); // Set global loading for this operation
+    setUpdatingOperation("Adding payment method...");
     try {
       const updatedUser = await addPayment({
         methodType: paymentType,
@@ -447,7 +454,7 @@ export default function Profile() {
         type: "error",
       });
     } finally {
-      setLoading(false); // Stop global loading
+      setUpdatingOperation(null);
     }
   };
 
@@ -492,7 +499,7 @@ export default function Profile() {
       return;
     }
 
-    setLoading(true); // Set global loading for this operation
+    setUpdatingOperation("Updating password...");
     try {
       await updatePassword({
         oldPassword,
@@ -516,7 +523,7 @@ export default function Profile() {
         type: "error",
       });
     } finally {
-      setLoading(false); // Stop global loading
+      setUpdatingOperation(null);
     }
   };
 
@@ -537,7 +544,7 @@ export default function Profile() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleDeleteFriend = async (friendId: string) => {
-    setLoading(true); // Set global loading for this operation
+    setUpdatingOperation("Removing contact...");
     try {
       await deleteFriend(friendId);
       setToast({ message: "Friend removed successfully!", type: "success" });
@@ -547,13 +554,13 @@ export default function Profile() {
       console.error("Error deleting friend:", error);
       setToast({ message: "Failed to remove friend!", type: "error" });
     } finally {
-      setLoading(false); // Stop global loading
+      setUpdatingOperation(null);
     }
   };
 
   const handleDeletePayment = async (paymentId: string) => {
     try {
-      setLoading(true);
+      setUpdatingOperation("Removing payment method...");
       await deletePayment(paymentId);
 
       // Simply reload the profile data after deletion
@@ -567,7 +574,7 @@ export default function Profile() {
         type: "error",
       });
     } finally {
-      setLoading(false);
+      setUpdatingOperation(null);
     }
   };
 
@@ -604,6 +611,36 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
+  const UpdateLoadingOverlay = ({ message = "Updating..." }) => (
+    <div className="fixed inset-0 z-50 bg-indigo-900/30 backdrop-blur-sm flex flex-col items-center justify-center">
+      <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-sm mx-4">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-indigo-500"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10"></path>
+              <polyline points="12 12 7 12 10 15"></polyline>
+              <polyline points="12 12 12 8 9 10"></polyline>
+            </svg>
+          </div>
+        </div>
+        <p className="mt-4 text-lg font-medium text-gray-700">{message}</p>
+        <p className="text-sm text-gray-500 text-center mt-1">
+          Please wait while we process your request
+        </p>
+      </div>
+    </div>
+  );
 
   const isGoogleUser = user?.googleId ? true : false;
 
@@ -680,442 +717,496 @@ export default function Profile() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center bg-gradient-to-b from-gray-100 to-gray-200 p-6"
+      className="min-h-screen flex flex-col items-center p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 bg-opacity-50"
       suppressHydrationWarning
     >
-      {/* Headings Section */}
-      <div className="text-center mb-8 mt-20">
-        <h1 className="text-5xl font-extrabold text-gray-800 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-          Profile Overview
-        </h1>
-        <p className="text-gray-600 text-lg mt-2 mb-8">
-          Manage your account details and preferences
-        </p>
+      {/* Background Pattern */}
+      <div className="fixed inset-0 opacity-5 z-0">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <defs>
+            <pattern
+              id="smallGrid"
+              width="20"
+              height="20"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 20 0 L 0 0 0 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.5"
+                opacity="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#smallGrid)" />
+        </svg>
       </div>
 
-      {/* Grid Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
-        {/* Toast Notification */}
-        {toast && (
-          <div
-            className={`fixed top-24 right-6 px-5 py-3 rounded-lg shadow-md flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
-              toast.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-            style={{
-              zIndex:
-                isAddContactModalOpen ||
-                isAddPaymentModalOpen ||
-                isPasswordModalOpen
-                  ? 1050
-                  : 999,
-            }}
-          >
-            <FontAwesomeIcon
-              icon={
-                toast.type === "success" ? faCheckCircle : faExclamationCircle
-              }
-              className="text-lg"
-            />
-            <span>{toast.message}</span>
-          </div>
-        )}
+      {/* Your existing content */}
+      <div className="z-10 w-full">
+        {/* Headings Section */}
+        <div className="text-center mb-8 mt-20">
+          <h1 className="text-5xl font-extrabold text-gray-800 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+            Profile Overview
+          </h1>
+          <p className="text-gray-600 text-lg mt-2 mb-8">
+            Manage your account details and preferences
+          </p>
+        </div>
 
-        <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md text-center transform transition-all duration-300 hover:shadow-2xl relative border-t-4 border-indigo-500">
-          {/* Profile Picture & Animated Greeting */}
-          <div className="relative w-32 h-32 mx-auto mb-3">
-            {/* 🔥 Fix Profile Picture src issue */}
-            <Image
-              src={profileImage || "/avatar_male.png"} // ✅ Use fallback image if null
-              alt="Profile Picture Not Supported"
-              width={128}
-              height={128}
-              unoptimized
-              className="rounded-full border-4 border-indigo-500 shadow-lg transition-all duration-300 hover:scale-105"
-            />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-800">
-            Welcome, {user?.fullName ? user.fullName.split(" ")[0] : "User"}!
-          </h2>
-
-          {/* Image Upload */}
-          {isEditing && (
-            <div className="flex flex-col items-center mt-2">
-              <label
-                htmlFor="profilePicUpload"
-                title={`Supported Formats : jpg, jpeg, png.\nSupported File Size : Less than 100KB.`}
-                className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md cursor-pointer"
-              >
-                Upload Image
-              </label>
-              <input
-                id="profilePicUpload"
-                type="file"
-                accept="image/*"
-                className="hidden" // ✅ Hide input
-                onChange={handleImageUpload}
+        {/* Grid Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
+          {/* Toast Notification */}
+          {toast && (
+            <div
+              className={`fixed top-24 right-6 px-5 py-3 rounded-lg shadow-md flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
+                toast.type === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+              style={{
+                zIndex:
+                  isAddContactModalOpen ||
+                  isAddPaymentModalOpen ||
+                  isPasswordModalOpen
+                    ? 1050
+                    : 999,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={
+                  toast.type === "success" ? faCheckCircle : faExclamationCircle
+                }
+                className="text-lg"
               />
+              <span>{toast.message}</span>
             </div>
           )}
 
-          {/* User Info */}
-          <div className="space-y-3 mt-4">
-            <input
-              type="text"
-              className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center focus:ring-2 focus:ring-indigo-300 transition-all"
-              value={updatedName}
-              disabled={!isEditing}
-              onChange={(e) => setUpdatedName(e.target.value)}
-            />
-
-            {/* ✅ Show Email as Read-Only */}
-            <input
-              type="email"
-              className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center bg-gray-200 text-gray-500 cursor-not-allowed"
-              value={user?.email || ""}
-              disabled
-            />
-
-            <select
-              className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center focus:ring-2 focus:ring-indigo-300 transition-all"
-              value={updatedGender}
-              disabled={!isEditing}
-              onChange={(e) =>
-                setUpdatedGender(e.target.value as "male" | "female" | "other")
-              }
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-6 space-y-3">
-            {isEditing ? (
-              <Button
-                text="Save Changes"
-                onClick={handleSaveProfile}
-                className="text-white bg-green-500 hover:bg-green-600 w-full"
-                disabled={loading}
+          <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md text-center transform transition-all duration-300 hover:shadow-2xl relative border-t-4 border-indigo-500">
+            {/* Profile Picture & Animated Greeting */}
+            <div className="relative w-32 h-32 mx-auto mb-3">
+              {/* 🔥 Fix Profile Picture src issue */}
+              <Image
+                src={profileImage || "/avatar_male.png"} // ✅ Use fallback image if null
+                alt="Profile Picture Not Supported"
+                width={128}
+                height={128}
+                unoptimized
+                className="rounded-full border-4 border-indigo-500 shadow-lg transition-all duration-300 hover:scale-105"
               />
-            ) : (
-              <Button
-                text="Edit Profile"
-                onClick={() => setIsEditing(true)}
-                className="text-white bg-blue-500 hover:bg-blue-600 w-full"
-                disabled={loading}
-              />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              Welcome, {user?.fullName ? user.fullName.split(" ")[0] : "User"}!
+            </h2>
+
+            {/* Image Upload */}
+            {isEditing && (
+              <div className="flex flex-col items-center mt-2">
+                <label
+                  htmlFor="profilePicUpload"
+                  title={`Supported Formats : jpg, jpeg, png.\nSupported File Size : Less than 100KB.`}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-md cursor-pointer"
+                >
+                  Upload Image
+                </label>
+                <input
+                  id="profilePicUpload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden" // ✅ Hide input
+                  onChange={handleImageUpload}
+                />
+              </div>
             )}
 
-            {/* Open Password Change Modal - Disabled only for Google OAuth users */}
-            <Button
-              text="Change Password"
-              onClick={() => setIsPasswordModalOpen(true)}
-              className={`w-full ${
-                isGoogleUser
-                  ? "bg-gray-300 cursor-not-allowed"
-                  : "bg-yellow-500 hover:bg-yellow-600"
-              } text-white`}
-              disabled={isGoogleUser || loading} // Disable based on googleId
-            />
-          </div>
-        </div>
-
-        {/* Saved Contacts Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 text-center border-t-4 border-green-500 relative">
-          <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-            <span>👥</span> Saved Contacts
-          </h3>
-
-          {/* ✅ Show Contacts Dynamically */}
-          <div
-            className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
-            suppressHydrationWarning
-          >
-            {user?.friends && user.friends.length > 0 ? (
-              user.friends.map((friend, index) => {
-                // Use proper type checking
-                const isFriendObject = typeof friend !== "string";
-
-                // Extract values safely with type assertions
-                const friendId = isFriendObject
-                  ? (friend as Friend)._id
-                  : friend;
-                const friendName = isFriendObject
-                  ? (friend as Friend).fullName
-                  : "Unknown Friend";
-                const friendEmail = isFriendObject
-                  ? (friend as Friend).email
-                  : "No email";
-
-                return (
-                  <div
-                    key={typeof friendId === "string" ? friendId : index}
-                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                  >
-                    <Image
-                      src="/avatar_friend.png"
-                      alt="Friend Avatar"
-                      width={40}
-                      height={40}
-                    />
-                    <div>
-                      <p className="font-semibold">{friendName}</p>
-                      <p className="text-sm text-gray-500">{friendEmail}</p>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteFriend(friendId as string)}
-                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                      title="Delete Friend"
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-sm text-gray-500 cursor-default">
-                No contacts added yet.
-              </p>
-            )}
-          </div>
-
-          {/* Add New Contact Button */}
-          <button
-            onClick={() => setIsAddContactModalOpen(true)}
-            className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-            disabled={loading}
-          >
-            Add New Contact
-          </button>
-        </div>
-
-        {/* Linked Payment Methods Card */}
-        <div className="bg-white shadow-lg rounded-xl p-6 text-center border-t-4 border-purple-500 relative">
-          <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-            <span>💳</span> Linked Payment Methods
-          </h3>
-
-          {/* ✅ Show Payments Dynamically */}
-          <div
-            className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
-            suppressHydrationWarning
-          >
-            {user && user.paymentMethods && user.paymentMethods.length > 0 ? (
-              user.paymentMethods.map(
-                (method: PaymentMethod, index: number) => (
-                  <div
-                    key={index}
-                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Dynamically Display Payment Icon */}
-                      <FontAwesomeIcon
-                        icon={getPaymentIcon(method.methodType)}
-                        className="text-3xl text-indigo-500"
-                      />
-                      <p className="text-sm text-gray-500">
-                        {method.accountDetails}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => handleDeletePayment(method._id || "")}
-                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                      title="Delete Payment"
-                      disabled={loading}
-                    >
-                      <FontAwesomeIcon icon={faTimes} />
-                    </button>
-                  </div>
-                )
-              )
-            ) : (
-              <p className="text-sm text-gray-500 cursor-default">
-                No payment methods added yet.
-              </p>
-            )}
-          </div>
-
-          {/* Add Payment Method Button */}
-          <button
-            onClick={() => setIsAddPaymentModalOpen(true)}
-            className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
-            disabled={loading}
-          >
-            Add Payment Method
-          </button>
-        </div>
-
-        {/* Add Friend Modal */}
-        {isAddContactModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
-              <h2 className="text-xl font-bold">Add New Friend</h2>
-
-              {/* Friend Name Search */}
+            {/* User Info */}
+            <div className="space-y-3 mt-4">
               <input
                 type="text"
-                placeholder="Search Friend by Name"
-                className="border p-2 rounded w-full mt-3"
-                value={friendName}
-                onChange={(e) => handleFriendSearch(e.target.value)}
-                disabled={loading}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center focus:ring-2 focus:ring-indigo-300 transition-all"
+                value={updatedName}
+                disabled={!isEditing}
+                onChange={(e) => setUpdatedName(e.target.value)}
               />
 
-              {/* Local Loading Indicator (Only in modal) */}
-              {friendSearchLoading && (
-                <div className="flex justify-center mt-2">
-                  <div className="w-5 h-5 border-4 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
-                </div>
-              )}
-
-              {/* Friend Suggestions Dropdown */}
-              {suggestedFriends.length > 0 && (
-                <ul className="bg-gray-100 border border-gray-300 rounded mt-2">
-                  {suggestedFriends.map((friend: User) => (
-                    <li
-                      key={friend._id}
-                      className={`p-2 hover:bg-indigo-200 cursor-pointer ${
-                        loading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                      onClick={
-                        loading
-                          ? undefined
-                          : () => handleAddFriend(friend._id || "")
-                      }
-                    >
-                      {friend.fullName} - {friend.email || "No email"}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Modal Buttons */}
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={handleCloseContactModal}
-                  className="text-gray-600"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-                  onClick={() =>
-                    !loading &&
-                    suggestedFriends.length > 0 &&
-                    handleAddFriend(suggestedFriends[0]._id || "")
-                  }
-                  disabled={loading || suggestedFriends.length === 0}
-                >
-                  Add Friend
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Add Payment Method Modal */}
-        {isAddPaymentModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
-              <h2 className="text-xl font-bold">Add Payment Method</h2>
+              {/* ✅ Show Email as Read-Only */}
+              <input
+                type="email"
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center bg-gray-200 text-gray-500 cursor-not-allowed"
+                value={user?.email || ""}
+                disabled
+              />
 
               <select
-                className="border p-2 rounded w-full mt-3"
-                value={paymentType}
-                onChange={(e) => setPaymentType(e.target.value)}
-                disabled={loading}
+                className="border border-gray-300 rounded-lg px-3 py-2 w-full text-center focus:ring-2 focus:ring-indigo-300 transition-all"
+                value={updatedGender}
+                disabled={!isEditing}
+                onChange={(e) =>
+                  setUpdatedGender(
+                    e.target.value as "male" | "female" | "other"
+                  )
+                }
               >
-                <option value="">Select Payment Type</option>
-                <option value="UPI">UPI</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Stripe">Stripe</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
               </select>
+            </div>
 
-              <input
-                type="text"
-                placeholder="Enter Payment Details"
-                className="border p-2 rounded w-full mt-3"
-                value={paymentDetails}
-                onChange={(e) => setPaymentDetails(e.target.value)}
-                disabled={loading}
-              />
+            {/* Buttons */}
+            <div className="mt-6 space-y-3">
+              {isEditing ? (
+                <Button
+                  text="Save Changes"
+                  onClick={handleSaveProfile}
+                  className="text-white bg-green-500 hover:bg-green-600 w-full"
+                  disabled={loading}
+                />
+              ) : (
+                <Button
+                  text="Edit Profile"
+                  onClick={() => setIsEditing(true)}
+                  className="text-white bg-blue-500 hover:bg-blue-600 w-full"
+                  disabled={loading}
+                />
+              )}
 
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={() => setIsAddPaymentModalOpen(false)}
-                  className="text-gray-600"
-                  disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddPayment}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
-                  disabled={loading}
-                >
-                  {loading ? "Adding..." : "Add Payment"}
-                </button>
-              </div>
+              {/* Open Password Change Modal - Disabled only for Google OAuth users */}
+              <Button
+                text="Change Password"
+                onClick={() => !isGoogleUser && setIsPasswordModalOpen(true)}
+                className={`w-full ${
+                  isGoogleUser
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-yellow-500 hover:bg-yellow-600"
+                } text-white relative group`}
+                disabled={isGoogleUser || loading}
+              >
+                {isGoogleUser && (
+                  <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs font-medium text-white bg-gray-700 rounded-lg shadow-sm pointer-events-none">
+                    Google users must change passwords through Google
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-solid border-t-gray-700 border-t-4 border-x-transparent border-x-4 border-b-0"></div>
+                  </div>
+                )}
+              </Button>
             </div>
           </div>
-        )}
 
-        {/* Password Change Modal */}
-        {isPasswordModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
-              <h2 className="text-xl font-bold text-gray-800">
-                🔒 Change Password
-              </h2>
+          {/* Saved Contacts Card */}
+          <div className="bg-white shadow-lg rounded-xl p-6 text-center border-t-4 border-green-500 relative">
+            <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+              <span>👥</span> Saved Contacts
+            </h3>
 
-              <input
-                type="password"
-                placeholder="Old Password"
-                className="border p-2 rounded w-full mt-3"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-                disabled={loading}
-              />
-              <input
-                type="password"
-                placeholder="New Password"
-                className="border p-2 rounded w-full mt-3"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                disabled={loading}
-              />
-              <input
-                type="password"
-                placeholder="Confirm New Password"
-                className="border p-2 rounded w-full mt-3"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading}
-              />
+            {/* ✅ Show Contacts Dynamically */}
+            <div
+              className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
+              suppressHydrationWarning
+            >
+              {user?.friends && user.friends.length > 0 ? (
+                user.friends.map((friend, index) => {
+                  // Use proper type checking
+                  const isFriendObject = typeof friend !== "string";
 
-              <div className="mt-4 flex justify-between">
-                <button
-                  onClick={() => setIsPasswordModalOpen(false)}
-                  className="text-gray-600"
+                  // Extract values safely with type assertions
+                  const friendId = isFriendObject
+                    ? (friend as Friend)._id
+                    : friend;
+                  const friendName = isFriendObject
+                    ? (friend as Friend).fullName
+                    : "Unknown Friend";
+                  const friendEmail = isFriendObject
+                    ? (friend as Friend).email
+                    : "No email";
+                  const friendProfilePic =
+                    isFriendObject && (friend as Friend).profilePic
+                      ? (friend as Friend).profilePic
+                      : "/avatar_friend.png";
+
+                  return (
+                    <div
+                      key={typeof friendId === "string" ? friendId : index}
+                      className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
+                    >
+                      {/* Show friend profile picture if available */}
+                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-green-200">
+                        <Image
+                          src={friendProfilePic || "/avatar_friend.png"}
+                          alt={friendName}
+                          width={40}
+                          height={40}
+                          unoptimized
+                          className="object-cover w-full h-full"
+                          onError={(e) => {
+                            // Fallback to default avatar on error
+                            (e.target as HTMLImageElement).src =
+                              "/avatar_friend.png";
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1 mx-3">
+                        <p className="font-semibold">{friendName}</p>
+                        <p className="text-sm text-gray-500">{friendEmail}</p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteFriend(friendId as string)}
+                        className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                        title="Delete Friend"
+                        disabled={!!updatingOperation}
+                      >
+                        <FontAwesomeIcon icon={faTimes} />
+                      </button>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-gray-500 cursor-default">
+                  No contacts added yet.
+                </p>
+              )}
+            </div>
+
+            {/* Add New Contact Button */}
+            <button
+              onClick={() => setIsAddContactModalOpen(true)}
+              className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+              disabled={loading}
+            >
+              Add New Contact
+            </button>
+          </div>
+
+          {/* Linked Payment Methods Card */}
+          <div className="bg-white shadow-lg rounded-xl p-6 text-center border-t-4 border-purple-500 relative">
+            <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+              <span>💳</span> Linked Payment Methods
+            </h3>
+
+            {/* ✅ Show Payments Dynamically */}
+            <div
+              className="mt-4 max-h-100 overflow-y-auto border rounded-lg p-3 text-left"
+              suppressHydrationWarning
+            >
+              {user && user.paymentMethods && user.paymentMethods.length > 0 ? (
+                user.paymentMethods.map(
+                  (method: PaymentMethod, index: number) => (
+                    <div
+                      key={index}
+                      className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
+                    >
+                      <div className="flex items-center gap-3">
+                        {/* Dynamically Display Payment Icon */}
+                        <FontAwesomeIcon
+                          icon={getPaymentIcon(method.methodType)}
+                          className="text-3xl text-indigo-500"
+                        />
+                        <p className="text-sm text-gray-500">
+                          {method.accountDetails}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePayment(method._id || "")}
+                        className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                        title="Delete Payment"
+                        disabled={loading}
+                      >
+                        <FontAwesomeIcon icon={faTimes} />
+                      </button>
+                    </div>
+                  )
+                )
+              ) : (
+                <p className="text-sm text-gray-500 cursor-default">
+                  No payment methods added yet.
+                </p>
+              )}
+            </div>
+
+            {/* Add Payment Method Button */}
+            <button
+              onClick={() => setIsAddPaymentModalOpen(true)}
+              className="mt-4 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+              disabled={loading}
+            >
+              Add Payment Method
+            </button>
+          </div>
+
+          {/* Add Friend Modal */}
+          {isAddContactModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
+                <h2 className="text-xl font-bold">Add New Friend</h2>
+
+                {/* Friend Name Search */}
+                <input
+                  type="text"
+                  placeholder="Search Friend by Name"
+                  className="border p-2 rounded w-full mt-3"
+                  value={friendName}
+                  onChange={(e) => handleFriendSearch(e.target.value)}
                   disabled={loading}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleChangePassword}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
-                  disabled={loading}
-                >
-                  {loading ? "Updating..." : "Update Password"}
-                </button>
+                />
+
+                {/* Local Loading Indicator (Only in modal) */}
+                {friendSearchLoading && (
+                  <div className="flex justify-center mt-2">
+                    <div className="w-5 h-5 border-4 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
+                  </div>
+                )}
+
+                {/* Friend Suggestions Dropdown */}
+                {suggestedFriends.length > 0 && (
+                  <ul className="bg-gray-100 border border-gray-300 rounded mt-2">
+                    {suggestedFriends.map((friend: User) => (
+                      <li
+                        key={friend._id}
+                        className={`p-2 hover:bg-indigo-200 cursor-pointer ${
+                          loading ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                        onClick={
+                          loading
+                            ? undefined
+                            : () => handleAddFriend(friend._id || "")
+                        }
+                      >
+                        {friend.fullName} - {friend.email || "No email"}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Modal Buttons */}
+                <div className="mt-4 flex justify-between">
+                  <button
+                    onClick={handleCloseContactModal}
+                    className="text-gray-600"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
+                    onClick={() =>
+                      !loading &&
+                      suggestedFriends.length > 0 &&
+                      handleAddFriend(suggestedFriends[0]._id || "")
+                    }
+                    disabled={loading || suggestedFriends.length === 0}
+                  >
+                    Add Friend
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Add Payment Method Modal */}
+          {isAddPaymentModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
+                <h2 className="text-xl font-bold">Add Payment Method</h2>
+
+                <select
+                  className="border p-2 rounded w-full mt-3"
+                  value={paymentType}
+                  onChange={(e) => setPaymentType(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="">Select Payment Type</option>
+                  <option value="UPI">UPI</option>
+                  <option value="PayPal">PayPal</option>
+                  <option value="Stripe">Stripe</option>
+                </select>
+
+                <input
+                  type="text"
+                  placeholder="Enter Payment Details"
+                  className="border p-2 rounded w-full mt-3"
+                  value={paymentDetails}
+                  onChange={(e) => setPaymentDetails(e.target.value)}
+                  disabled={loading}
+                />
+
+                <div className="mt-4 flex justify-between">
+                  <button
+                    onClick={() => setIsAddPaymentModalOpen(false)}
+                    className="text-gray-600"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAddPayment}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg"
+                    disabled={loading}
+                  >
+                    {loading ? "Adding..." : "Add Payment"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Password Change Modal */}
+          {isPasswordModalOpen && (
+            <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white p-6 rounded-lg shadow-xl w-96 text-center">
+                <h2 className="text-xl font-bold text-gray-800">
+                  🔒 Change Password
+                </h2>
+
+                <input
+                  type="password"
+                  placeholder="Old Password"
+                  className="border p-2 rounded w-full mt-3"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  disabled={loading}
+                />
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  className="border p-2 rounded w-full mt-3"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  disabled={loading}
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm New Password"
+                  className="border p-2 rounded w-full mt-3"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                />
+
+                <div className="mt-4 flex justify-between">
+                  <button
+                    onClick={() => setIsPasswordModalOpen(false)}
+                    className="text-gray-600"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleChangePassword}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                    disabled={loading}
+                  >
+                    {loading ? "Updating..." : "Update Password"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Show the overlay when an operation is in progress */}
+      {updatingOperation && (
+        <UpdateLoadingOverlay message={updatingOperation} />
+      )}
     </div>
   );
 }
