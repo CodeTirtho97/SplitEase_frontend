@@ -4,11 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import Testimonials from "@/components/Testimonials";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/context/authContext";
 
-// Loading and Error Components
+// Import Framer Motion for animations (optional, install if not already: npm install framer-motion)
+import { motion, AnimatePresence } from "framer-motion";
+
+// Loading and Error Components (optional, if needed)
 const LoadingSpinner = () => (
   <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-50">
     <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
@@ -43,8 +43,6 @@ const LoadingSpinner = () => (
 );
 
 export default function Home() {
-  const router = useRouter();
-  const { user, token } = useAuth();
   const [appName, setAppName] = useState("");
   const fullName = "SplitEase";
   const [showSections, setShowSections] = useState({
@@ -54,27 +52,6 @@ export default function Home() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Check authentication and redirect if user is logged in
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Using the AuthContext to check if user is logged in
-        if (user && token) {
-          router.replace("/dashboard");
-        } else {
-          // Only show loading animation for non-logged in users
-          setTimeout(() => setLoading(false), 1000);
-        }
-      } catch (error) {
-        console.error("Authentication check failed:", error);
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [user, token, router]);
-
-  // Typing animation effect with cursor blink
   useEffect(() => {
     // Typing animation effect with cursor blink
     let i = 0;
@@ -221,10 +198,12 @@ export default function Home() {
               }}
               className={`p-6 rounded-2xl bg-${feature.bg} hover:bg-opacity-90 shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer`}
             >
-              <span className="text-3xl mr-4 text-indigo-600">
+              <span className={`text-3xl mr-4 text-${feature.color}`}>
                 {feature.icon}
               </span>
-              <h3 className="text-2xl font-semibold text-indigo-600 mb-2">
+              <h3
+                className={`text-2xl font-semibold text-${feature.color} mb-2`}
+              >
                 {feature.title}
               </h3>
               <p className="text-gray-600 text-lg">{feature.desc}</p>
@@ -244,6 +223,11 @@ export default function Home() {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="mt-48 max-w-5xl mx-auto px-8 transition-opacity duration-1000"
       >
+        {/* <h2 className="text-5xl font-extrabold text-gray-900 text-center tracking-tight mb-12">
+          <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+            What Our Users Say
+          </span>
+        </h2> */}
         <motion.div
           className="relative"
           animate={{ x: showSections.testimonials ? 0 : -100 }}
@@ -307,13 +291,13 @@ export default function Home() {
                   delay: index * 0.2,
                   ease: "easeOut",
                 }}
-                className="flex items-center space-x-4 p-6 rounded-2xl bg-indigo-50/70 shadow-md hover:bg-opacity-90 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                className={`flex items-center space-x-4 p-6 rounded-2xl bg-${step.bg} shadow-md hover:bg-opacity-90 hover:shadow-lg transition-all duration-300 cursor-pointer`}
               >
-                <span className="text-3xl mr-4 text-indigo-600">
+                <span className={`text-3xl mr-4 text-${step.color}`}>
                   {step.icon}
                 </span>
                 <div>
-                  <h3 className="text-2xl font-semibold text-indigo-700">
+                  <h3 className={`text-2xl font-semibold text-${step.color}`}>
                     {step.step} {step.title}
                   </h3>
                 </div>
@@ -322,53 +306,6 @@ export default function Home() {
           </ol>
         </div>
       </motion.div>
-
-      {/* Custom CSS */}
-      <style jsx global>{`
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        @keyframes blink {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0;
-          }
-        }
-
-        @keyframes gradient-shift {
-          0%,
-          100% {
-            opacity: 0.1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.2;
-            transform: scale(1.05);
-          }
-        }
-
-        .animate-gradient-shift {
-          animation: gradient-shift 15s ease-in-out infinite;
-        }
-
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-
-        .animate-blink {
-          animation: blink 1s step-end infinite;
-        }
-      `}</style>
     </main>
   );
 }
