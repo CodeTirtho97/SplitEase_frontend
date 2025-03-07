@@ -720,8 +720,7 @@ export default function Profile() {
       className="min-h-screen flex flex-col items-center p-6 bg-gradient-to-br from-indigo-50 via-white to-purple-50 bg-opacity-50"
       suppressHydrationWarning
     >
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-5 z-0">
+      <div className="fixed inset-0 opacity-10 z-0">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
           <defs>
             <pattern
@@ -734,8 +733,8 @@ export default function Profile() {
                 d="M 20 0 L 0 0 0 20"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="0.5"
-                opacity="0.5"
+                strokeWidth="0.7"
+                opacity="0.7"
               />
             </pattern>
           </defs>
