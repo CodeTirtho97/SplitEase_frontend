@@ -7,35 +7,45 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "react-responsive";
 
-// Loading Spinner Component
+// Enhanced Loading Spinner Component
 const LoadingSpinner = () => (
-  <div className="relative flex flex-col items-center justify-center min-h-screen bg-gray-50">
-    <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
-      <svg
-        className="w-16 h-16 text-indigo-500 animate-spin"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8H4z"
-        />
-      </svg>
-      <p className="mt-4 text-xl font-medium text-gray-700">
-        Loading Home Page...
+  <div className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50">
+    <div className="relative flex flex-col items-center justify-center p-8 bg-white/80 rounded-2xl shadow-xl backdrop-blur-md">
+      {/* Logo and animated spinner container */}
+      <div className="relative">
+        {/* Animated background blob */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-300 to-purple-300 opacity-30 blur-lg animate-pulse"></div>
+
+        {/* Custom animated spinner */}
+        <div className="w-24 h-24 relative flex items-center justify-center">
+          {/* Outer ring */}
+          <div className="absolute w-full h-full rounded-full border-4 border-indigo-500/30 border-t-indigo-600 animate-spin"></div>
+
+          {/* Middle ring - spins in opposite direction */}
+          <div
+            className="absolute w-4/5 h-4/5 rounded-full border-4 border-purple-500/30 border-b-purple-600 animate-spin"
+            style={{ animationDirection: "reverse", animationDuration: "1.5s" }}
+          ></div>
+
+          {/* Inner circle with app letter or logo */}
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 shadow-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">S</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Loading text with animated dots */}
+      <p className="mt-6 text-xl font-medium text-gray-700 flex items-center">
+        Loading
+        <span className="inline-flex ml-2">
+          <span className="animate-dot-1">.</span>
+          <span className="animate-dot-2">.</span>
+          <span className="animate-dot-3">.</span>
+        </span>
       </p>
-      <p className="text-sm text-gray-500">
-        Please wait while we prepare your experience.
+
+      <p className="mt-2 text-sm text-gray-500">
+        Preparing your SplitEase experience
       </p>
     </div>
   </div>
