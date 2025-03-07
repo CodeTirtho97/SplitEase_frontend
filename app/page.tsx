@@ -333,8 +333,13 @@ export default function Home() {
                 >
                   <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded"></div>
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                    Mobile View
+                  <div className="w-full h-full">
+                    <Image
+                      src="/home_mobile.png"
+                      alt="SplitEase Mobile App"
+                      fill
+                      className="object-cover"
+                    />
                   </div>
                 </motion.div>
 
@@ -347,8 +352,13 @@ export default function Home() {
                     className="relative w-64 h-80 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl"
                   >
                     <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                      Tablet View
+                    <div className="w-full h-full">
+                      <Image
+                        src="/home_tablet.png"
+                        alt="SplitEase Tablet App"
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   </motion.div>
                 )}
@@ -368,8 +378,13 @@ export default function Home() {
                         <div className="w-2 h-2 rounded-full bg-green-500"></div>
                       </div>
                     </div>
-                    <div className="w-full h-full pt-6 flex items-center justify-center text-gray-400 bg-gray-100">
-                      Desktop View
+                    <div className="w-full h-full">
+                      <Image
+                        src="/home_laptops.png"
+                        alt="SplitEase Desktop App"
+                        fill
+                        className="object-cover"
+                      />
                     </div>
                   </motion.div>
                 )}
