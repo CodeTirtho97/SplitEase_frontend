@@ -92,6 +92,18 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [toast]);
 
+  useEffect(() => {
+    if (token) {
+      console.log("Token available, attempting to fetch profile");
+      fetchUserProfile().catch((error) => {
+        console.error(
+          "Failed to load profile on context initialization:",
+          error
+        );
+      });
+    }
+  }, [token]);
+
   const fetchUserProfile = async (): Promise<void> => {
     if (!token) {
       console.error("No token found, cannot fetch profile");
@@ -187,9 +199,16 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      const updatedUser = await apiAddPaymentMethod(paymentData, token);
-      setUser(updatedUser); // Update Context State with new payment methods
-      return updatedUser;
+      const result = await apiAddPaymentMethod(paymentData, token);
+      // Instead of replacing the entire user object, merge the new payment methods
+      setUser((prevUser) => {
+        if (!prevUser) return result;
+        return {
+          ...prevUser,
+          paymentMethods: result.paymentMethods || prevUser.paymentMethods,
+        };
+      });
+      return result;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Add Payment Error:");
     }

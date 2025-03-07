@@ -311,39 +311,44 @@ export default function Profile() {
       if (name.length < 2) {
         setSuggestedFriends([]);
         setToast(null);
-        setFriendSearchLoading(false); // Reset local loading
+        setFriendSearchLoading(false);
         return;
       }
 
-      setFriendSearchLoading(true); // Set local loading for friend search
+      setFriendSearchLoading(true);
 
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
       debounceTimeout.current = setTimeout(async () => {
         try {
+          // Ensure proper error handling and correct parameter passing
           const friends = await searchFriend(name);
           console.log("Friend search response:", friends);
-          setSuggestedFriends(friends || []);
 
-          if (friends.length === 0) {
-            setToast({ message: "No friends found", type: "error" });
+          // Check if friends is an array
+          if (Array.isArray(friends)) {
+            setSuggestedFriends(friends);
+
+            if (friends.length === 0) {
+              setToast({ message: "No friends found", type: "error" });
+            } else {
+              setToast(null);
+            }
           } else {
-            setToast(null); // ✅ Hide previous error
+            // Handle case where API doesn't return expected array
+            console.error("Friends search returned unexpected data:", friends);
+            setSuggestedFriends([]);
+            setToast({ message: "Error searching friends", type: "error" });
           }
         } catch (error: any) {
-          console.error(
-            "Friend search error:",
-            error.response?.data || error.message
-          );
+          console.error("Friend search error:", error);
           setSuggestedFriends([]);
           setToast({
-            message:
-              error.message ||
-              "Failed to search friends! Try again with a different name",
+            message: error.message || "Failed to search friends!",
             type: "error",
           });
         } finally {
-          setFriendSearchLoading(false); // Reset local loading after search
+          setFriendSearchLoading(false);
         }
       }, 500);
     },
@@ -450,13 +455,12 @@ export default function Profile() {
     }
   }, [showPaymentToast]);
 
-  const handleCloseModal = () => {
-    setIsAddPaymentModalOpen(false);
-    // Reset payment fields after a small delay to ensure modal animation completes
+  const handleCloseContactModal = () => {
+    setIsAddContactModalOpen(false);
     setTimeout(() => {
-      setPaymentType(""); // Reset payment type
-      setPaymentDetails(""); // Reset payment details
-    }, 300); // Match the delay with your modal animation or UI transition
+      setFriendName("");
+      setSuggestedFriends([]);
+    }, 300);
   };
 
   // ✅ Handle Password Change
@@ -539,17 +543,22 @@ export default function Profile() {
   };
 
   const handleDeletePayment = async (paymentId: string) => {
-    setLoading(true); // Set global loading for this operation
     try {
+      setLoading(true);
       await deletePayment(paymentId);
-      setToast({ message: "Payment method removed!", type: "success" });
 
-      await fetchUserProfile(); // ✅ Refresh UI
-    } catch (error) {
+      // Simply reload the profile data after deletion
+      await fetchUserProfile();
+
+      setToast({ message: "Payment method removed!", type: "success" });
+    } catch (error: any) {
       console.error("Error deleting payment:", error);
-      setToast({ message: "Failed to remove payment method!", type: "error" });
+      setToast({
+        message: error.message || "Failed to remove payment method!",
+        type: "error",
+      });
     } finally {
-      setLoading(false); // Stop global loading
+      setLoading(false);
     }
   };
 
@@ -586,6 +595,8 @@ export default function Profile() {
       setLoading(false);
     }
   };
+
+  const isGoogleUser = user?.googleId ? true : false;
 
   if (loading) {
     return (
@@ -792,11 +803,11 @@ export default function Profile() {
               text="Change Password"
               onClick={() => setIsPasswordModalOpen(true)}
               className={`w-full ${
-                user?.googleId
+                isGoogleUser
                   ? "bg-gray-300 cursor-not-allowed"
                   : "bg-yellow-500 hover:bg-yellow-600"
               } text-white`}
-              disabled={!!user?.googleId || loading} // Disable only if googleId exists
+              disabled={isGoogleUser || loading} // Disable based on googleId
             />
           </div>
         </div>
@@ -961,7 +972,7 @@ export default function Profile() {
               {/* Modal Buttons */}
               <div className="mt-4 flex justify-between">
                 <button
-                  onClick={() => setIsAddContactModalOpen(false)}
+                  onClick={handleCloseContactModal}
                   className="text-gray-600"
                   disabled={loading}
                 >
