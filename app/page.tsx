@@ -5,6 +5,7 @@ import Link from "next/link";
 import Testimonials from "@/components/Testimonials";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMediaQuery } from "react-responsive";
 
 // Loading Spinner Component
 const LoadingSpinner = () => (
@@ -252,26 +253,30 @@ export default function Home() {
     return () => clearInterval(typeInterval);
   }, []);
 
+  // Media queries for responsive design
+  const isTabletOrLarger = useMediaQuery({ minWidth: 768 });
+  const isDesktop = useMediaQuery({ minWidth: 1024 });
+
   if (loading) {
     return <LoadingSpinner />;
   }
 
   return (
-    <main className="relative flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-50 to-indigo-50 text-gray-900 overflow-x-hidden">
+    <main className="relative flex flex-col items-center justify-center min-h-screen text-gray-900 overflow-x-hidden bg-gradient-to-br from-white via-indigo-50 to-purple-50">
       {/* Animated Particles Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute w-full h-full opacity-30">
+        <div className="absolute w-full h-full opacity-20">
           {/* This would be replaced with a proper particle animation library */}
-          {Array.from({ length: 50 }).map((_, i) => (
+          {Array.from({ length: 30 }).map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-indigo-500"
+              className="absolute rounded-full bg-gradient-to-r from-indigo-300 to-purple-300"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,
                 width: `${Math.random() * 10 + 5}px`,
                 height: `${Math.random() * 10 + 5}px`,
-                opacity: Math.random() * 0.5,
+                opacity: Math.random() * 0.6,
                 animation: `float ${Math.random() * 10 + 10}s linear infinite`,
               }}
             />
@@ -280,12 +285,12 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative z-10 flex flex-col items-center pt-24 pb-20 px-6 w-full">
+      <section className="relative z-10 flex flex-col items-center pt-36 pb-24 px-6 w-full">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center max-w-5xl"
+          className="text-center max-w-6xl"
         >
           <div className="relative">
             <Image
@@ -302,23 +307,23 @@ export default function Home() {
                 repeat: Infinity,
                 repeatType: "reverse",
               }}
-              className="absolute -z-10 inset-0 rounded-full bg-indigo-300 opacity-30 blur-2xl"
+              className="absolute -z-10 inset-0 rounded-full bg-gradient-to-r from-indigo-300 to-purple-300 opacity-30 blur-2xl"
             />
           </div>
 
-          <h1 className="text-7xl font-extrabold mt-6 text-indigo-800 tracking-wide">
+          <h1 className="text-6xl md:text-7xl font-extrabold mt-8 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-700 text-transparent bg-clip-text tracking-wide">
             {appName}
             <span className="text-indigo-500 animate-blink">.</span>
           </h1>
 
-          <p className="text-2xl text-gray-700 mt-6 font-semibold max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-700 mt-8 font-semibold max-w-3xl mx-auto">
             Simplify bill splitting, track expenses, and settle payments
             effortlessly with friends!
           </p>
 
           {/* Trust Badge */}
-          <div className="mt-4">
-            <span className="inline-flex items-center px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+          <div className="mt-6">
+            <span className="inline-flex items-center px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 shadow-sm">
               <svg
                 className="w-4 h-4 mr-1"
                 fill="currentColor"
@@ -335,8 +340,8 @@ export default function Home() {
           </div>
 
           {/* App Store Badges and Device Mockup */}
-          <div className="mt-12 relative">
-            <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-12">
+          <div className="mt-14 relative">
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-16">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -386,19 +391,62 @@ export default function Home() {
               </motion.button>
             </div>
 
-            <div className="relative w-full max-w-4xl mx-auto">
+            <div className="relative w-full max-w-5xl mx-auto">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 w-full">
-                <div className="w-64 h-64 rounded-full bg-indigo-400 opacity-20 blur-3xl mx-auto"></div>
+                <div className="w-64 h-64 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 opacity-20 blur-3xl mx-auto"></div>
               </div>
 
-              {/* Phone mockups would go here */}
-              <div className="flex justify-center">
-                <div className="relative w-64 h-64 md:w-72 md:h-72 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl">
+              {/* Device mockups */}
+              <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
+                {/* Mobile */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="relative w-48 h-96 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl"
+                >
                   <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    App Screenshot
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded"></div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                    Mobile View
                   </div>
-                </div>
+                </motion.div>
+
+                {/* Tablet - Only show on tablet+ screens */}
+                {isTabletOrLarger && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.4 }}
+                    className="relative w-64 h-80 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl"
+                  >
+                    <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
+                    <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
+                      Tablet View
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Desktop - Only show on desktop screens */}
+                {isDesktop && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.6 }}
+                    className="relative w-72 h-56 border-8 border-gray-800 rounded-xl bg-white overflow-hidden shadow-2xl"
+                  >
+                    <div className="absolute top-0 w-full h-6 bg-gray-800 flex items-center px-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      </div>
+                    </div>
+                    <div className="w-full h-full pt-6 flex items-center justify-center text-gray-400 bg-gray-100">
+                      Desktop View
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
@@ -411,7 +459,7 @@ export default function Home() {
       <section
         ref={featuresRef as React.RefObject<HTMLElement>}
         id="features"
-        className="w-full py-24 bg-white"
+        className="w-full py-24 bg-white rounded-t-[40px] shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]"
       >
         <div className="max-w-6xl mx-auto px-6">
           <motion.div
@@ -421,10 +469,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 shadow-sm">
               Features
             </span>
-            <h2 className="text-5xl font-extrabold mt-4 mb-6">
+            <h2 className="text-5xl font-extrabold mt-6 mb-6">
               <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
                 Why Choose SplitEase?
               </span>
@@ -493,10 +541,10 @@ export default function Home() {
       {/* Social Proof Section */}
       <section
         id="social-proof"
-        className="w-full py-12 bg-gradient-to-b from-indigo-50 to-purple-50"
+        className="w-full py-12 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50"
       >
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+          <div className="flex flex-wrap justify-center items-center gap-8 opacity-70">
             {[
               "Company A",
               "Company B",
@@ -504,20 +552,30 @@ export default function Home() {
               "Company D",
               "Company E",
             ].map((company, i) => (
-              <div key={i} className="flex items-center justify-center h-12">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="flex items-center justify-center h-12"
+              >
                 <span className="text-xl font-bold text-gray-500">
                   {company}
                 </span>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Testimonials Section */}
+      <Testimonials />
+
+      {/* How It Works Section */}
       <section
-        id="testimonials"
-        className="w-full py-20 bg-gradient-to-b from-purple-50 to-indigo-50"
+        id="how-it-works"
+        className="w-full py-24 bg-white rounded-t-[40px] shadow-[0_-10px_30px_-15px_rgba(0,0,0,0.1)]"
       >
         <div className="max-w-6xl mx-auto px-6">
           <motion.div
@@ -527,36 +585,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
-              Testimonials
-            </span>
-            <h2 className="text-5xl font-extrabold mt-4 mb-6">
-              <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-                What Our Users Say
-              </span>
-            </h2>
-          </motion.div>
-
-          <Testimonials />
-        </div>
-      </section>
-
-      <WaveDivider color="#ffffff" />
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="w-full py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
-          >
-            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+            <span className="px-4 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 shadow-sm">
               Simple Process
             </span>
-            <h2 className="text-5xl font-extrabold mt-4 mb-6">
+            <h2 className="text-5xl font-extrabold mt-6 mb-6">
               <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
                 How It Works
               </span>
@@ -566,53 +598,113 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="relative">
-            {/* Connection Line */}
-            <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 hidden md:block"></div>
+          <div className="space-y-12 max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="flex flex-col md:flex-row items-center p-6 rounded-2xl bg-indigo-50/70 shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-indigo-600 text-white font-bold text-xl mb-4 md:mb-0 md:mr-6">
+                1
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center mb-2">
+                  <span className="text-2xl mr-3 text-indigo-600">👥</span>
+                  <h3 className="text-xl font-bold text-indigo-600">
+                    Create a Group & Add Members
+                  </h3>
+                </div>
+                <p className="text-gray-600">
+                  Easily create a group and invite your friends via email, phone
+                  number, or sharing a unique link.
+                </p>
+              </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  Step 1
+                </div>
+              </div>
+            </motion.div>
 
-            <div className="space-y-12">
-              <StepCard
-                number="1"
-                title="Create a Group & Add Members"
-                description="Easily create a group and invite your friends via email, phone number, or sharing a unique link."
-                icon="👥"
-                color="indigo-600"
-                bg="indigo-50/70"
-                delay={0.1}
-              />
-              <StepCard
-                number="2"
-                title="Track & Add Expenses in Real-Time"
-                description="Snap a photo of receipts or manually add expenses. Everyone gets notified instantly."
-                icon="📝"
-                color="purple-600"
-                bg="purple-50/70"
-                delay={0.2}
-              />
-              <StepCard
-                number="3"
-                title="Instantly Settle Payments with One Click"
-                description="Choose your preferred payment method and settle debts with just one tap."
-                icon="✅"
-                color="green-600"
-                bg="green-50/70"
-                delay={0.3}
-              />
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex flex-col md:flex-row items-center p-6 rounded-2xl bg-purple-50/70 shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-purple-600 text-white font-bold text-xl mb-4 md:mb-0 md:mr-6">
+                2
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center mb-2">
+                  <span className="text-2xl mr-3 text-purple-600">📝</span>
+                  <h3 className="text-xl font-bold text-purple-600">
+                    Track & Add Expenses in Real-Time
+                  </h3>
+                </div>
+                <p className="text-gray-600">
+                  Snap a photo of receipts or manually add expenses. Everyone
+                  gets notified instantly.
+                </p>
+              </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  Step 2
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col md:flex-row items-center p-6 rounded-2xl bg-green-50/70 shadow-md hover:shadow-xl transition-all duration-300"
+            >
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-600 text-white font-bold text-xl mb-4 md:mb-0 md:mr-6">
+                3
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <div className="flex flex-col md:flex-row md:items-center mb-2">
+                  <span className="text-2xl mr-3 text-green-600">✅</span>
+                  <h3 className="text-xl font-bold text-green-600">
+                    Instantly Settle Payments with One Click
+                  </h3>
+                </div>
+                <p className="text-gray-600">
+                  Choose your preferred payment method and settle debts with
+                  just one tap.
+                </p>
+              </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  Step 3
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Final CTA Section */}
-      <section className="w-full py-20 bg-gradient-to-b from-indigo-600 to-purple-700 text-white">
-        <div className="max-w-5xl mx-auto px-6 text-center">
+      <section className="w-full py-20 bg-gradient-to-b from-indigo-600 to-purple-800 text-white relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-purple-300 -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-indigo-300 translate-x-1/2 translate-y-1/2 blur-3xl"></div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl font-bold mb-6">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               Ready to simplify group expenses?
             </h2>
             <p className="text-xl opacity-90 mb-10 max-w-2xl mx-auto">
@@ -623,13 +715,45 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="inline-block bg-white text-indigo-700 px-8 py-4 rounded-xl shadow-lg 
-                hover:shadow-xl transition duration-300 font-bold text-lg"
+                hover:shadow-2xl transition duration-300 font-bold text-lg"
             >
               <Link href="/signup">Get Started — It's Free!</Link>
             </motion.div>
           </motion.div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="w-full py-8 bg-gray-900 text-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="mb-4 md:mb-0">
+              <span className="text-xl font-bold">SplitEase</span>
+              <span className="text-sm ml-2">© 2025</span>
+            </div>
+            <div className="flex space-x-6">
+              <Link
+                href="/privacy"
+                className="text-gray-300 hover:text-white transition"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-gray-300 hover:text-white transition"
+              >
+                Terms of Service
+              </Link>
+              <Link
+                href="/contact"
+                className="text-gray-300 hover:text-white transition"
+              >
+                Contact Us
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
     </main>
   );
 }
