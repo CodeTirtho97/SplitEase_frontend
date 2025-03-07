@@ -9,17 +9,19 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import {
-  fetchProfile,
-  updateProfile,
-  changePassword,
-  addPaymentMethod,
-  searchFriend,
-  addFriend,
-  deleteFriend,
-  deletePayment,
-} from "../utils/api/profile";
 import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
+
+// Import API functions - note the renamed imports to avoid naming conflicts
+import {
+  fetchProfile as apiFetchProfile,
+  updateProfile as apiUpdateProfile,
+  changePassword as apiChangePassword,
+  addPaymentMethod as apiAddPaymentMethod,
+  searchFriend as apiSearchFriend,
+  addFriend as apiAddFriend,
+  deleteFriend as apiDeleteFriend,
+  deletePayment as apiDeletePayment,
+} from "../utils/api/profile";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -75,7 +77,7 @@ export const ProfileContext = createContext<ProfileContextType | null>(null);
 export const ProfileProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
-  const { token, loading: authLoading } = useAuth() || {}; // Use token and loading from AuthContext
+  const { token } = useAuth() || {}; // Use token from AuthContext
 
   const [toast, setToast] = useState<{
     message: string;
@@ -92,22 +94,25 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserProfile = async (): Promise<void> => {
     if (!token) {
-      console.error("❌ No token found, redirecting to login...");
-      router.push("/login");
+      console.error("No token found, cannot fetch profile");
       return;
     }
 
     try {
-      //console.log("🔄 Fetching Profile Data...");
-      const data = await fetchProfile(token); // Use token from AuthContext
-      //console.log("✅ Profile Data Received:", data);
-      setUser(data); // ✅ Update state with fetched user data
+      console.log(
+        "Fetching Profile Data with token:",
+        token ? "Token exists" : "No token"
+      );
+      const data = await apiFetchProfile(token); // Use token from AuthContext
+      console.log("Profile Data Received:", data);
+      setUser(data); // Update state with fetched user data
     } catch (error: any) {
+      console.error("Profile fetch error:", error);
       throw new Error(error.message || "Profile Fetch Error!");
     }
   };
 
-  // 🔹 Update Profile
+  // Update Profile
   const updateUserProfile = async (updatedData: {
     fullName?: string;
     gender?: string;
@@ -115,9 +120,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      //console.log("🔄 Sending Update Request:", updatedData);
-      const response = await updateProfile(updatedData, token); // Correct parameter order: updatedData first, then token
-      //console.log("✅ Update Successful:", response);
+      const response = await apiUpdateProfile(updatedData, token);
       setUser(response); // Update user state with new data
       return response;
     } catch (error: any) {
@@ -131,7 +134,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Upload or Update Profile Picture
+  // Upload or Update Profile Picture
   const uploadProfilePic = async (imageFile: File): Promise<string> => {
     if (!token) throw new Error("User not authenticated!");
 
@@ -148,8 +151,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
       setUser((prevUser: User | null) =>
         prevUser ? { ...prevUser, profilePic: response.data.profilePic } : null
-      ); // ✅ Update profile pic in context
-      return response.data.profilePic; // ✅ Return updated image URL
+      ); // Update profile pic in context
+      return response.data.profilePic; // Return updated image URL
     } catch (error: any) {
       console.error("Profile Picture Upload Error:", error);
       throw new Error(
@@ -158,7 +161,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🔹 Update Password Function
+  // Update Password Function
   const updatePassword = async (passwords: {
     oldPassword: string;
     newPassword: string;
@@ -167,7 +170,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      const response = await changePassword(passwords, token); // Correct parameter order: passwords first, then token
+      const response = await apiChangePassword(passwords, token);
       setToast({ message: "Password updated successfully!", type: "success" });
     } catch (error: any) {
       throw new Error(
@@ -176,7 +179,7 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // 🔹 Add Payment Method
+  // Add Payment Method
   const addPayment = async (paymentData: {
     methodType: string;
     accountDetails: string;
@@ -184,21 +187,21 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      const updatedUser = await addPaymentMethod(paymentData, token); // Correct parameter order: paymentData first, then token
-      setUser(updatedUser); // ✅ Update Context State with new payment methods
+      const updatedUser = await apiAddPaymentMethod(paymentData, token);
+      setUser(updatedUser); // Update Context State with new payment methods
       return updatedUser;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Add Payment Error:");
     }
   };
 
-  // ✅ Search for a Friend by Name
+  // Search for a Friend by Name
   const searchFriend = async (friendName: string): Promise<User[]> => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      const friends = await searchFriend(friendName); // Call without token, let profileAPI.ts handle it
-      return friends || []; // ✅ Fix: Return empty array instead of null
+      const friends = await apiSearchFriend(friendName, token);
+      return friends || []; // Fix: Return empty array instead of null
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to search friends"
@@ -206,25 +209,25 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Add a Friend by ID
+  // Add a Friend by ID
   const addFriend = async (friendId: string): Promise<void> => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      const response = await addFriend(friendId); // Call without token, let profileAPI.ts handle it
-      await fetchUserProfile(); // ✅ Refresh profile after adding
+      const response = await apiAddFriend(friendId, token);
+      await fetchUserProfile(); // Refresh profile after adding
       setToast({ message: "Friend added successfully!", type: "success" });
     } catch (error: any) {
       throw new Error(error.response?.data?.message || "Failed to add friend");
     }
   };
 
-  // ✅ Delete a Friend by ID
+  // Delete a Friend by ID
   const deleteFriend = async (friendId: string): Promise<void> => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      await deleteFriend(friendId); // Call without token, let profileAPI.ts handle it
+      await apiDeleteFriend(friendId, token);
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to delete friend"
@@ -232,18 +235,31 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // ✅ Delete a Payment by ID
+  // Delete a Payment by ID
   const deletePayment = async (paymentId: string): Promise<void> => {
     if (!token) throw new Error("User not authenticated!");
 
     try {
-      await deletePayment(paymentId); // Call without token, let profileAPI.ts handle it
+      await apiDeletePayment(paymentId, token);
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message || "Failed to delete payment method"
       );
     }
   };
+
+  // Initialize profile data whenever token changes
+  useEffect(() => {
+    if (token) {
+      console.log("Token available, attempting to fetch profile");
+      fetchUserProfile().catch((error) => {
+        console.error(
+          "Failed to load profile on context initialization:",
+          error
+        );
+      });
+    }
+  }, [token]);
 
   return (
     <ProfileContext.Provider
@@ -263,4 +279,13 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </ProfileContext.Provider>
   );
+};
+
+// Export a custom hook for using the profile context
+export const useProfile = () => {
+  const context = useContext(ProfileContext);
+  if (!context) {
+    throw new Error("useProfile must be used within a ProfileProvider");
+  }
+  return context;
 };

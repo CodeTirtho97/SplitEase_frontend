@@ -1,6 +1,7 @@
 "use client";
+
 import { useContext, useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation"; // Removed usePathname to simplify
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,6 +17,7 @@ import {
   faStripe,
 } from "@fortawesome/free-brands-svg-icons";
 import { ProfileContext } from "@/context/profileContext";
+import { useAuth } from "@/context/authContext"; // Import useAuth explicitly
 
 // Define PaymentMethod interface inline
 interface PaymentMethod {
@@ -43,6 +45,7 @@ interface User {
 
 export default function Profile() {
   const router = useRouter();
+  const { token } = useAuth(); // Directly access the token from AuthContext
 
   // ✅ Ensure ProfileContext is valid before accessing user data
   const profileContext = useContext(ProfileContext);
@@ -122,53 +125,54 @@ export default function Profile() {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [showPasswordToast, setShowPasswordToast] = useState(false);
 
-  const isFetched = useRef(false);
+  // Fix: Use state to track profile fetch attempts
+  const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
+  const [profileFetchError, setProfileFetchError] = useState(false);
 
+  // Fixed useEffect for profile loading
   useEffect(() => {
     let mounted = true;
-    console.log("Profile component mounted");
 
     const loadUserProfile = async () => {
-      if (isFetched.current) return; // 🚀 Prevent multiple API calls
-      isFetched.current = true; // ✅ Mark as fetched
+      if (!token) {
+        console.log("No token available, waiting...");
+        return;
+      }
 
       setLoading(true);
+      setProfileFetchAttempted(true);
+
       try {
-        await fetchUserProfile(); // ✅ Wait for fetch to complete
-        if (mounted && user) {
-          console.log("User after fetch:", user);
-          setUpdatedName(user.fullName || "");
-          setUpdatedGender(
-            (user.gender?.toLowerCase() as "male" | "female" | "other") ||
-              "other"
-          );
-          setProfileImage(
-            user.profilePic ||
-              (user.gender?.toLowerCase() === "male"
-                ? "/avatar_male.png"
-                : user.gender?.toLowerCase() === "female"
-                ? "/avatar_female.png"
-                : "/avatar_trans.png")
-          );
+        await fetchUserProfile();
+        if (mounted) {
+          console.log("Profile data loaded successfully");
+          setProfileFetchError(false);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
+        if (mounted) {
+          setProfileFetchError(true);
+        }
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    loadUserProfile();
+    // Only attempt to load profile if we have a token and haven't tried yet
+    if (token && !profileFetchAttempted) {
+      loadUserProfile();
+    }
 
     return () => {
       mounted = false;
-      console.log("Profile component unmounted");
     };
-  }, []);
+  }, [token, profileFetchAttempted, fetchUserProfile]);
 
-  // Sync state with user changes from context, but only if user exists and data changes
+  // Sync state with user changes from context, but only if user exists
   useEffect(() => {
-    if (!user || isFetched.current) return; // 🚀 Run only on first mount when user is available
+    if (!user) return;
 
     const newName = user.fullName || "";
     const newGender =
@@ -181,37 +185,34 @@ export default function Profile() {
         ? "/avatar_female.png"
         : "/avatar_trans.png");
 
-    // ✅ Update only if values have changed (avoids redundant renders)
+    // Update only if values have changed (avoids redundant renders)
     setUpdatedName(newName);
     setUpdatedGender(newGender);
     setProfileImage(newProfileImage);
-
-    isFetched.current = true; // ✅ Prevents unnecessary future updates
-  }, [user]); // ✅ Empty dependency array ensures this runs only once
+  }, [user]);
 
   const hasRedirected = useRef(false);
 
+  // Redirect if no user and we've attempted to fetch
   useEffect(() => {
-    if (loading || hasRedirected.current) return; // 🚀 Prevent redirecting while fetching
+    if (loading || hasRedirected.current) return;
 
-    if (!user) {
-      console.log("User is null, waiting before redirecting...");
-
+    // If we've tried to fetch profile and there's no user, redirect to login
+    if (!user && profileFetchAttempted && !loading && !hasRedirected.current) {
       const timer = setTimeout(() => {
-        if (!user && !loading && !hasRedirected.current) {
-          hasRedirected.current = true; // 🚀 Ensure only one redirect happens
-          setToast({
-            message: "Session expired. Please log in again.",
-            type: "error",
-          });
-          router.push("/login");
-        }
-      }, 3000); // ⏳ Allow 3 seconds for fetch to complete
+        hasRedirected.current = true;
+        setToast({
+          message: "Session expired. Please log in again.",
+          type: "error",
+        });
+        router.push("/login");
+      }, 2000);
 
-      return () => clearTimeout(timer); // Cleanup on unmount
+      return () => clearTimeout(timer);
     }
-  }, [user, loading]); // ✅ Only triggers when user or loading changes
+  }, [user, loading, profileFetchAttempted, router]);
 
+  // Auto-hide toast after delay
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -565,6 +566,27 @@ export default function Profile() {
     }
   };
 
+  // Add a retry mechanism
+  const handleRetryFetch = async () => {
+    setLoading(true);
+    setProfileFetchError(false);
+    setProfileFetchAttempted(false); // Reset the attempted flag to try again
+
+    try {
+      await fetchUserProfile();
+      setToast({ message: "Profile loaded successfully!", type: "success" });
+    } catch (error) {
+      console.error("Error retrying profile fetch:", error);
+      setProfileFetchError(true);
+      setToast({
+        message: "Failed to load profile. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center bg-gradient-to-b from-gray-100 to-gray-200">
@@ -595,6 +617,42 @@ export default function Profile() {
           <p className="text-sm text-gray-500">
             Please wait while we fetch your profile data securely.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state with retry button
+  if (profileFetchError) {
+    return (
+      <div className="min-h-screen flex justify-center items-center bg-gradient-to-b from-gray-100 to-gray-200">
+        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md">
+          <svg
+            className="w-16 h-16 text-red-500 mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+          <p className="mt-2 text-xl font-medium text-gray-600">
+            Error Loading Profile
+          </p>
+          <p className="text-sm text-gray-500 mb-4 text-center">
+            There was an issue loading your profile data. Please try again.
+          </p>
+          <button
+            onClick={handleRetryFetch}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
