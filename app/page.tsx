@@ -285,7 +285,7 @@ export default function Home() {
       </div>
 
       {/* Hero Section */}
-      <section className="relative z-10 flex flex-col items-center pt-36 pb-24 px-6 w-full">
+      <section className="relative z-10 flex flex-col items-center pt-48 pb-24 px-6 w-full">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
