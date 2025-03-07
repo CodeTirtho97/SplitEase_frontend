@@ -26,6 +26,13 @@ interface PaymentMethod {
   _id?: string; // Optional MongoDB _id field
 }
 
+interface Friend {
+  _id: string;
+  fullName: string;
+  email: string;
+  profilePic?: string;
+}
+
 // Define User interface inline
 interface User {
   _id?: string; // Optional MongoDB _id field
@@ -826,34 +833,47 @@ export default function Profile() {
             suppressHydrationWarning
           >
             {user?.friends && user.friends.length > 0 ? (
-              user.friends.map((friendId: string, index: number) => (
-                <div
-                  key={index}
-                  className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
-                >
-                  <Image
-                    src="/avatar_friend.png"
-                    alt="Friend Avatar"
-                    width={40}
-                    height={40}
-                  />
-                  <div>
-                    <p className="font-semibold">
-                      {friendId || "Unknown Friend"}
-                    </p>
-                    <p className="text-sm text-gray-500">No email</p>{" "}
-                    {/* Adjust if you fetch friend details */}
-                  </div>
-                  <button
-                    onClick={() => handleDeleteFriend(friendId)}
-                    className="text-gray-400 hover:text-red-500 transition-all duration-300"
-                    title="Delete Friend"
-                    disabled={loading}
+              user.friends.map((friend, index) => {
+                // Use proper type checking
+                const isFriendObject = typeof friend !== "string";
+
+                // Extract values safely with type assertions
+                const friendId = isFriendObject
+                  ? (friend as Friend)._id
+                  : friend;
+                const friendName = isFriendObject
+                  ? (friend as Friend).fullName
+                  : "Unknown Friend";
+                const friendEmail = isFriendObject
+                  ? (friend as Friend).email
+                  : "No email";
+
+                return (
+                  <div
+                    key={typeof friendId === "string" ? friendId : index}
+                    className="mb-2 border-b pb-2 flex justify-between items-center cursor-default"
                   >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                </div>
-              ))
+                    <Image
+                      src="/avatar_friend.png"
+                      alt="Friend Avatar"
+                      width={40}
+                      height={40}
+                    />
+                    <div>
+                      <p className="font-semibold">{friendName}</p>
+                      <p className="text-sm text-gray-500">{friendEmail}</p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteFriend(friendId as string)}
+                      className="text-gray-400 hover:text-red-500 transition-all duration-300"
+                      title="Delete Friend"
+                      disabled={loading}
+                    >
+                      <FontAwesomeIcon icon={faTimes} />
+                    </button>
+                  </div>
+                );
+              })
             ) : (
               <p className="text-sm text-gray-500 cursor-default">
                 No contacts added yet.

@@ -32,6 +32,13 @@ interface PaymentMethod {
   _id?: string; // Optional MongoDB _id field
 }
 
+interface Friend {
+  _id: string;
+  fullName: string;
+  email: string;
+  profilePic?: string;
+}
+
 // Define User interface inline
 interface User {
   _id?: string; // Optional MongoDB _id field
@@ -43,7 +50,7 @@ interface User {
   resetPasswordExpires?: Date; // Optional
   googleId?: string; // Optional, for Google OAuth users
   profilePic: string; // Default is "", but can be updated
-  friends: string[]; // Array of ObjectId strings (simpler for API responses)
+  friends: Friend[] | string[]; // Array of ObjectId strings (simpler for API responses)
   paymentMethods: PaymentMethod[]; // Array of payment methods
   createdAt?: Date; // Optional, from timestamps
   updatedAt?: Date; // Optional, from timestamps
