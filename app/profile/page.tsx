@@ -147,15 +147,13 @@ export default function Profile() {
         if (mounted) {
           console.log("Profile data loaded successfully");
           setProfileFetchError(false);
+          setLoading(false); // Make sure this line is always executed when data is received
         }
       } catch (error) {
         console.error("Error fetching user profile:", error);
         if (mounted) {
           setProfileFetchError(true);
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
+          setLoading(false); // Also update loading state on error
         }
       }
     };
@@ -163,12 +161,16 @@ export default function Profile() {
     // Only attempt to load profile if we have a token and haven't tried yet
     if (token && !profileFetchAttempted) {
       loadUserProfile();
+    } else if (user) {
+      // If we already have user data, make sure loading is false
+      setLoading(false);
+      console.log("Loading state set to false");
     }
 
     return () => {
       mounted = false;
     };
-  }, [token, profileFetchAttempted, fetchUserProfile]);
+  }, [token, profileFetchAttempted, fetchUserProfile, user]);
 
   // Sync state with user changes from context, but only if user exists
   useEffect(() => {
