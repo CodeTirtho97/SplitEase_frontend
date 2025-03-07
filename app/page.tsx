@@ -666,11 +666,15 @@ export default function Home() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="w-full py-20 bg-gradient-to-r from-purple-600 to-indigo-700 text-white relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
-          <div className="absolute top-0 left-0 w-96 h-96 rounded-full bg-purple-300 -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-indigo-300 translate-x-1/2 translate-y-1/2 blur-3xl"></div>
+      <section className="w-full py-20 bg-gradient-to-r from-indigo-600 to-purple-600 text-white relative overflow-hidden">
+        {/* Background decorations that match your footer design */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-24 -left-24 w-64 h-64 rounded-full bg-indigo-500 opacity-20 blur-3xl"></div>
+          <div className="absolute top-1/2 right-1/4 w-96 h-96 rounded-full bg-purple-500 opacity-10 blur-3xl"></div>
+          <div className="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-indigo-400 opacity-20 blur-3xl"></div>
+
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-900/10 opacity-30"></div>
         </div>
 
         <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
@@ -687,15 +691,76 @@ export default function Home() {
               Join thousands of users who have made splitting bills stress-free
               with SplitEase
             </p>
+
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="inline-block bg-white text-indigo-700 px-8 py-4 rounded-xl shadow-lg 
-                hover:shadow-2xl transition duration-300 font-bold text-lg"
+              className="inline-block bg-white text-indigo-700 hover:text-purple-700 px-8 py-4 rounded-xl shadow-lg 
+          hover:shadow-white/20 transition-all duration-300 font-bold text-lg"
             >
-              <Link href="/signup">Get Started — It's Free!</Link>
+              <Link href="/signup">
+                <span className="flex items-center">
+                  Get Started — It's Free!
+                  <svg
+                    className="w-5 h-5 ml-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </span>
+              </Link>
             </motion.div>
+
+            {/* Social proof element */}
+            {/* <div className="mt-8 flex flex-wrap justify-center items-center gap-4">
+              <div className="flex items-center bg-white/10 px-4 py-2 rounded-full">
+                <span className="mr-2">⭐</span>
+                <span>4.8/5 Rating</span>
+              </div>
+              <div className="flex items-center bg-white/10 px-4 py-2 rounded-full">
+                <span className="mr-2">👥</span>
+                <span>10,000+ Users</span>
+              </div>
+              <div className="flex items-center bg-white/10 px-4 py-2 rounded-full">
+                <span className="mr-2">🔒</span>
+                <span>Secure Payments</span>
+              </div>
+            </div> */}
           </motion.div>
+        </div>
+
+        {/* Wave pattern that connects to footer */}
+        <div className="absolute bottom-0 left-0 w-full overflow-hidden">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1440 50"
+            className="w-full"
+          >
+            <path
+              fill="url(#footerGradient)"
+              fillOpacity="1"
+              d="M0,32L48,26.7C96,21,192,11,288,10.7C384,11,480,21,576,32C672,43,768,53,864,48C960,43,1056,21,1152,16C1248,11,1344,21,1392,26.7L1440,32L1440,100L1392,100C1344,100,1248,100,1152,100C1056,100,960,100,864,100C768,100,672,100,576,100C480,100,384,100,288,100C192,100,96,100,48,100L0,100Z"
+            ></path>
+            <defs>
+              <linearGradient
+                id="footerGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="0%"
+              >
+                <stop offset="0%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#9333ea" />
+              </linearGradient>
+            </defs>
+          </svg>
         </div>
       </section>
     </main>
