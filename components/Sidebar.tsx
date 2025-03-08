@@ -142,12 +142,12 @@ const Sidebar = ({ activePage }: SidebarProps) => {
         </nav>
 
         {/* SplitEase branding at bottom */}
-        <div className="mt-auto mb-6 px-6 flex items-center gap-3">
+        {/* <div className="mt-auto mb-6 px-6 flex items-center gap-3">
           <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md">
             <span className="text-indigo-700 font-bold text-lg">S</span>
           </div>
           <span className="font-semibold text-white">SplitEase</span>
-        </div>
+        </div> */}
       </div>
     </aside>
   );
