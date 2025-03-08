@@ -6,6 +6,7 @@ import Testimonials from "@/components/Testimonials";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "react-responsive";
+import DeviceMockups from "@/components/DeviceMockups";
 
 // Enhanced Loading Spinner Component
 const LoadingSpinner = () => (
@@ -333,71 +334,19 @@ export default function Home() {
               </div>
 
               {/* Device mockups */}
-              <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8">
-                {/* Mobile */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="relative w-48 h-96 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl"
-                >
-                  <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-16 h-1 bg-gray-800 rounded"></div>
-                  <div className="w-full h-full">
-                    <Image
-                      src="/home_mobile.png"
-                      alt="SplitEase Mobile App"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </motion.div>
+              <div className="relative w-full max-w-6xl mx-auto mt-20">
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 w-full">
+                  <div className="w-64 h-64 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 opacity-20 blur-3xl mx-auto"></div>
+                </div>
 
-                {/* Tablet - Only show on tablet+ screens */}
-                {isTabletOrLarger && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="relative w-64 h-80 border-8 border-gray-800 rounded-3xl bg-white overflow-hidden shadow-2xl"
-                  >
-                    <div className="absolute top-0 w-full h-6 bg-gray-800"></div>
-                    <div className="w-full h-full">
-                      <Image
-                        src="/home_tablet.png"
-                        alt="SplitEase Tablet App"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Desktop - Only show on desktop screens */}
-                {isDesktop && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                    className="relative w-72 h-56 border-8 border-gray-800 rounded-xl bg-white overflow-hidden shadow-2xl"
-                  >
-                    <div className="absolute top-0 w-full h-6 bg-gray-800 flex items-center px-2">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                      </div>
-                    </div>
-                    <div className="w-full h-full">
-                      <Image
-                        src="/home_laptops.png"
-                        alt="SplitEase Desktop App"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </motion.div>
-                )}
+                <DeviceMockups
+                  mobileImage="/home_mobile.png"
+                  tabletImage="/home_tablet.png"
+                  desktopImage="/home_laptops.png"
+                  showMobile={true}
+                  showTablet={isTabletOrLarger}
+                  showDesktop={isDesktop}
+                />
               </div>
             </div>
           </div>
