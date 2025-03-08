@@ -21,13 +21,13 @@ import {
   fetchGroupTransactions,
   calculateOwes,
 } from "@/utils/api/group";
-import Cookies from "js-cookie"; // Using cookies instead of localStorage
-import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
+import Cookies from "js-cookie";
+import { useAuth } from "@/context/authContext";
 
 export default function Groups() {
   const router = useRouter();
   const { groups, refreshGroups, friends, refreshFriends } = useGroups();
-  const { token, loading: authLoading } = useAuth() || {}; // Use useAuth for authentication state
+  const { token, loading: authLoading } = useAuth() || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -113,7 +113,7 @@ export default function Groups() {
 
   const avatarMap: { [key: string]: string } = {
     Travel: "/travel_group.png",
-    Household: "/household_group.png",
+    Household: "/accomodation_group.png",
     Event: "/event_group.png",
     Work: "/work_group.png",
     Friends: "/friends_group.png",
@@ -250,10 +250,10 @@ export default function Groups() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-100 pt-20 justify-center items-center">
-        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
+      <div className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 pt-20 justify-center items-center">
+        <div className="relative flex flex-col items-center justify-center p-8 bg-white/70 rounded-2xl shadow-2xl backdrop-blur-lg animate-pulse">
           <svg
-            className="w-16 h-16 text-indigo-500 animate-spin"
+            className="w-20 h-20 text-purple-500 animate-spin"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -272,11 +272,11 @@ export default function Groups() {
               d="M4 12a8 8 0 018-8v8H4z"
             />
           </svg>
-          <p className="mt-4 text-xl font-medium text-gray-700">
-            Loading Groups...
+          <p className="mt-6 text-2xl font-semibold text-gray-800">
+            Loading Groups
           </p>
-          <p className="text-sm text-gray-500">
-            Please wait while we fetch your groups securely.
+          <p className="text-sm text-gray-600 text-center">
+            Preparing your collaborative spaces securely...
           </p>
         </div>
       </div>
@@ -285,22 +285,21 @@ export default function Groups() {
 
   return (
     <div
-      className="flex min-h-screen bg-gray-100 pt-20"
+      className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 pt-20"
       suppressHydrationWarning
     >
-      {/* Sidebar */}
       <Sidebar activePage="groups" />
 
-      <div className="flex-1 p-8">
-        {/* Toast Notification (Client-side only) */}
+      <div className="flex-1 p-8 max-w-7xl mx-auto">
+        {/* Toast Notification with Modern Design */}
         {toast && typeof window !== "undefined" && (
           <div
-            className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm transition-all duration-500 transform ${
+            className={`fixed top-24 right-6 px-6 py-4 rounded-xl shadow-lg flex items-center gap-4 text-white text-sm transition-all duration-500 transform origin-top-right ${
               toast.type === "success"
-                ? "bg-green-500"
+                ? "bg-gradient-to-r from-green-500 to-green-600"
                 : toast.type === "info"
-                ? "bg-blue-500"
-                : "bg-red-500"
+                ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                : "bg-gradient-to-r from-red-500 to-red-600"
             }`}
             style={{ zIndex: 10000 }}
           >
@@ -308,84 +307,100 @@ export default function Groups() {
               icon={
                 toast.type === "success" ? faCheckCircle : faExclamationCircle
               }
-              className="text-lg"
+              className="text-xl"
             />
-            <span>{toast.message}</span>
+            <span className="font-medium">{toast.message}</span>
           </div>
         )}
 
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+        {/* Modern Page Header */}
+        <div className="flex items-center justify-between mb-10">
+          <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500">
             Groups
           </h1>
           <Button
             text="Add Group"
             onClick={() => setIsModalOpen(true)}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-xl flex items-center gap-2 text-xl"
+            className="bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            <FontAwesomeIcon icon={faPlus} />
+            <FontAwesomeIcon icon={faPlus} className="text-xl" />
             <span>Add Group</span>
           </Button>
         </div>
 
-        {/* Group Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Total Groups
-            </h2>
-            <p className="text-2xl font-bold text-indigo-600">
-              {groups.length}
-            </p>
-          </div>
-          <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Active Groups
-            </h2>
-            <p className="text-2xl font-bold text-green-600">
-              {groups.filter((group) => !group.completed).length}
-            </p>
-          </div>
-          <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-            <h2 className="text-lg font-semibold text-gray-700">
-              Completed Groups
-            </h2>
-            <p className="text-2xl font-bold text-gray-500">
-              {groups.filter((group) => group.completed).length}
-            </p>
-          </div>
+        {/* Glassmorphic Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          {[
+            { label: "Total Groups", value: groups.length, color: "purple" },
+            {
+              label: "Active Groups",
+              value: groups.filter((group) => !group.completed).length,
+              color: "green",
+            },
+            {
+              label: "Completed Groups",
+              value: groups.filter((group) => group.completed).length,
+              color: "gray",
+            },
+          ].map((card, index) => (
+            <div
+              key={index}
+              className={`bg-white/40 backdrop-blur-lg border border-white/20 rounded-2xl p-6 text-center shadow-xl transform transition-all duration-300 hover:-translate-y-2`}
+            >
+              <h2
+                className={`text-lg font-semibold text-${card.color}-700 mb-2 opacity-80`}
+              >
+                {card.label}
+              </h2>
+              <p
+                className={`text-3xl font-bold text-${card.color}-600 bg-gradient-to-r from-${card.color}-500 to-${card.color}-600 text-transparent bg-clip-text`}
+              >
+                {card.value}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* Kanban Style Group Management */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Groups Grid with Modern Card Design */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Active Groups */}
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
+          <div className="bg-white/50 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+            <h2 className="text-xl font-bold text-indigo-800 mb-6">
               Active Groups
             </h2>
 
             {groups.filter((group) => !group.completed).length === 0 ? (
-              <p className="text-gray-500 italic">No active groups found.</p>
+              <div className="text-center py-10 text-gray-500 bg-gray-100/50 rounded-xl">
+                <p className="text-lg font-medium italic">
+                  No active groups found
+                </p>
+                <p className="text-sm mt-2">
+                  Create a new group to get started
+                </p>
+              </div>
             ) : (
               groups
                 .filter((group) => !group.completed)
                 .map((group) => (
                   <div
                     key={group._id}
-                    className="bg-gray-100 p-4 rounded-lg mb-3 flex items-center shadow-sm hover:shadow-md transition"
+                    className="bg-white/70 p-4 rounded-xl mb-4 flex items-center shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                   >
                     <Image
-                      src={avatarMap[group.type] || "/friends_group.png"} // Fallback avatar
+                      src={
+                        avatarMap[group.type] || "/friends_group_gradient.png"
+                      }
                       alt="Group Avatar"
-                      width={50}
-                      height={50}
-                      className="rounded-full mr-3"
+                      width={60}
+                      height={60}
+                      className="rounded-full mr-4 border-2 border-white shadow-lg"
                     />
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold">{group.name}</h3>
+                      <h3 className="text-lg font-bold text-indigo-800">
+                        {group.name}
+                      </h3>
                       <p className="text-sm text-gray-600">
-                        <FontAwesomeIcon icon={faUser} className="mr-1" />{" "}
+                        <FontAwesomeIcon icon={faUser} className="mr-2" />
                         {group.members.length} members · Created by{" "}
                         <span className="font-semibold">
                           {typeof group.createdBy === "object" &&
@@ -393,23 +408,18 @@ export default function Groups() {
                             ? group.createdBy.fullName
                             : "Unknown"}
                         </span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          Created on{" "}
-                          {new Date(group.createdAt).toLocaleDateString()}
-                        </span>
                       </p>
                     </div>
                     <div className="flex gap-3">
                       <Button
                         text="Edit"
                         onClick={() => handleEditGroup(group)}
-                        className="bg-yellow-500 text-white px-4 py-2 rounded-md"
+                        className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors"
                       />
                       <Button
                         text="View"
                         onClick={() => handleViewGroup(group)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
                       />
                     </div>
                   </div>
@@ -418,32 +428,43 @@ export default function Groups() {
           </div>
 
           {/* Completed Groups */}
-          <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
+          <div className="bg-white/50 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/20">
+            <h2 className="text-xl font-bold text-indigo-800 mb-6">
               Completed Groups
             </h2>
 
             {groups.filter((group) => group.completed).length === 0 ? (
-              <p className="text-gray-500 italic">No completed groups found.</p>
+              <div className="text-center py-10 text-gray-500 bg-gray-100/50 rounded-xl">
+                <p className="text-lg font-medium italic">
+                  No completed groups found
+                </p>
+                <p className="text-sm mt-2">
+                  Complete an active group to see it here
+                </p>
+              </div>
             ) : (
               groups
                 .filter((group) => group.completed)
                 .map((group) => (
                   <div
                     key={group._id}
-                    className="bg-gray-100 p-4 rounded-lg mb-3 flex items-center shadow-sm hover:shadow-md transition"
+                    className="bg-white/70 p-4 rounded-xl mb-4 flex items-center shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                   >
                     <Image
-                      src={avatarMap[group.type] || "/friends_group.png"} // Fallback image
+                      src={
+                        avatarMap[group.type] || "/friends_group_gradient.png"
+                      }
                       alt="Group Avatar"
-                      width={50}
-                      height={50}
-                      className="rounded-full mr-3"
+                      width={60}
+                      height={60}
+                      className="rounded-full mr-4 border-2 border-white shadow-lg"
                     />
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold">{group.name}</h3>
+                      <h3 className="text-lg font-bold text-indigo-800">
+                        {group.name}
+                      </h3>
                       <p className="text-sm text-gray-600">
-                        <FontAwesomeIcon icon={faUser} className="mr-1" />{" "}
+                        <FontAwesomeIcon icon={faUser} className="mr-2" />
                         {group.members.length} members · Created by{" "}
                         <span className="font-semibold">
                           {typeof group.createdBy === "object" &&
@@ -451,17 +472,12 @@ export default function Groups() {
                             ? group.createdBy.fullName
                             : "Unknown"}
                         </span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          Created on{" "}
-                          {new Date(group.createdAt).toLocaleDateString()}
-                        </span>
                       </p>
                     </div>
                     <Button
                       text="Delete"
                       onClick={() => handleDeleteGroup(group)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition-colors"
                     />
                   </div>
                 ))
