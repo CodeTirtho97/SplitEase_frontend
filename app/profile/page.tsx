@@ -46,9 +46,9 @@ interface User {
   password?: string; // Optional, only for non-Google users
   resetPasswordToken?: string; // Optional
   resetPasswordExpires?: Date; // Optional
-  googleId?: string; // Optional, for Google OAuth users
+  googleId?: string | null; // Optional, for Google OAuth users - ensure it allows null
   profilePic: string; // Default is "", but can be updated
-  friends: string[]; // Array of ObjectId strings (simpler for API responses)
+  friends: Friend[] | string[]; // Array of Friend objects or ObjectId strings
   paymentMethods: PaymentMethod[]; // Array of payment methods
   createdAt?: Date; // Optional, from timestamps
   updatedAt?: Date; // Optional, from timestamps
@@ -667,12 +667,12 @@ export default function Profile() {
     </div>
   );
 
-  const isGoogleUser = user?.googleId && user.googleId !== "";
+  const isGoogleUser = !!user?.googleId;
   console.log("Google ID check:", {
-    hasGoogleIdProperty: "googleId" in (user || {}),
     googleIdValue: user?.googleId,
-    isEmptyString: user?.googleId === "",
-    isGoogleUser: user?.googleId && user.googleId !== "",
+    googleIdType: typeof user?.googleId,
+    hasGoogleIdProperty: user && "googleId" in user,
+    isGoogleUserResult: !!user?.googleId,
   });
 
   if (loading) {
