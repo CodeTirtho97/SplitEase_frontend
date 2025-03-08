@@ -825,20 +825,21 @@ const LegalPage = () => {
                       </div>
                     </section>
                   </div>
-                  <div>
-                    <section className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-xl mt-8">
-                      <h3 className="text-xl font-semibold mb-3">
-                        Live Chat Support
-                      </h3>
-                      <p className="mb-4">
-                        Need immediate assistance? Our support team is available
-                        via live chat during business hours.
-                      </p>
-                      <button className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
-                        Start Live Chat
-                      </button>
-                    </section>
-                  </div>
+                </div>
+
+                <div>
+                  <section className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-xl mt-8">
+                    <h3 className="text-xl font-semibold mb-3">
+                      Live Chat Support
+                    </h3>
+                    <p className="mb-4">
+                      Need immediate assistance? Our support team is available
+                      via live chat during business hours.
+                    </p>
+                    <button className="bg-white text-indigo-700 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition-colors">
+                      Start Live Chat
+                    </button>
+                  </section>
                 </div>
 
                 <div className="border-t border-gray-200 pt-8 mt-8">
