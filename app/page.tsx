@@ -253,7 +253,7 @@ export default function Home() {
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-700 mt-8 font-semibold max-w-3xl mx-auto">
-            Simplify bill splitting, track expenses, and settle payments
+            Simplify Bill Splitting, Track Expenses, and Settle Payments
             effortlessly with friends!
           </p>
 
