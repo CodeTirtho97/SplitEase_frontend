@@ -616,6 +616,27 @@ export default function Profile() {
     }
   };
 
+  useEffect(() => {
+    // Clear payment form data when modal is closed
+    if (!isAddPaymentModalOpen) {
+      setPaymentType("");
+      setPaymentDetails("");
+    }
+
+    // Clear friend search data when modal is closed
+    if (!isAddContactModalOpen) {
+      setFriendName("");
+      setSuggestedFriends([]);
+    }
+
+    // Clear password change data when modal is closed
+    if (!isPasswordModalOpen) {
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [isAddPaymentModalOpen, isAddContactModalOpen, isPasswordModalOpen]);
+
   const UpdateLoadingOverlay = ({ message = "Updating..." }) => (
     <div className="fixed inset-0 z-50 bg-indigo-900/30 backdrop-blur-sm flex flex-col items-center justify-center">
       <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-sm mx-4">
@@ -646,7 +667,7 @@ export default function Profile() {
     </div>
   );
 
-  const isGoogleUser = user?.googleId ? true : false;
+  const isGoogleUser = user?.googleId && user.googleId !== "";
 
   if (loading) {
     return (
@@ -731,7 +752,7 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-36">
+      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-28">
         {/* Profile Header - Lighter color gradient */}
         <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white p-8 rounded-2xl mb-10 flex flex-col md:flex-row items-center shadow-xl">
           <div className="relative group">
