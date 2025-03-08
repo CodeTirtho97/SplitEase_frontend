@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import Testimonials from "@/components/Testimonials";
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMediaQuery } from "react-responsive";
 import DeviceMockups from "@/components/DeviceMockups";
+import { useAuth } from "@/context/authContext";
 
 // Enhanced Loading Spinner Component
 const LoadingSpinner = () => (
@@ -165,10 +167,25 @@ const FeatureCard = ({
 );
 
 export default function Home() {
+  const router = useRouter();
+  const { token, user } = useAuth();
   const [appName, setAppName] = useState("");
   const fullName = "SplitEase";
   const [loading, setLoading] = useState(true);
   const featuresRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Check if user is logged in
+    if (token) {
+      // Redirect to dashboard if user is already logged in
+      router.push("/dashboard");
+    }
+  }, [token, router]);
+
+  // If still checking authentication or redirecting, show loading spinner
+  if (loading || token) {
+    return <LoadingSpinner />;
+  }
 
   const scrollToFeatures = () => {
     if (featuresRef.current) {
