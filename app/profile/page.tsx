@@ -668,12 +668,12 @@ export default function Profile() {
   );
 
   const isGoogleUser = user?.googleId && user.googleId !== "";
-  console.log(
-    "User has Google ID:",
-    !!user?.googleId,
-    "Google ID value:",
-    user?.googleId
-  );
+  console.log("Google ID check:", {
+    hasGoogleIdProperty: "googleId" in (user || {}),
+    googleIdValue: user?.googleId,
+    isEmptyString: user?.googleId === "",
+    isGoogleUser: user?.googleId && user.googleId !== "",
+  });
 
   if (loading) {
     return (
@@ -734,13 +734,13 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Modern light gradient background with subtle pattern */}
+      {/* Enhanced Modern Background with More Visible Elements */}
       <div className="fixed inset-0 z-0">
-        {/* Base gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/60 via-white to-purple-50/60"></div>
+        {/* Base gradient background - darker now */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/80 via-white/90 to-purple-100/80"></div>
 
-        {/* Subtle dot pattern overlay */}
-        <div className="absolute inset-0 opacity-10">
+        {/* Dot pattern overlay - increased opacity */}
+        <div className="absolute inset-0 opacity-20">
           <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
             <defs>
               <pattern
@@ -749,17 +749,17 @@ export default function Profile() {
                 height="20"
                 patternUnits="userSpaceOnUse"
               >
-                <circle cx="2" cy="2" r="1" fill="currentColor" />
+                <circle cx="2" cy="2" r="1.5" fill="currentColor" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#dotPattern)" />
           </svg>
         </div>
 
-        {/* Soft decorative blobs */}
-        <div className="absolute top-0 right-0 w-1/3 h-1/3 rounded-full bg-indigo-200/10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-1/3 h-1/3 rounded-full bg-purple-200/10 blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/4 w-1/4 h-1/4 rounded-full bg-blue-200/10 blur-3xl"></div>
+        {/* Larger, more visible decorative blobs */}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 rounded-full bg-indigo-200/30 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 rounded-full bg-purple-200/30 blur-3xl"></div>
+        <div className="absolute top-1/3 left-1/4 w-1/3 h-1/3 rounded-full bg-blue-200/20 blur-3xl"></div>
       </div>
 
       {/* Content */}
