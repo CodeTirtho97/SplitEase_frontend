@@ -1,242 +1,220 @@
-import axios from 'axios';
+import axios from "axios";
+import Cookies from "js-cookie"; // Using cookies instead of localStorage
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Types
-export interface GroupMember {
-  _id: string;
-  fullName: string;
-  email: string;
-}
-
-export interface Group {
-  _id: string;
-  name: string;
-  description?: string;
-  type: "Travel" | "Household" | "Event" | "Work" | "Friends";
-  members: GroupMember[];
-  createdBy: GroupMember;
-  completed: boolean;
-  isFavorite?: boolean;
-  isArchived?: boolean;
-  lastActivity?: string;
-  createdAt: string;
-  updatedAt: string;
-  expensesCount?: number;
-  totalExpenses?: number;
-  pendingAmount?: number;
-}
-
-export interface NewGroup {
-  name: string;
-  description?: string;
-  type: "Travel" | "Household" | "Event" | "Work" | "Friends";
-  members: string[];
-}
-
-export interface GroupStats {
-  totalExpenses: number;
-  totalAmount: number;
-  settledAmount: number;
-  pendingAmount: number;
-  memberContributions: {
-    memberId: string;
-    memberName: string;
-    amount: number;
-    percentage: number;
-  }[];
-}
-
-export interface OweEntry {
-  from: string;
-  to: string;
-  amount: number;
-}
-
-export interface Friend {
-  _id: string;
-  fullName: string;
-  email: string;
-}
-
-// Fetch All Groups
-export const fetchGroups = async (token: string): Promise<Group[]> => {
+// ✅ Fetch User's Groups
+export const fetchUserGroups = async (token?: string) => {
   try {
-    const response = await axios.get(`${API_URL}/groups`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching groups:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch groups');
-  }
-};
-
-// Create New Group
-export const createNewGroup = async (groupData: NewGroup, token: string): Promise<Group> => {
-  try {
-    const response = await axios.post(`${API_URL}/groups`, groupData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error creating group:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to create group');
-  }
-};
-
-// Update Group
-export const updateGroup = async (groupId: string, updateData: any, token: string): Promise<Group> => {
-  try {
-    const response = await axios.put(`${API_URL}/groups/${groupId}`, updateData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error updating group:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to update group');
-  }
-};
-
-// Fetch Group by ID
-export const fetchGroupById = async (groupId: string, token: string): Promise<Group> => {
-  try {
-    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching group:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch group');
-  }
-};
-
-// Delete Group
-export const removeGroup = async (groupId: string, token: string): Promise<void> => {
-  try {
-    await axios.delete(`${API_URL}/groups/${groupId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  } catch (error: any) {
-    console.error('Error deleting group:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to delete group');
-  }
-};
-
-// Archive Group (Soft Delete)
-export const archiveGroup = async (groupId: string, token: string): Promise<Group> => {
-  try {
-    const response = await axios.put(`${API_URL}/groups/${groupId}/archive`, {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error archiving group:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to archive group');
-  }
-};
-
-// Fetch Group Transactions
-export const fetchGroupTransactions = async (groupId: string, token: string): Promise<any> => {
-  try {
-    const response = await axios.get(`${API_URL}/groups/${groupId}/transactions`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching group transactions:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch group transactions');
-  }
-};
-
-// Calculate Who Owes Whom
-export const calculateOwes = async (groupId: string, token: string): Promise<OweEntry[]> => {
-  try {
-    const response = await axios.get(`${API_URL}/groups/${groupId}/owes`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error calculating owes:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to calculate who owes whom');
-  }
-};
-
-// Get Group Stats
-export const fetchGroupStats = async (groupId: string, token: string): Promise<GroupStats> => {
-  try {
-    const response = await axios.get(`${API_URL}/groups/${groupId}/stats`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error('Error fetching group stats:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch group statistics');
-  }
-};
-
-// Get Multiple Groups by IDs
-export const fetchGroupsByIds = async (groupIds: string[], token: string): Promise<Group[]> => {
-  try {
-    const response = await axios.post(
-      `${API_URL}/groups/batch`,
-      { groupIds },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        console.warn("User not authenticated, returning empty groups list.");
+        return []; // Return empty array instead of throwing error
       }
-    );
-    return response.data;
+    }
+
+    const response = await axios.get(`${API_URL}/groups/mygroups`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data.groups || [];
   } catch (error: any) {
-    console.error('Error fetching groups batch:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch groups batch');
+    console.error("Error fetching groups:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch groups");
   }
 };
 
-// Toggle Group Favorite Status
-export const toggleGroupFavorite = async (groupId: string, token: string): Promise<Group> => {
+// ✅ Fetch Single Group Details
+export const fetchGroupDetails = async (groupId: string, token?: string) => {
   try {
-    const response = await axios.put(`${API_URL}/groups/${groupId}/favorite`, {}, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    return response.data;
+
+    if (!response.data.group) throw new Error("Group not found!");
+
+    return response.data.group;
   } catch (error: any) {
-    console.error('Error toggling group favorite:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to toggle group favorite');
+    console.error("Error fetching group details:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch group details");
   }
 };
 
-export const fetchFriends = async (token: string): Promise<Friend[]> => {
+// ✅ Create a New Group
+export const createNewGroup = async (groupData: any, token?: string) => {
   try {
-    const response = await axios.get(`${API_URL}/friends`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    const response = await axios.post(`${API_URL}/groups/create`, groupData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
-    return response.data;
+
+    return response.data.group;
   } catch (error: any) {
-    console.error('Error fetching friends:', error.response?.data?.message || error.message);
-    throw new Error(error.response?.data?.message || 'Failed to fetch friends');
+    throw new Error(error.response?.data?.message || "Failed to create group");
+  }
+};
+
+// ✅ Update Group (Edit Description, Members, Completion Status)
+export const updateGroup = async (groupId: string, updatedData: any, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    const response = await axios.put(`${API_URL}/groups/edit/${groupId}`, updatedData, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    });
+
+    return response.data.updatedGroup;
+  } catch (error: any) {
+    console.error("Error updating group:", error.response?.data?.message || error.message);
+    throw new Error(error.response?.data?.message || "Failed to update group");
+  }
+};
+
+// ✅ Delete Group
+export const removeGroup = async (groupId: string, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    await axios.delete(`${API_URL}/groups/delete/${groupId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return true;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to delete group");
+  }
+};
+
+// ✅ Fetch Group Transactions (Last 5 Completed & Top 5 Pending)
+export const fetchGroupTransactions = async (groupId: string, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.data) {
+      console.warn(`No transactions data found for group ${groupId}`);
+      return { completed: [], pending: [] };
+    }
+
+    const completed = response.data.completedTransactions?.slice(0, 5) || [];
+    const pending = response.data.pendingTransactions?.slice(0, 5) || [];
+
+    return { completed, pending };
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return { completed: [], pending: [] }; // Graceful return for 404
+    }
+    console.error("Unexpected error fetching transactions:", error.message);
+    return { completed: [], pending: [] };
+  }
+};
+
+// ✅ Calculate Who Owes Whom (Based on Both Completed and Pending Transactions)
+export const calculateOwes = async (groupId: string, token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) throw new Error("User not authenticated!");
+    }
+
+    const transactions = await fetchGroupTransactions(groupId, token);
+
+    if (transactions.completed.length === 0 && transactions.pending.length === 0) {
+      return [];
+    }
+
+    const memberTotals: { [key: string]: number } = {};
+    transactions.completed.forEach((txn: any) => {
+      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
+      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
+      memberTotals[txn.sender?.fullName] -= txn.amount;
+      memberTotals[txn.receiver?.fullName] += txn.amount;
+    });
+    transactions.pending.forEach((txn: any) => {
+      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
+      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
+      memberTotals[txn.sender?.fullName] -= txn.amount;
+      memberTotals[txn.receiver?.fullName] += txn.amount;
+    });
+
+    const balances = Object.entries(memberTotals).map(([name, balance]) => ({
+      name,
+      balance,
+    }));
+
+    const owesList: { from: string; to: string; amount: number }[] = [];
+    let creditors = balances.filter((m) => m.balance > 0).sort((a, b) => b.balance - a.balance);
+    let debtors = balances.filter((m) => m.balance < 0).sort((a, b) => a.balance - b.balance);
+
+    while (creditors.length > 0 && debtors.length > 0) {
+      let creditor = creditors[0];
+      let debtor = debtors[0];
+      let settleAmount = Math.min(creditor.balance, Math.abs(debtor.balance));
+
+      owesList.push({ from: debtor.name, to: creditor.name, amount: settleAmount });
+
+      creditor.balance -= settleAmount;
+      debtor.balance += settleAmount;
+
+      if (creditor.balance === 0) creditors.shift();
+      if (debtor.balance === 0) debtors.shift();
+    }
+
+    return owesList;
+  } catch (error: any) {
+    console.error("Error calculating owes:", error.message);
+    return [];
+  }
+};
+
+// ✅ Fetch User's Friends (From Group API)
+export const fetchUserFriends = async (token?: string) => {
+  try {
+    // Use provided token or fall back to cookies if not provided
+    if (!token) {
+      token = Cookies.get("userToken");
+      if (!token) {
+        console.warn("User not authenticated, returning empty friends list.");
+        return []; // Return empty array instead of throwing error
+      }
+    }
+
+    const response = await axios.get(`${API_URL}/groups/friends`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    return response.data.friends || [];
+  } catch (error: any) {
+    console.error("API Error:", error.response?.data?.message);
+    return [];
   }
 };

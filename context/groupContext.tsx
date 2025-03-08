@@ -1,240 +1,182 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
-  fetchGroups,
-  fetchFriends,
-  Friend, // Import the Friend type
-  Group,
-  GroupStats,
-  NewGroup,
-  fetchGroupStats,
-  fetchGroupsByIds,
-  archiveGroup as apiArchiveGroup,
-  toggleGroupFavorite as apiToggleGroupFavorite,
+  fetchUserGroups,
+  fetchUserFriends,
+  createNewGroup,
+  updateGroup,
+  removeGroup,
+  fetchGroupDetails,
 } from "@/utils/api/group";
-import { useAuth } from "./authContext";
+import { useAuth } from "@/context/authContext"; // Import useAuth for authentication
 
-interface GroupContextType {
-  groups: Group[];
-  favoriteGroups: Group[];
-  archivedGroups: Group[]; // Keep this
-  recentGroups: Group[];
-  friends: Friend[]; // Update to use Friend type
-  activeGroup: Group | null;
-  activeGroupStats: GroupStats | null;
-  groupsLoading: boolean;
-  friendsLoading: boolean;
-  statsLoading: boolean;
-
-  refreshGroups: () => Promise<void>;
-  refreshFriends: () => Promise<void>;
-  setActiveGroup: (group: Group | null) => void;
-  refreshGroupStats: (groupId: string) => Promise<void>;
-  getRecentlyViewedGroups: () => Promise<void>;
-  archiveGroup: (groupId: string) => Promise<void>;
-  toggleGroupFavorite: (groupId: string) => Promise<void>;
+interface Friend {
+  _id: string;
+  fullName: string;
 }
 
+// ✅ Type for Group Object
+interface Group {
+  _id: string;
+  name: string;
+  description: string;
+  type: "Travel" | "Household" | "Event" | "Work" | "Friends";
+  completed: boolean;
+  createdBy: { fullName: string } | string;
+  members: string[];
+  createdAt: string;
+  creator?: { fullName: string };
+}
+
+// ✅ Type for Context Provider
+interface GroupContextType {
+  groups: Group[];
+  friends: Friend[];
+  loading: boolean;
+  refreshGroups: () => Promise<void>; // Updated to return Promise for async clarity
+  refreshFriends: () => Promise<void>; // Updated to return Promise for async clarity
+  addGroup: (groupData: Omit<Group, "_id" | "createdAt">) => Promise<void>;
+  editGroup: (groupId: string, updatedData: Partial<Group>) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
+  getGroupDetails: (groupId: string) => Promise<Group | null>;
+}
+
+// ✅ Create Context
 const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
-export function GroupProvider({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth() || { token: null };
+// ✅ Group Provider Component
+export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [favoriteGroups, setFavoriteGroups] = useState<Group[]>([]);
-  const [archivedGroups, setArchivedGroups] = useState<Group[]>([]); // Add this
-  const [recentGroups, setRecentGroups] = useState<Group[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]); // Update type
-  const [activeGroup, setActiveGroup] = useState<Group | null>(null);
-  const [activeGroupStats, setActiveGroupStats] = useState<GroupStats | null>(
-    null
-  );
-  const [groupsLoading, setGroupsLoading] = useState<boolean>(true);
-  const [friendsLoading, setFriendsLoading] = useState<boolean>(true);
-  const [statsLoading, setStatsLoading] = useState<boolean>(false);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { token } = useAuth() || {}; // Use token from AuthContext
 
-  const refreshGroups = useCallback(async () => {
-    if (!token) return;
-
-    setGroupsLoading(true);
-    try {
-      const fetchedGroups = await fetchGroups(token);
-      setGroups(fetchedGroups);
-
-      // Separate groups into different categories
-      const favorites = fetchedGroups.filter((group) => group.isFavorite);
-      const archived = fetchedGroups.filter((group) => group.isArchived);
-
-      setFavoriteGroups(favorites);
-      setArchivedGroups(archived); // Set archived groups
-
-      setGroupsLoading(false);
-    } catch (error) {
-      console.error("Error refreshing groups in context:", error);
-      setGroupsLoading(false);
+  // ✅ Fetch Groups from API with token (Server-safe, async)
+  const refreshGroups = async () => {
+    if (!token) {
+      console.warn("User not authenticated, returning empty groups list.");
+      setGroups([]);
+      setLoading(false);
+      return;
     }
-  }, [token]);
 
-  const archiveGroup = useCallback(
-    async (groupId: string) => {
-      if (!token) return;
-      try {
-        // Use the imported API method
-        await apiArchiveGroup(groupId, token);
-        await refreshGroups();
-      } catch (error) {
-        console.error("Error archiving group:", error);
-        // Consider adding user-facing error handling
-        throw error; // Re-throw to allow caller to handle
-      }
-    },
-    [token, refreshGroups]
-  );
-
-  const toggleGroupFavorite = useCallback(
-    async (groupId: string) => {
-      if (!token) return;
-      try {
-        // Use the imported API method
-        await apiToggleGroupFavorite(groupId, token);
-        await refreshGroups();
-      } catch (error) {
-        console.error("Error toggling group favorite:", error);
-        // Consider adding user-facing error handling
-        throw error; // Re-throw to allow caller to handle
-      }
-    },
-    [token, refreshGroups]
-  );
-
-  const refreshFriends = useCallback(async () => {
-    if (!token) return;
-
-    setFriendsLoading(true);
+    setLoading(true);
     try {
-      const fetchedFriends = await fetchFriends(token);
-      setFriends(fetchedFriends);
-      setFriendsLoading(false);
+      const userGroups = await fetchUserGroups(token);
+      setGroups(userGroups);
     } catch (error) {
-      console.error("Error refreshing friends in context:", error);
-      setFriendsLoading(false);
+      console.error("Error fetching groups:", error);
+      setGroups([]); // Handle error gracefully
+    } finally {
+      setLoading(false);
     }
-  }, [token]);
+  };
 
-  const refreshGroupStats = useCallback(
-    async (groupId: string) => {
-      if (!token || !groupId) return;
-
-      setStatsLoading(true);
-      try {
-        const stats = await fetchGroupStats(groupId, token);
-        setActiveGroupStats(stats);
-        setStatsLoading(false);
-      } catch (error) {
-        console.error("Error refreshing group stats:", error);
-        setStatsLoading(false);
-      }
-    },
-    [token]
-  );
-
-  // Get recently viewed groups from local storage
-  const getRecentlyViewedGroups = useCallback(async () => {
-    if (!token) return;
+  // ✅ Fetch Friends from API with token (Server-safe, async)
+  const refreshFriends = async () => {
+    if (!token) {
+      console.warn("User not authenticated, returning empty friends list.");
+      setFriends([]);
+      return;
+    }
 
     try {
-      const storedGroups = localStorage.getItem("recentlyViewedGroups");
-      if (storedGroups) {
-        const groupIds = JSON.parse(storedGroups);
-        if (groupIds.length > 0) {
-          const fetchedGroups = await fetchGroupsByIds(groupIds, token);
-          setRecentGroups(fetchedGroups);
-        }
-      }
+      const friendsList = await fetchUserFriends(token);
+      setFriends(friendsList);
     } catch (error) {
-      console.error("Error fetching recently viewed groups:", error);
+      console.error("Error fetching friends:", error);
+      setFriends([]); // Handle error gracefully
     }
-  }, [token]);
+  };
 
-  // Update recently viewed groups when active group changes
+  // Initial load (client-side only to prevent SSR hydration issues)
   useEffect(() => {
-    if (activeGroup) {
-      try {
-        // Get existing recently viewed groups
-        const storedGroups = localStorage.getItem("recentlyViewedGroups");
-        let groupIds: string[] = storedGroups ? JSON.parse(storedGroups) : [];
-
-        // Remove the current group if it exists already
-        groupIds = groupIds.filter((id) => id !== activeGroup._id);
-
-        // Add the current group to the beginning
-        groupIds.unshift(activeGroup._id);
-
-        // Keep only the most recent 5
-        groupIds = groupIds.slice(0, 5);
-
-        // Store the updated list
-        localStorage.setItem("recentlyViewedGroups", JSON.stringify(groupIds));
-      } catch (error) {
-        console.error("Error updating recently viewed groups:", error);
-      }
-    }
-  }, [activeGroup]);
-
-  // Reset active group when unmounting
-  useEffect(() => {
-    return () => {
-      setActiveGroup(null);
-      setActiveGroupStats(null);
-    };
-  }, []);
-
-  // Initialize data when component mounts
-  useEffect(() => {
-    if (token) {
-      refreshGroups();
+    if (typeof window !== "undefined") {
       refreshFriends();
-      getRecentlyViewedGroups();
+      refreshGroups();
     }
-  }, [token, refreshGroups, refreshFriends, getRecentlyViewedGroups]);
+  }, [token]); // Re-run when token changes
 
-  const contextValue: GroupContextType = {
-    groups,
-    favoriteGroups,
-    archivedGroups, // Include in context value
-    recentGroups,
-    friends,
-    activeGroup,
-    activeGroupStats,
-    groupsLoading,
-    friendsLoading,
-    statsLoading,
-    refreshGroups,
-    refreshFriends,
-    setActiveGroup,
-    refreshGroupStats,
-    getRecentlyViewedGroups,
-    archiveGroup,
-    toggleGroupFavorite,
+  // ✅ Add a New Group (Server-safe, async)
+  const addGroup = async (groupData: Omit<Group, "_id" | "createdAt">) => {
+    if (!token) throw new Error("User not authenticated!");
+    try {
+      const newGroup = await createNewGroup(groupData, token);
+      setGroups((prevGroups) => [...prevGroups, newGroup]);
+    } catch (error) {
+      console.error("Error creating group:", error);
+      throw error;
+    }
+  };
+
+  // ✅ Edit a Group (Server-safe, async)
+  const editGroup = async (groupId: string, updatedData: Partial<Group>) => {
+    if (!token) throw new Error("User not authenticated!");
+    try {
+      const updatedGroup = await updateGroup(groupId, updatedData, token);
+      setGroups((prevGroups) =>
+        prevGroups.map((group) =>
+          group._id === groupId ? updatedGroup : group
+        )
+      );
+    } catch (error) {
+      console.error("Error updating group:", error);
+      throw error;
+    }
+  };
+
+  // ✅ Delete a Group (Server-safe, async)
+  const deleteGroup = async (groupId: string) => {
+    if (!token) throw new Error("User not authenticated!");
+    try {
+      await removeGroup(groupId, token);
+      setGroups((prevGroups) =>
+        prevGroups.filter((group) => group._id !== groupId)
+      );
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      throw error;
+    }
+  };
+
+  // ✅ Fetch Group Details (Server-safe, async)
+  const getGroupDetails = async (groupId: string): Promise<Group | null> => {
+    if (!token) throw new Error("User not authenticated!");
+    try {
+      return await fetchGroupDetails(groupId, token);
+    } catch (error) {
+      console.error("Error fetching group details:", error);
+      return null;
+    }
   };
 
   return (
-    <GroupContext.Provider value={contextValue}>
+    <GroupContext.Provider
+      value={{
+        groups,
+        friends,
+        loading,
+        refreshGroups,
+        refreshFriends,
+        addGroup,
+        editGroup,
+        deleteGroup,
+        getGroupDetails,
+      }}
+    >
       {children}
     </GroupContext.Provider>
   );
-}
+};
 
-export function useGroups() {
+// ✅ Custom Hook for Context
+export const useGroups = () => {
   const context = useContext(GroupContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useGroups must be used within a GroupProvider");
   }
   return context;
-}
+};

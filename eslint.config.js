@@ -16,5 +16,6 @@ export default [
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/explicit-module-boundary-types": "off",
     },
+    extends: ["next/core-web-vitals"],
   },
 ];
