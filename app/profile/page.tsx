@@ -731,7 +731,7 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-24">
+      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-36">
         {/* Profile Header - Lighter color gradient */}
         <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white p-8 rounded-2xl mb-10 flex flex-col md:flex-row items-center shadow-xl">
           <div className="relative group">
