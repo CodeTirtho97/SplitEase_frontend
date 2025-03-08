@@ -734,32 +734,26 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-      {/* Enhanced Modern Background with More Visible Elements */}
-      <div className="fixed inset-0 z-0">
-        {/* Base gradient background - darker now */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/80 via-white/90 to-purple-100/80"></div>
-
-        {/* Dot pattern overlay - increased opacity */}
-        <div className="absolute inset-0 opacity-20">
-          <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-            <defs>
-              <pattern
-                id="dotPattern"
-                width="20"
-                height="20"
-                patternUnits="userSpaceOnUse"
-              >
-                <circle cx="2" cy="2" r="1.5" fill="currentColor" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dotPattern)" />
-          </svg>
-        </div>
-
-        {/* Larger, more visible decorative blobs */}
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 rounded-full bg-indigo-200/30 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 rounded-full bg-purple-200/30 blur-3xl"></div>
-        <div className="absolute top-1/3 left-1/4 w-1/3 h-1/3 rounded-full bg-blue-200/20 blur-3xl"></div>
+      <div className="fixed inset-0 opacity-10 z-0">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+          <defs>
+            <pattern
+              id="smallGrid"
+              width="20"
+              height="20"
+              patternUnits="userSpaceOnUse"
+            >
+              <path
+                d="M 20 0 L 0 0 0 20"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.7"
+                opacity="0.7"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#smallGrid)" />
+        </svg>
       </div>
 
       {/* Content */}
