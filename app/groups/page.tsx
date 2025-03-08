@@ -455,11 +455,11 @@ export default function Groups() {
             text-sm 
             font-medium 
             hover:bg-gray-50 
-            hover:border-gray-300 
+            hover:border-blue-500 
             transition-colors 
             focus:outline-none 
             focus:ring-2 
-            focus:ring-blue-500/50
+            focus:ring-blue-600/50
           "
                       />
                       <Button
@@ -535,9 +535,9 @@ export default function Groups() {
                         <h3 className="text-xl font-semibold text-gray-500 mr-3 line-through">
                           {group.name}
                         </h3>
-                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+                        {/* <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
                           Completed {group.type} Group
-                        </span>
+                        </span> */}
                       </div>
 
                       <div className="text-sm text-gray-400 space-y-1">
@@ -574,11 +574,11 @@ export default function Groups() {
           text-sm 
           font-medium 
           hover:bg-gray-200 
-          hover:text-gray-800
+          hover:text-red-600
           transition-colors 
           focus:outline-none 
           focus:ring-2 
-          focus:ring-gray-500/50
+          focus:ring-red-700/100
         "
                     />
                   </div>
