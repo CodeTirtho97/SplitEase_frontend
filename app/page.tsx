@@ -183,9 +183,9 @@ export default function Home() {
   }, [token, router]);
 
   // If still checking authentication or redirecting, show loading spinner
-  if (loading || token) {
-    return <LoadingSpinner />;
-  }
+  // if (loading || token) {
+  //   return <LoadingSpinner />;
+  // }
 
   const scrollToFeatures = () => {
     if (featuresRef.current) {
