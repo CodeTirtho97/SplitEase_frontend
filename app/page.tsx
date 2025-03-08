@@ -343,9 +343,6 @@ export default function Home() {
                   mobileImage="/home_mobile.png"
                   tabletImage="/home_tablet.png"
                   desktopImage="/home_laptops.png"
-                  showMobile={true}
-                  showTablet={isTabletOrLarger}
-                  showDesktop={isDesktop}
                 />
               </div>
             </div>

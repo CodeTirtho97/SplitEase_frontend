@@ -48,7 +48,30 @@ const config: Config = {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    function({ addUtilities }: { addUtilities: (utilities: Record<string, Record<string, string>>) => void }) {
+      const newUtilities = {
+        '.perspective-1000': {
+          perspective: '1000px',
+        },
+        '.preserve-3d': {
+          transformStyle: 'preserve-3d',
+        },
+        '.transform-gpu': {
+          transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
+          willChange: 'transform',
+        },
+        '.rotateX-5': {
+          transform: 'rotateX(5deg)',
+        },
+        '.rotateX-80': {
+          transform: 'rotateX(80deg)',
+        },
+      }
+      addUtilities(newUtilities)
+    }
+  ],
 };
 
 export default config;
