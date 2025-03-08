@@ -11,6 +11,7 @@ const config: Config = {
       },
       boxShadow: {
         'device': '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(255, 255, 255, 0.2)',
+        'monitor': '0 10px 30px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
       },
       keyframes: {
         gradientShift: {
@@ -36,6 +37,10 @@ const config: Config = {
         'dot-3': {
           '0%, 60%': { opacity: '0' },
           '80%, 100%': { opacity: '1' },
+        },
+        'pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' }
         }
       },
       animation: {
@@ -45,6 +50,11 @@ const config: Config = {
         'dot-1': 'dot-1 1.5s infinite',
         'dot-2': 'dot-2 1.5s infinite',
         'dot-3': 'dot-3 1.5s infinite',
+        'pulse': 'pulse 2s infinite',
+      },
+      backgroundImage: {
+        'monitor-gradient': 'linear-gradient(to bottom, #444, #333, #222)',
+        'monitor-base': 'linear-gradient(to bottom, #333, #111)',
       }
     },
   },
@@ -68,6 +78,27 @@ const config: Config = {
         '.rotateX-80': {
           transform: 'rotateX(80deg)',
         },
+        // Add these utilities for the monitor reflection effects
+        '.monitor-screen-reflection::after': {
+          content: '""',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          height: '30%',
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03), transparent)',
+          pointerEvents: 'none',
+        },
+        '.monitor-base-reflection::after': {
+          content: '""',
+          position: 'absolute',
+          top: '0',
+          left: '0',
+          right: '0',
+          height: '40%',
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.07), transparent)',
+          pointerEvents: 'none',
+        }
       }
       addUtilities(newUtilities)
     }

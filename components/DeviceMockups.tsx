@@ -14,14 +14,14 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
   desktopImage,
 }) => {
   return (
-    <div className="flex flex-wrap justify-center items-center gap-12 mt-10 mb-16 max-w-6xl mx-auto">
-      {/* Mobile Device - Reduced size */}
+    <div className="flex flex-wrap justify-center items-end gap-10 md:gap-12 mt-10 mb-16 max-w-6xl mx-auto device-container">
+      {/* Mobile Device */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.1 }}
         whileHover={{ y: -8, transition: { duration: 0.3 } }}
-        className="relative w-[180px] h-[360px] group"
+        className="relative w-[180px] h-[360px] group mobile-device"
       >
         {/* Phone chassis */}
         <div className="absolute inset-0 bg-black rounded-[28px] shadow-device overflow-hidden">
@@ -51,22 +51,22 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
           </div>
         </div>
 
+        {/* Device shadow */}
+        <div className="device-shadow"></div>
+
         {/* Device label - only visible on hover */}
         <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           Smartphone
         </div>
-
-        {/* Glare effect */}
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-br from-white/10 to-transparent rounded-t-[28px] pointer-events-none"></div>
       </motion.div>
 
-      {/* Tablet Device - Adjusted height */}
+      {/* Tablet Device */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
         whileHover={{ y: -8, transition: { duration: 0.3 } }}
-        className="relative w-[330px] h-[230px] group"
+        className="relative w-[330px] h-[230px] group tablet-device"
       >
         {/* Tablet chassis */}
         <div className="absolute inset-0 bg-gray-800 rounded-[16px] shadow-device overflow-hidden">
@@ -90,42 +90,33 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
           </div>
         </div>
 
+        {/* Device shadow */}
+        <div className="device-shadow"></div>
+
         {/* Device label - only visible on hover */}
         <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           Tablet
         </div>
-
-        {/* Glare effect */}
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-br from-white/10 to-transparent rounded-t-[16px] pointer-events-none"></div>
       </motion.div>
 
-      {/* Desktop Device - MacBook Style */}
+      {/* Desktop Monitor */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.5 }}
         whileHover={{
           y: -8,
-          rotateX: -2,
           transition: { duration: 0.3 },
         }}
-        className="relative w-[330px] h-[230px] group transform perspective-1000 preserve-3d"
-        style={{ transformStyle: "preserve-3d" }}
+        className="relative w-[330px] h-[300px] group desktop-device"
       >
-        {/* MacBook screen - with 3D positioning */}
-        <div
-          className="absolute top-0 left-0 right-0 h-[210px] bg-gray-800 rounded-t-lg shadow-xl overflow-hidden transform-gpu rotateX-5"
-          style={{
-            transformOrigin: "bottom",
-            backfaceVisibility: "hidden",
-            background: "linear-gradient(to bottom, #7d7d7d, #2c2c2c)",
-          }}
-        >
-          {/* Webcam */}
-          <div className="absolute top-[5px] left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-700 rounded-full z-10"></div>
+        {/* Main Monitor Frame */}
+        <div className="absolute top-0 left-0 right-0 h-[220px] monitor-frame">
+          {/* Power LED */}
+          <div className="power-indicator"></div>
 
-          {/* Screen bezel */}
-          <div className="absolute inset-[5px] rounded-t-lg overflow-hidden bg-black">
+          {/* Screen content */}
+          <div className="absolute inset-0 monitor-screen">
             {/* Browser chrome */}
             <div className="h-6 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center px-2 border-b border-gray-300">
               <div className="flex space-x-1.5 ml-1">
@@ -150,35 +141,31 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
           </div>
         </div>
 
-        {/* MacBook base - with 3D positioning, thicker with middle notch */}
-        <div
-          className="absolute bottom-0 left-[5px] right-[5px] h-[10px] rounded-b-xl transform-gpu rotateX-80 z-10"
-          style={{
-            transformOrigin: "top",
-            backfaceVisibility: "hidden",
-            background: "linear-gradient(to bottom, #7d7d7d, #2c2c2c)",
-          }}
-        >
-          {/* MacBook notch in the middle */}
-          <div className="absolute w-[90px] h-[3px] bottom-0 left-1/2 transform -translate-x-1/2 rounded-t-lg bg-gray-700"></div>
+        {/* Monitor Neck */}
+        <div className="absolute bottom-[30px] left-1/2 transform -translate-x-1/2 w-[24px] h-[50px] monitor-stand">
+          {/* Neck details */}
+          <div className="absolute inset-x-0 top-[10px] h-[1px] bg-gray-600"></div>
+          <div className="absolute inset-x-0 top-[20px] h-[1px] bg-gray-600"></div>
         </div>
 
-        {/* MacBook body-base connection */}
-        <div
-          className="absolute bottom-[10px] left-[15px] right-[15px] h-[10px] bg-gray-800 transform-gpu rotateX-80 z-5"
-          style={{
-            transformOrigin: "top",
-            backfaceVisibility: "hidden",
-            background: "linear-gradient(to right, #7d7d7d, #2c2c2c, #7d7d7d)",
-          }}
-        ></div>
+        {/* Monitor Base */}
+        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[30px]">
+          {/* Base top connector */}
+          <div className="absolute inset-x-0 top-0 h-[6px] w-[40px] mx-auto bg-gray-800 rounded-t-md"></div>
 
-        {/* Bottom edge shadow to create "desk" illusion */}
-        <div className="absolute -bottom-3 left-[5%] right-[5%] h-4 bg-black/10 blur-md rounded-full"></div>
+          {/* Base bottom */}
+          <div className="absolute left-0 right-0 bottom-0 h-[24px] monitor-base">
+            {/* Base details */}
+            <div className="absolute top-[10px] left-1/2 transform -translate-x-1/2 w-[50px] h-[2px] bg-gray-700 rounded-full"></div>
+          </div>
+        </div>
+
+        {/* Monitor shadow */}
+        <div className="monitor-shadow"></div>
 
         {/* Device label - only visible on hover */}
-        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          MacBook
+        <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          Desktop
         </div>
       </motion.div>
     </div>
