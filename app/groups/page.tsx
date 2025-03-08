@@ -513,41 +513,74 @@ export default function Groups() {
                 .map((group) => (
                   <div
                     key={group._id}
-                    className="bg-gray-50/50 p-4 rounded-xl mb-4 border border-gray-100 hover:border-gray-200 transition-all"
+                    className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-gray-100 p-5 mb-4 flex items-center opacity-70 hover:opacity-100 transition-all duration-300"
                   >
-                    <div className="flex items-center mb-3">
+                    <div className="mr-5 relative">
                       <Image
                         src={
                           avatarMap[group.type] || "/friends_group_gradient.png"
                         }
                         alt="Group Avatar"
-                        width={50}
-                        height={50}
-                        className="rounded-full mr-4 border-2 border-gray-200 opacity-70"
+                        width={60}
+                        height={60}
+                        className="rounded-full border-2 border-gray-200 grayscale"
                       />
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800 line-through">
-                          {group.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {group.members.length} members
-                        </p>
+                      <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                        ✓
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-gray-500">
-                        Completed by{" "}
-                        {typeof group.createdBy === "object" &&
-                        group.createdBy?.fullName
-                          ? group.createdBy.fullName
-                          : "Unknown"}
-                      </p>
-                      <Button
-                        text="Delete"
-                        onClick={() => handleDeleteGroup(group)}
-                        className="bg-gray-500 text-white px-3 py-1 rounded-md text-sm"
-                      />
+
+                    <div className="flex-grow">
+                      <div className="flex items-center mb-2">
+                        <h3 className="text-xl font-semibold text-gray-500 mr-3 line-through">
+                          {group.name}
+                        </h3>
+                        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+                          Completed {group.type} Group
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-gray-400 space-y-1">
+                        <p>
+                          <span className="font-medium text-gray-500">
+                            {group.members.length} Members
+                          </span>
+                          <span className="mx-2 text-gray-300">•</span>
+                          <span>
+                            Completed by{" "}
+                            {typeof group.createdBy === "object" &&
+                            group.createdBy?.fullName
+                              ? group.createdBy.fullName
+                              : "Unknown"}
+                          </span>
+                        </p>
+                        {/* <p className="text-xs text-gray-400">
+                          Completed on{" "}
+                          {new Date(
+                            group.updatedAt || group.createdAt
+                          ).toLocaleDateString()}
+                        </p> */}
+                      </div>
                     </div>
+
+                    <Button
+                      text="Delete"
+                      onClick={() => handleDeleteGroup(group)}
+                      className="
+          px-4 py-2 
+          bg-gray-100 
+          text-gray-600 
+          rounded-lg 
+          text-sm 
+          font-medium 
+          hover:bg-gray-200 
+          hover:text-gray-800
+          transition-colors 
+          focus:outline-none 
+          focus:ring-2 
+          focus:ring-gray-500/50
+        "
+                    />
                   </div>
                 ))
             )}
