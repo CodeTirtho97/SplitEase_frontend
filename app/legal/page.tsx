@@ -30,6 +30,7 @@ import {
   faInstagram,
   faFacebook,
 } from "@fortawesome/free-brands-svg-icons";
+import { useAuth } from "@/context/authContext"; // Import useAuth hook
 
 // SearchParams Handler Component
 const SearchParamsHandler = ({
@@ -44,7 +45,7 @@ const SearchParamsHandler = ({
     if (tab === "privacy" || tab === "terms" || tab === "contact") {
       setActiveTab(tab);
     }
-  }, [searchParams]);
+  }, [searchParams, setActiveTab]);
 
   return null;
 };
@@ -52,51 +53,72 @@ const SearchParamsHandler = ({
 const LegalPage = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("privacy");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { token } = useAuth(); // Get token from auth context
 
-  // Check if user is logged in (Client-Side Only)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userToken = localStorage.getItem("userToken");
-      setIsLoggedIn(!!userToken);
-    }
-  }, []);
+  // Determine if user is logged in based on auth context
+  const isLoggedIn = !!token;
 
   return (
     <Suspense fallback={<div>Loading legal page...</div>}>
       {/* SearchParams Handler */}
       <SearchParamsHandler setActiveTab={setActiveTab} />
 
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 text-gray-800 flex flex-col items-center pb-16">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-indigo-50 text-gray-800 flex flex-col items-center pb-16 relative">
         {/* Background Design Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {/* Dots pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <svg width="100%" height="100%">
+              <pattern
+                id="pattern-circles"
+                x="0"
+                y="0"
+                width="20"
+                height="20"
+                patternUnits="userSpaceOnUse"
+                patternContentUnits="userSpaceOnUse"
+              >
+                <circle
+                  id="pattern-circle"
+                  cx="10"
+                  cy="10"
+                  r="1"
+                  fill="currentColor"
+                />
+              </pattern>
+              <rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="url(#pattern-circles)"
+              />
+            </svg>
+          </div>
+
           {/* Abstract shapes */}
           <div className="absolute top-1/4 -left-10 w-64 h-64 rounded-full bg-gradient-to-r from-indigo-300 to-purple-300 opacity-20 blur-3xl"></div>
           <div className="absolute bottom-1/4 -right-10 w-80 h-80 rounded-full bg-gradient-to-r from-purple-300 to-indigo-300 opacity-20 blur-3xl"></div>
+          <div className="absolute top-3/4 left-1/3 w-40 h-40 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 opacity-15 blur-2xl"></div>
 
-          {/* Grid pattern overlay */}
-          <div className="absolute inset-0 opacity-10">
-            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-              <pattern
-                id="grid"
-                width="30"
-                height="30"
-                patternUnits="userSpaceOnUse"
-              >
-                <path
-                  d="M 30 0 L 0 0 0 30"
-                  fill="none"
-                  stroke="rgba(107, 70, 193, 0.3)"
-                  strokeWidth="0.5"
-                />
-              </pattern>
-              <rect width="100%" height="100%" fill="url(#grid)" />
+          {/* Subtle wave pattern */}
+          <div className="absolute bottom-0 left-0 right-0 h-64 opacity-10">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              className="w-full"
+            >
+              <path
+                fill="currentColor"
+                fillOpacity="1"
+                d="M0,192L48,208C96,224,192,256,288,261.3C384,267,480,245,576,218.7C672,192,768,160,864,165.3C960,171,1056,213,1152,229.3C1248,245,1344,235,1392,229.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+              ></path>
             </svg>
           </div>
         </div>
 
         {/* Header Section with Logo */}
-        <div className="w-full pt-24 flex justify-center mb-8">
+        <div className="w-full pt-24 flex justify-center mb-8 z-10">
           <div className="flex items-center gap-3 text-3xl font-bold text-gray-700">
             <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
               <span className="text-white">S</span>
@@ -108,7 +130,7 @@ const LegalPage = () => {
         </div>
 
         {/* Content Container */}
-        <div className="w-full max-w-4xl px-4">
+        <div className="w-full max-w-4xl px-4 z-10">
           {/* Page Header */}
           <div className="bg-white shadow-xl rounded-2xl p-8 mb-8 text-center relative overflow-hidden">
             {/* Header Background Accent */}
@@ -802,7 +824,8 @@ const LegalPage = () => {
                         </a>
                       </div>
                     </section>
-
+                  </div>
+                  <div>
                     <section className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-xl mt-8">
                       <h3 className="text-xl font-semibold mb-3">
                         Live Chat Support
@@ -868,7 +891,7 @@ const LegalPage = () => {
             )}
           </div>
 
-          {/* Back Button - Redesigned with conditional text */}
+          {/* Back Button - Redesigned with conditional text based on auth state */}
           <div className="flex justify-center">
             <button
               onClick={() => router.push(isLoggedIn ? "/dashboard" : "/")}
