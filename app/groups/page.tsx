@@ -397,47 +397,90 @@ export default function Groups() {
                 .map((group) => (
                   <div
                     key={group._id}
-                    className="bg-green-50/50 p-4 rounded-xl mb-4 border border-green-100 hover:border-green-200 transition-all"
+                    className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-5 mb-4 flex items-center hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300"
                   >
-                    <div className="flex items-center mb-3">
+                    <div className="mr-5">
                       <Image
                         src={
                           avatarMap[group.type] || "/friends_group_gradient.png"
                         }
                         alt="Group Avatar"
-                        width={50}
-                        height={50}
-                        className="rounded-full mr-4 border-2 border-green-200"
+                        width={60}
+                        height={60}
+                        className="rounded-full border-2 border-gray-100 shadow-sm"
                       />
-                      <div>
-                        <h3 className="text-lg font-bold text-green-800">
+                    </div>
+
+                    <div className="flex-grow">
+                      <div className="flex items-center mb-2">
+                        <h3 className="text-xl font-semibold text-gray-800 mr-3">
                           {group.name}
                         </h3>
-                        <p className="text-sm text-green-700">
-                          {group.members.length} members
+                        <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">
+                          {group.type} Group
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-gray-500 space-y-1">
+                        <p>
+                          <span className="font-medium text-gray-600">
+                            {group.members.length} Members
+                          </span>
+                          <span className="mx-2 text-gray-300">•</span>
+                          <span>
+                            Created by{" "}
+                            {typeof group.createdBy === "object" &&
+                            group.createdBy?.fullName
+                              ? group.createdBy.fullName
+                              : "Unknown"}
+                          </span>
+                        </p>
+                        <p className="text-xs text-gray-400">
+                          Created on{" "}
+                          {new Date(group.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-green-600">
-                        Created by{" "}
-                        {typeof group.createdBy === "object" &&
-                        group.createdBy?.fullName
-                          ? group.createdBy.fullName
-                          : "Unknown"}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          text="Edit"
-                          onClick={() => handleEditGroup(group)}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded-md text-sm"
-                        />
-                        <Button
-                          text="View"
-                          onClick={() => handleViewGroup(group)}
-                          className="bg-green-500 text-white px-3 py-1 rounded-md text-sm"
-                        />
-                      </div>
+
+                    <div className="flex space-x-3">
+                      <Button
+                        text="Edit"
+                        onClick={() => handleEditGroup(group)}
+                        className="
+            px-4 py-2 
+            bg-white 
+            border border-gray-200 
+            text-gray-700 
+            rounded-lg 
+            text-sm 
+            font-medium 
+            hover:bg-gray-50 
+            hover:border-gray-300 
+            transition-colors 
+            focus:outline-none 
+            focus:ring-2 
+            focus:ring-blue-500/50
+          "
+                      />
+                      <Button
+                        text="View"
+                        onClick={() => handleViewGroup(group)}
+                        className="
+            px-4 py-2 
+            bg-blue-600 
+            text-white 
+            rounded-lg 
+            text-sm 
+            font-medium 
+            hover:bg-blue-700 
+            transition-colors 
+            focus:outline-none 
+            focus:ring-2 
+            focus:ring-blue-500
+            shadow-md 
+            hover:shadow-lg
+          "
+                      />
                     </div>
                   </div>
                 ))
@@ -701,6 +744,196 @@ export default function Groups() {
                   text="Create Group"
                   onClick={handleAddGroup}
                   className="text-white bg-green-500 hover:bg-green-600 transition-all duration-300 ease-in-out px-6 py-3 rounded-md w-[45%]"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ✅ Edit Group Modal (Two-Column Layout) */}
+        {isEditModalOpen && selectedGroup && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4">
+            <div className="bg-white p-8 rounded-lg shadow-lg w-[700px] max-w-2xl flex flex-col gap-6 relative">
+              {/* 🔹 Modal Title */}
+              <h2 className="text-xl font-bold text-center">Edit Group</h2>
+
+              {/* ✅ Two-Column Layout */}
+              <div className="grid grid-cols-2 gap-6">
+                {/* 🔹 Left Column */}
+                <div className="flex flex-col gap-4">
+                  {/* Group Name (Non-Editable) */}
+                  <div>
+                    <label className="block text-gray-700 font-semibold">
+                      Group Name
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedGroup.name}
+                      disabled
+                      className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Group Type (Non-Editable) */}
+                  <div>
+                    <label className="block text-gray-700 font-semibold">
+                      Group Type
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedGroup.type}
+                      disabled
+                      className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Group Description (Editable) */}
+                  <div>
+                    <label className="block text-gray-700 font-semibold">
+                      Group Description
+                    </label>
+                    <textarea
+                      value={groupDescription}
+                      onChange={(e) => setGroupDescription(e.target.value)}
+                      className="w-full border p-2 rounded"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={completedStatus}
+                      onChange={(e) => setCompletedStatus(e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                    <label className="text-gray-700 font-semibold">
+                      Completed
+                    </label>
+                  </div>
+                </div>
+
+                {/* 🔹 Right Column */}
+                <div className="flex flex-col gap-4">
+                  {/* Group Owner (Created By) */}
+                  <div>
+                    <label className="block text-gray-700 font-semibold">
+                      Group Creator
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedGroup.createdBy?.fullName || "Unknown"} // ✅ Fetch from `createdBy`
+                      disabled
+                      className="w-full border bg-gray-200 text-gray-500 p-2 rounded cursor-not-allowed"
+                    />
+                  </div>
+
+                  {/* Add/Remove Members */}
+                  <div>
+                    <label className="block text-gray-700 font-semibold">
+                      Group Members
+                    </label>
+
+                    {/* Member Dropdown - Show "No new friends to add" when empty */}
+                    <select
+                      onChange={(e) => {
+                        const newMemberId = e.target.value;
+                        if (newMemberId && !newMembers.includes(newMemberId)) {
+                          setNewMembers([...newMembers, newMemberId]);
+                        }
+                      }}
+                      className="w-full border p-2 rounded mb-3"
+                      disabled={
+                        friends.length === 0 ||
+                        friends.every(
+                          (friend) =>
+                            friend._id === selectedGroup.createdBy._id ||
+                            newMembers.includes(friend._id)
+                        )
+                      } // ✅ Disable dropdown if no new members to add
+                    >
+                      {friends.length > 0 &&
+                      !friends.some(
+                        (friend) =>
+                          !newMembers.includes(friend._id) &&
+                          friend._id !== selectedGroup.createdBy._id
+                      ) ? (
+                        <option value="">No new friends to add</option> // ✅ Show this when no friends available
+                      ) : (
+                        <>
+                          <option value="">Add a new member...</option>
+                          {friends
+                            .filter(
+                              (friend) =>
+                                friend._id !== selectedGroup.createdBy._id && // ✅ Exclude creator
+                                !newMembers.includes(friend._id) // ✅ Exclude already added members
+                            )
+                            .map((friend) => (
+                              <option key={friend._id} value={friend._id}>
+                                {friend.fullName}
+                              </option>
+                            ))}
+                        </>
+                      )}
+                    </select>
+
+                    {/* Member List with Remove Option */}
+                    <div className="flex flex-wrap gap-2 mt-1 border p-2 rounded-md min-h-[50px]">
+                      {newMembers.length > 0 ? (
+                        newMembers.map((memberId, index) => {
+                          const friend = friends.find(
+                            (f) => f._id === memberId
+                          );
+                          return (
+                            friend && (
+                              <span
+                                key={index}
+                                className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm flex items-center gap-2"
+                              >
+                                {friend.fullName}
+                                {/* Remove Button */}
+                                <button
+                                  type="button"
+                                  className="text-white ml-2"
+                                  onClick={() => {
+                                    if (newMembers.length <= 1) {
+                                      setToast({
+                                        message:
+                                          "❌ A group must have at least 2 members (including the creator)!",
+                                        type: "error",
+                                      });
+                                      return;
+                                    }
+                                    setNewMembers(
+                                      newMembers.filter((m) => m !== memberId)
+                                    );
+                                  }}
+                                >
+                                  ❌
+                                </button>
+                              </span>
+                            )
+                          );
+                        })
+                      ) : (
+                        <p className="text-gray-500 text-sm italic">
+                          No members selected.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 🔹 Action Buttons */}
+              <div className="flex justify-between mt-4">
+                <Button
+                  text="Cancel"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="bg-red-500 text-white px-4 py-2 rounded-md"
+                />
+                <Button
+                  text="Save Changes"
+                  onClick={handleSaveGroup}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md"
                 />
               </div>
             </div>
