@@ -273,7 +273,7 @@ export default function Dashboard() {
   if (!hasData) {
     return (
       <div className="flex min-h-screen mt-20">
-        <Sidebar activePage="dashboard" />
+        {/* <Sidebar activePage="dashboard" /> */}
 
         <main className="flex-1 min-h-screen p-4 bg-gray-100 flex items-center justify-center">
           <motion.div
