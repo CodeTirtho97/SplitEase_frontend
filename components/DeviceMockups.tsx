@@ -14,14 +14,14 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
   desktopImage,
 }) => {
   return (
-    <div className="flex flex-wrap justify-center items-end gap-10 md:gap-12 mt-10 mb-16 max-w-6xl mx-auto device-container">
+    <div className="flex flex-wrap justify-center items-end gap-10 md:gap-14 mt-10 mb-16 max-w-6xl mx-auto">
       {/* Mobile Device */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.1 }}
         whileHover={{ y: -8, transition: { duration: 0.3 } }}
-        className="relative w-[180px] h-[360px] group mobile-device"
+        className="relative w-[180px] h-[360px] group"
       >
         {/* Phone chassis */}
         <div className="absolute inset-0 bg-black rounded-[28px] shadow-device overflow-hidden">
@@ -52,7 +52,7 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
         </div>
 
         {/* Device shadow */}
-        <div className="device-shadow"></div>
+        <div className="absolute -bottom-3 left-[5%] right-[5%] h-4 bg-black/10 blur-md rounded-full"></div>
 
         {/* Device label - only visible on hover */}
         <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -66,7 +66,7 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.3 }}
         whileHover={{ y: -8, transition: { duration: 0.3 } }}
-        className="relative w-[330px] h-[230px] group tablet-device"
+        className="relative w-[330px] h-[230px] group"
       >
         {/* Tablet chassis */}
         <div className="absolute inset-0 bg-gray-800 rounded-[16px] shadow-device overflow-hidden">
@@ -91,7 +91,7 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
         </div>
 
         {/* Device shadow */}
-        <div className="device-shadow"></div>
+        <div className="absolute -bottom-3 left-[5%] right-[5%] h-4 bg-black/10 blur-md rounded-full"></div>
 
         {/* Device label - only visible on hover */}
         <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -99,7 +99,7 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
         </div>
       </motion.div>
 
-      {/* Desktop Monitor */}
+      {/* Desktop Monitor - COMPLETELY REDESIGNED */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -108,63 +108,58 @@ const DeviceMockups: React.FC<DeviceMockupsProps> = ({
           y: -8,
           transition: { duration: 0.3 },
         }}
-        className="relative w-[330px] h-[300px] group desktop-device"
+        className="relative w-[380px] h-[300px] group"
       >
-        {/* Main Monitor Frame */}
-        <div className="absolute top-0 left-0 right-0 h-[220px] monitor-frame">
-          {/* Power LED */}
-          <div className="power-indicator"></div>
+        {/* Monitor Frame */}
+        <div className="absolute top-0 left-0 right-0 h-[240px] bg-black border-[8px] border-gray-800 rounded-lg shadow-xl overflow-hidden">
+          {/* Brand logo */}
+          <div className="absolute bottom-[5px] left-1/2 -translate-x-1/2 w-4 h-4 flex items-center justify-center">
+            <div className="w-3 h-3 bg-gray-700 rounded-full flex items-center justify-center">
+              <div className="w-1.5 h-1.5 bg-gray-500 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Power indicator */}
+          <div className="absolute bottom-[5px] right-[8px] w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
 
           {/* Screen content */}
-          <div className="absolute inset-0 monitor-screen">
-            {/* Browser chrome */}
-            <div className="h-6 bg-gradient-to-r from-gray-100 to-gray-200 flex items-center px-2 border-b border-gray-300">
-              <div className="flex space-x-1.5 ml-1">
-                <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-              </div>
-              <div className="ml-4 bg-white h-4 w-full max-w-xs rounded-md flex items-center justify-center text-[10px] text-gray-400 overflow-hidden">
-                splitease.app
-              </div>
-            </div>
+          <div className="absolute inset-0 overflow-hidden bg-white">
+            <Image
+              src={desktopImage}
+              alt="SplitEase desktop app"
+              fill
+              className="object-cover object-top"
+            />
 
-            {/* Actual screen content area */}
-            <div className="h-[calc(100%-24px)] overflow-hidden">
-              <Image
-                src={desktopImage}
-                alt="SplitEase desktop app"
-                fill
-                className="object-cover object-top"
-              />
-            </div>
+            {/* Subtle screen reflection */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
           </div>
         </div>
 
-        {/* Monitor Neck */}
-        <div className="absolute bottom-[30px] left-1/2 transform -translate-x-1/2 w-[24px] h-[50px] monitor-stand">
-          {/* Neck details */}
-          <div className="absolute inset-x-0 top-[10px] h-[1px] bg-gray-600"></div>
-          <div className="absolute inset-x-0 top-[20px] h-[1px] bg-gray-600"></div>
+        {/* Monitor Stand - Neck */}
+        <div className="absolute bottom-[16px] left-1/2 -translate-x-1/2 w-[20px] h-[50px] bg-gradient-to-b from-gray-700 to-gray-800">
+          {/* Neck detail lines */}
+          <div className="absolute inset-x-0 top-1/3 h-[1px] bg-gray-600"></div>
+          <div className="absolute inset-x-0 bottom-1/3 h-[1px] bg-gray-600"></div>
         </div>
 
-        {/* Monitor Base */}
-        <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[120px] h-[30px]">
-          {/* Base top connector */}
-          <div className="absolute inset-x-0 top-0 h-[6px] w-[40px] mx-auto bg-gray-800 rounded-t-md"></div>
+        {/* Monitor Stand - Base */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[100px] h-[16px]">
+          {/* Base top */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[30px] h-[5px] bg-gray-700 rounded-t-sm"></div>
 
-          {/* Base bottom */}
-          <div className="absolute left-0 right-0 bottom-0 h-[24px] monitor-base">
-            {/* Base details */}
-            <div className="absolute top-[10px] left-1/2 transform -translate-x-1/2 w-[50px] h-[2px] bg-gray-700 rounded-full"></div>
+          {/* Base bottom - oval shape */}
+          <div className="absolute bottom-0 inset-x-0 h-[10px] bg-gradient-to-b from-gray-800 to-gray-900 rounded-[50%] shadow-md">
+            {/* Base reflection */}
+            <div className="absolute inset-x-[10px] top-[2px] h-[1px] bg-gray-600 rounded-full"></div>
           </div>
         </div>
 
         {/* Monitor shadow */}
-        <div className="monitor-shadow"></div>
+        <div className="absolute -bottom-4 left-[10%] right-[10%] h-5 bg-black/15 blur-md rounded-full"></div>
 
         {/* Device label - only visible on hover */}
-        <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-sm font-medium bg-white/90 px-3 py-1 rounded-full shadow-sm text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           Desktop
         </div>
       </motion.div>
