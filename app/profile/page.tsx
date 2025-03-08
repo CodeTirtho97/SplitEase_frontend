@@ -731,18 +731,35 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-16">
-        {/* Profile Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-8 rounded-2xl mb-8 flex flex-col md:flex-row items-center shadow-xl">
+      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-24">
+        {/* Profile Header - Lighter color gradient */}
+        <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white p-8 rounded-2xl mb-10 flex flex-col md:flex-row items-center shadow-xl">
           <div className="relative group">
             <div className="w-28 h-28 rounded-full bg-white/20 p-1 shadow-lg relative overflow-hidden">
-              <Image
-                src={profileImage || "/avatar_male.png"}
-                alt="Profile"
-                width={112}
-                height={112}
-                className="rounded-full object-cover transition-transform group-hover:scale-105"
-              />
+              {profileImage ? (
+                <Image
+                  src={profileImage}
+                  alt="Profile"
+                  width={112}
+                  height={112}
+                  className="rounded-full object-cover transition-transform group-hover:scale-105"
+                  unoptimized
+                  onError={() => {
+                    // Fallback to default avatar if image fails to load
+                    setProfileImage(
+                      user?.gender?.toLowerCase() === "male"
+                        ? "/avatar_male.png"
+                        : user?.gender?.toLowerCase() === "female"
+                        ? "/avatar_female.png"
+                        : "/avatar_trans.png"
+                    );
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full rounded-full flex items-center justify-center bg-indigo-200 text-indigo-600 text-4xl font-bold">
+                  {user?.fullName ? user.fullName.charAt(0).toUpperCase() : "U"}
+                </div>
+              )}
 
               {isEditing && (
                 <label
@@ -823,24 +840,17 @@ export default function Profile() {
                 Edit Profile
               </button>
             )}
-            <button
-              onClick={() => !isGoogleUser && setIsPasswordModalOpen(true)}
-              className={`${
-                isGoogleUser
-                  ? "bg-white/5 cursor-not-allowed"
-                  : "bg-white/10 hover:bg-white/20 cursor-pointer"
-              } text-white font-medium transition-all duration-300 px-6 py-2 rounded-lg flex items-center justify-center relative group`}
-              disabled={isGoogleUser}
-            >
-              <FontAwesomeIcon icon={faKey} className="mr-2" />
-              Change Password
-              {isGoogleUser && (
-                <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs font-medium text-white bg-gray-700 rounded-lg shadow-sm pointer-events-none whitespace-nowrap">
-                  Google users must change passwords through Google
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 border-solid border-t-gray-700 border-t-4 border-x-transparent border-x-4 border-b-0"></div>
-                </div>
-              )}
-            </button>
+
+            {/* Only show Change Password button for non-Google users */}
+            {!isGoogleUser && (
+              <button
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="bg-white/10 hover:bg-white/20 text-white font-medium transition-all duration-300 px-6 py-2 rounded-lg flex items-center justify-center"
+              >
+                <FontAwesomeIcon icon={faKey} className="mr-2" />
+                Change Password
+              </button>
+            )}
           </div>
         </div>
 
