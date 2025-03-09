@@ -17,6 +17,7 @@ import {
   faGlobe,
   faChartPie,
   faChartLine,
+  faSmileWink,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios"; // Assuming you’re using axios for API calls
 import Cookies from "js-cookie"; // Import Cookies for token persistence
@@ -244,7 +245,7 @@ export default function Dashboard() {
   // Stylish welcome message for new users with no data
   if (!hasData) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
+      <div className="relative min-h-screen bg-gradient-to-br from-indigo-200 via-white to-purple-400 overflow-hidden">
         {/* Advanced Background Design */}
         <div className="absolute inset-0 pointer-events-none">
           {/* Layered Gradient Backgrounds */}
@@ -297,7 +298,8 @@ export default function Dashboard() {
                 transition={{ delay: 0.2 }}
               >
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Welcome, <span className="text-indigo-600">{firstName}</span>!
+                  Welcome, <span className="text-indigo-600">{firstName}</span>
+                  <FontAwesomeIcon icon={faSmileWink} />
                 </h1>
                 <p className="text-gray-600 mb-8 leading-relaxed">
                   Transform how you manage shared expenses. Our platform makes
