@@ -699,8 +699,8 @@ export default function Groups() {
                   Create a New Group
                 </h2>
                 <Image
-                  src="/group-avatar-illustration.svg"
-                  alt="Group Creation"
+                  src={avatarMap[newGroup.type]}
+                  alt={`${newGroup.type} Group Avatar`}
                   width={100}
                   height={100}
                   className="absolute top-4 right-4 opacity-70"
