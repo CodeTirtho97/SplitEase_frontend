@@ -39,6 +39,9 @@ export default function Groups() {
   });
   const [owesList, setOwesList] = useState<any[]>([]);
 
+  // Enhanced state management
+  const [isUpdating, setIsUpdating] = useState(false);
+
   useEffect(() => {
     // If not loading and no token exists, redirect to login
     if (!authLoading && !token) {
@@ -149,7 +152,11 @@ export default function Groups() {
       }
 
       try {
+        setIsUpdating(true);
         await createNewGroup(newGroup, token); // Use token from AuthContext
+
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
         setIsModalOpen(false);
         refreshGroups();
         setToast({ message: "Group created successfully!", type: "success" });
@@ -163,6 +170,8 @@ export default function Groups() {
         });
       } catch (error: any) {
         setToast({ message: error.message, type: "error" });
+      } finally {
+        setIsUpdating(false); // End update state
       }
     }
   };
@@ -703,7 +712,7 @@ export default function Groups() {
                   alt={`${newGroup.type} Group Avatar`}
                   width={100}
                   height={100}
-                  className="absolute top-4 right-4 opacity-70"
+                  className="absolute top-4 right-4 bg-white/80 p-2 rounded-full shadow-md border border-purple-100"
                 />
               </div>
 
