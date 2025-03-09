@@ -244,183 +244,188 @@ export default function Dashboard() {
   // Stylish welcome message for new users with no data
   if (!hasData) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center 
-      bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden"
-      >
-        {/* Subtle Background Design */}
+      <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
+        {/* Subtle Background Patterns */}
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div
-            className="absolute top-0 left-0 w-1/2 h-full 
-          bg-gradient-to-br from-indigo-100 to-purple-100 
-          transform -skew-x-12 -translate-x-1/4"
+            className="absolute top-0 left-0 w-full h-full 
+          bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] 
+          from-indigo-100 via-white to-purple-100 
+          opacity-50 blur-3xl"
+          ></div>
+
+          {/* Geometric Background Shapes */}
+          <div
+            className="absolute top-0 right-0 w-96 h-96 
+          bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-2xl"
           ></div>
           <div
-            className="absolute bottom-0 right-0 w-1/2 h-full 
-          bg-gradient-to-br from-green-100 to-blue-100 
-          transform skew-x-12 translate-x-1/4"
+            className="absolute bottom-0 left-0 w-80 h-80 
+          bg-purple-200/30 rounded-full mix-blend-multiply filter blur-2xl"
           ></div>
         </div>
 
         {/* Welcome Content */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="relative z-10 bg-white rounded-3xl shadow-2xl 
-          border border-gray-200 p-10 max-w-4xl w-full grid md:grid-cols-2 
-          gap-10 items-center"
-        >
-          {/* Left Side: Welcome Message & Features */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Welcome, <span className="text-indigo-600">{firstName}</span>!
-              </h1>
-              <p className="text-gray-600 mb-8 leading-relaxed">
-                Transform how you manage shared expenses. Our platform makes
-                splitting bills, tracking costs, and settling payments
-                effortless and transparent.
-              </p>
-            </motion.div>
+        <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative z-10 bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl 
+            border border-gray-200/50 p-10 max-w-4xl w-full grid md:grid-cols-2 
+            gap-10 items-center"
+          >
+            {/* Left Side: Welcome Message & Features */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                  Welcome, <span className="text-indigo-600">{firstName}</span>!
+                </h1>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  Transform how you manage shared expenses. Our platform makes
+                  splitting bills, tracking costs, and settling payments
+                  effortless and transparent.
+                </p>
+              </motion.div>
 
-            {/* Feature Highlights */}
-            <div className="space-y-6">
-              {[
-                {
-                  icon: (
-                    <FontAwesomeIcon
-                      icon={faUsers}
-                      className="text-indigo-600 text-2xl"
-                    />
-                  ),
-                  title: "Seamless Group Sharing",
-                  description:
-                    "Easily split expenses with friends, roommates, or colleagues",
-                },
-                {
-                  icon: (
-                    <FontAwesomeIcon
-                      icon={faMoneyBill}
-                      className="text-green-600 text-2xl"
-                    />
-                  ),
-                  title: "Smart Expense Tracking",
-                  description:
-                    "Automatically categorize and analyze your spending patterns",
-                },
-                {
-                  icon: (
-                    <FontAwesomeIcon
-                      icon={faChartPie}
-                      className="text-purple-600 text-2xl"
-                    />
-                  ),
-                  title: "Detailed Insights",
-                  description:
-                    "Gain comprehensive financial visibility across all your groups",
-                },
-              ].map((feature, index) => (
-                <motion.div
-                  key={feature.title}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + index * 0.2 }}
-                  className="flex items-center space-x-4 p-4 
+              {/* Feature Highlights */}
+              <div className="space-y-6">
+                {[
+                  {
+                    icon: (
+                      <FontAwesomeIcon
+                        icon={faUsers}
+                        className="text-indigo-600 text-2xl"
+                      />
+                    ),
+                    title: "Seamless Group Sharing",
+                    description:
+                      "Easily split expenses with friends, roommates, or colleagues",
+                  },
+                  {
+                    icon: (
+                      <FontAwesomeIcon
+                        icon={faMoneyBill}
+                        className="text-green-600 text-2xl"
+                      />
+                    ),
+                    title: "Smart Expense Tracking",
+                    description:
+                      "Automatically categorize and analyze your spending patterns",
+                  },
+                  {
+                    icon: (
+                      <FontAwesomeIcon
+                        icon={faChartPie}
+                        className="text-purple-600 text-2xl"
+                      />
+                    ),
+                    title: "Detailed Insights",
+                    description:
+                      "Gain comprehensive financial visibility across all your groups",
+                  },
+                ].map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + index * 0.2 }}
+                    className="flex items-center space-x-4 p-4 
                   bg-gray-50 rounded-xl hover:bg-gray-100 
                   transition-all duration-300 group"
-                >
-                  <div
-                    className="p-3 bg-white rounded-full shadow-md 
-                  group-hover:shadow-lg transition-shadow"
                   >
-                    {feature.icon}
-                  </div>
-                  <div>
-                    <h3
-                      className="font-semibold text-gray-800 
-                    group-hover:text-indigo-600 transition"
+                    <div
+                      className="p-3 bg-white rounded-full shadow-md 
+                  group-hover:shadow-lg transition-shadow"
                     >
-                      {feature.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {feature.description}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+                      {feature.icon}
+                    </div>
+                    <div>
+                      <h3
+                        className="font-semibold text-gray-800 
+                    group-hover:text-indigo-600 transition"
+                      >
+                        {feature.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
 
-            {/* Action Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="mt-8 flex space-x-4"
-            >
-              <Button
-                text="Create Groups"
-                onClick={() => router.push("/groups")}
-                className="flex-1 flex items-center justify-center 
+              {/* Action Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="mt-8 flex space-x-4"
+              >
+                <Button
+                  text="Create Groups"
+                  onClick={() => router.push("/groups")}
+                  className="flex-1 flex items-center justify-center 
                 bg-indigo-600 text-white py-3 rounded-lg 
                 hover:bg-indigo-700 transition-colors 
                 font-semibold shadow-lg hover:shadow-xl 
                 transform hover:-translate-y-1"
-                {...({ icon: faUsers } as any)}
-              />
-              <Button
-                text="Add Expenses"
-                onClick={() => router.push("/expenses")}
-                className="flex-1 flex items-center justify-center 
+                  {...({ icon: faUsers } as any)}
+                />
+                <Button
+                  text="Add Expenses"
+                  onClick={() => router.push("/expenses")}
+                  className="flex-1 flex items-center justify-center 
                 bg-green-600 text-white py-3 rounded-lg 
                 hover:bg-green-700 transition-colors 
                 font-semibold shadow-lg hover:shadow-xl 
                 transform hover:-translate-y-1"
-                {...({ icon: faMoneyBill } as any)}
-              />
-            </motion.div>
-          </div>
+                  {...({ icon: faMoneyBill } as any)}
+                />
+              </motion.div>
+            </div>
 
-          {/* Right Side: Illustrative Graphic */}
-          <div
-            className="hidden md:flex flex-col items-center justify-center 
+            {/* Right Side: Illustrative Graphic */}
+            <div
+              className="hidden md:flex flex-col items-center justify-center 
           bg-gray-100 rounded-3xl p-10 relative overflow-hidden"
-          >
-            <motion.div
-              animate={{
-                rotate: [0, 5, -5, 0],
-                scale: [1, 1.05, 0.95, 1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
             >
-              <FontAwesomeIcon
-                icon={faRocket}
-                className="absolute top-10 left-10 text-yellow-500 
+              <motion.div
+                animate={{
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.05, 0.95, 1],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <FontAwesomeIcon
+                  icon={faRocket}
+                  className="absolute top-10 left-10 text-yellow-500 
                 opacity-30 text-4xl"
-              />
-              <FontAwesomeIcon
-                icon={faChartLine}
-                className="absolute bottom-10 right-10 text-green-500 
+                />
+                <FontAwesomeIcon
+                  icon={faChartLine}
+                  className="absolute bottom-10 right-10 text-green-500 
                 opacity-30 text-4xl"
-              />
-              <FontAwesomeIcon
-                icon={faGlobe}
-                className="text-indigo-600 animate-pulse text-8xl"
-              />
-            </motion.div>
-            <p className="mt-6 text-center text-gray-600 italic">
-              Simplify your financial connections
-            </p>
-          </div>
-        </motion.div>
+                />
+                <FontAwesomeIcon
+                  icon={faGlobe}
+                  className="text-indigo-600 animate-pulse text-8xl"
+                />
+              </motion.div>
+              <p className="mt-6 text-center text-gray-600 italic">
+                Simplify your financial connections
+              </p>
+            </div>
+          </motion.div>
+        </div>
       </div>
     );
   }
