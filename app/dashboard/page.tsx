@@ -14,10 +14,14 @@ import {
   faExclamationCircle,
   faRocket,
   faLightbulb,
+  faGlobe,
+  faChartPie,
+  faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios"; // Assuming you’re using axios for API calls
 import Cookies from "js-cookie"; // Import Cookies for token persistence
 import { useAuth } from "@/context/authContext"; // Import useAuth
+import EnhancedLoadingScreen from "@/components/EnhancedLoadingScreen";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -194,39 +198,7 @@ export default function Dashboard() {
   }, [router, token, user, setToken, setUser]); // Add token and user as dependencies to re-run if they change
 
   if (authLoading || dashboardLoading) {
-    return (
-      <div className="flex min-h-screen mt-20 justify-center items-center">
-        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
-          {/* Animated Loading SVG */}
-          <svg
-            className="w-16 h-16 text-indigo-500 animate-spin"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            />
-          </svg>
-          <p className="mt-4 text-xl font-medium text-gray-700">
-            Loading Dashboard...
-          </p>
-          <p className="text-sm text-gray-500">
-            Please wait while we fetch your data securely.
-          </p>
-        </div>
-      </div>
-    );
+    return <EnhancedLoadingScreen />;
   }
 
   if (authError || dashboardError) {
@@ -272,96 +244,183 @@ export default function Dashboard() {
   // Stylish welcome message for new users with no data
   if (!hasData) {
     return (
-      <div className="flex min-h-screen mt-20">
-        {/* <Sidebar activePage="dashboard" /> */}
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center 
+      bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden"
+      >
+        {/* Subtle Background Design */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div
+            className="absolute top-0 left-0 w-1/2 h-full 
+          bg-gradient-to-br from-indigo-100 to-purple-100 
+          transform -skew-x-12 -translate-x-1/4"
+          ></div>
+          <div
+            className="absolute bottom-0 right-0 w-1/2 h-full 
+          bg-gradient-to-br from-green-100 to-blue-100 
+          transform skew-x-12 translate-x-1/4"
+          ></div>
+        </div>
 
-        <main className="flex-1 min-h-screen p-4 bg-gray-100 flex items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-10 w-full max-w-6xl text-center border border-indigo-300 hover:shadow-3xl transition-all duration-500"
-          >
-            {/* Animated Rocket Icon */}
+        {/* Welcome Content */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative z-10 bg-white rounded-3xl shadow-2xl 
+          border border-gray-200 p-10 max-w-4xl w-full grid md:grid-cols-2 
+          gap-10 items-center"
+        >
+          {/* Left Side: Welcome Message & Features */}
+          <div>
             <motion.div
-              animate={{ y: [0, -20, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="absolute -top-16 left-1/2 transform -translate-x-1/2"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                Welcome, <span className="text-indigo-600">{firstName}</span>!
+              </h1>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Transform how you manage shared expenses. Our platform makes
+                splitting bills, tracking costs, and settling payments
+                effortless and transparent.
+              </p>
+            </motion.div>
+
+            {/* Feature Highlights */}
+            <div className="space-y-6">
+              {[
+                {
+                  icon: (
+                    <FontAwesomeIcon
+                      icon={faUsers}
+                      className="text-indigo-600 text-2xl"
+                    />
+                  ),
+                  title: "Seamless Group Sharing",
+                  description:
+                    "Easily split expenses with friends, roommates, or colleagues",
+                },
+                {
+                  icon: (
+                    <FontAwesomeIcon
+                      icon={faMoneyBill}
+                      className="text-green-600 text-2xl"
+                    />
+                  ),
+                  title: "Smart Expense Tracking",
+                  description:
+                    "Automatically categorize and analyze your spending patterns",
+                },
+                {
+                  icon: (
+                    <FontAwesomeIcon
+                      icon={faChartPie}
+                      className="text-purple-600 text-2xl"
+                    />
+                  ),
+                  title: "Detailed Insights",
+                  description:
+                    "Gain comprehensive financial visibility across all your groups",
+                },
+              ].map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 + index * 0.2 }}
+                  className="flex items-center space-x-4 p-4 
+                  bg-gray-50 rounded-xl hover:bg-gray-100 
+                  transition-all duration-300 group"
+                >
+                  <div
+                    className="p-3 bg-white rounded-full shadow-md 
+                  group-hover:shadow-lg transition-shadow"
+                  >
+                    {feature.icon}
+                  </div>
+                  <div>
+                    <h3
+                      className="font-semibold text-gray-800 
+                    group-hover:text-indigo-600 transition"
+                    >
+                      {feature.title}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {feature.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-8 flex space-x-4"
+            >
+              <Button
+                text="Create Groups"
+                onClick={() => router.push("/groups")}
+                className="flex-1 flex items-center justify-center 
+                bg-indigo-600 text-white py-3 rounded-lg 
+                hover:bg-indigo-700 transition-colors 
+                font-semibold shadow-lg hover:shadow-xl 
+                transform hover:-translate-y-1"
+                {...({ icon: faUsers } as any)}
+              />
+              <Button
+                text="Add Expenses"
+                onClick={() => router.push("/expenses")}
+                className="flex-1 flex items-center justify-center 
+                bg-green-600 text-white py-3 rounded-lg 
+                hover:bg-green-700 transition-colors 
+                font-semibold shadow-lg hover:shadow-xl 
+                transform hover:-translate-y-1"
+                {...({ icon: faMoneyBill } as any)}
+              />
+            </motion.div>
+          </div>
+
+          {/* Right Side: Illustrative Graphic */}
+          <div
+            className="hidden md:flex flex-col items-center justify-center 
+          bg-gray-100 rounded-3xl p-10 relative overflow-hidden"
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 5, -5, 0],
+                scale: [1, 1.05, 0.95, 1],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             >
               <FontAwesomeIcon
                 icon={faRocket}
-                className="text-indigo-500 text-6xl drop-shadow-md animate-pulse-slow"
+                className="absolute top-10 left-10 text-yellow-500 
+                opacity-30 text-4xl"
               />
-            </motion.div>
-
-            {/* Main Message */}
-            <h1 className="text-4xl font-extrabold text-gray-900 mb-6 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-              Welcome, {firstName}! 🚀
-            </h1>
-            <p className="text-lg text-gray-700 mb-8 font-medium">
-              Looks like you’re new here! Let’s get started by adding your first
-              group, expenses, and transactions to unlock your dashboard stats.
-            </p>
-
-            {/* Animated Icons and Call-to-Action Buttons */}
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-6 mb-8">
-              {/* Groups Icon */}
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 4 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center p-4 bg-indigo-100 rounded-xl shadow-md hover:bg-indigo-200 transition-all duration-100"
-              >
-                <FontAwesomeIcon
-                  icon={faUsers}
-                  className="text-indigo-600 text-5xl mb-2 animate-bounce-slow"
-                />
-                <p className="text-gray-800 text-xl font-semibold">
-                  Create Groups
-                </p>
-                <Button
-                  text="Go to Groups"
-                  onClick={() => router.push("/groups")}
-                  className="mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm"
-                />
-              </motion.div>
-
-              {/* Expenses Icon */}
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: -4 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center p-4 bg-purple-100 rounded-xl shadow-md hover:bg-purple-200 transition-all duration-100"
-              >
-                <FontAwesomeIcon
-                  icon={faMoneyBill}
-                  className="text-purple-600 text-5xl mb-2 animate-bounce-slow"
-                />
-                <p className="text-gray-800 text-xl font-semibold">
-                  Add Expenses
-                </p>
-                <Button
-                  text="Go to Expenses"
-                  onClick={() => router.push("/expenses")}
-                  className="mt-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
-                />
-              </motion.div>
-            </div>
-
-            {/* Inspirational Lightbulb */}
-            <motion.div
-              animate={{ rotate: [2, 5, -5] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-              className="mt-6 flex items-center justify-center gap-4"
-            >
               <FontAwesomeIcon
-                icon={faLightbulb}
-                className="text-yellow-500 text-3xl animate-pulse"
+                icon={faChartLine}
+                className="absolute bottom-10 right-10 text-green-500 
+                opacity-30 text-4xl"
               />
-              <p className="text-gray-600 text-sm italic">
-                Tip: Start with creating a group to share expenses with friends!
-              </p>
+              <FontAwesomeIcon
+                icon={faGlobe}
+                className="text-indigo-600 animate-pulse text-8xl"
+              />
             </motion.div>
-          </motion.div>
-        </main>
+            <p className="mt-6 text-center text-gray-600 italic">
+              Simplify your financial connections
+            </p>
+          </div>
+        </motion.div>
       </div>
     );
   }
