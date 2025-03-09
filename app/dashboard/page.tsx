@@ -298,10 +298,10 @@ export default function Dashboard() {
                 transition={{ delay: 0.2 }}
               >
                 <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Welcome, <span className="text-indigo-600">{firstName}</span>
+                  Welcome, <span className="text-indigo-600">{firstName}</span>{" "}
                   <FontAwesomeIcon
                     icon={faSmile}
-                    className="text-green-600 text-lg"
+                    className="text-green-600 text-2xl"
                   />
                 </h1>
                 <p className="text-gray-600 mb-8 leading-relaxed">
@@ -422,35 +422,121 @@ export default function Dashboard() {
             {/* Right Side: Illustrative Graphic with Enhanced Animation */}
             <div
               className="hidden md:flex flex-col items-center justify-center 
-            bg-gradient-to-br from-indigo-50 to-purple-100 
-            rounded-3xl p-10 relative overflow-hidden"
+  bg-gradient-to-br from-indigo-50 to-purple-100 
+  rounded-3xl p-10 relative overflow-hidden"
             >
               <motion.div
                 animate={{
-                  rotate: [0, 5, -5, 0],
-                  scale: [1, 1.05, 0.95, 1],
+                  rotate: [0, 3, -3, 0],
+                  scale: [1, 1.03, 0.97, 1],
                 }}
                 transition={{
                   duration: 3,
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
-                className="relative"
+                className="relative flex items-center justify-center"
               >
-                <FontAwesomeIcon
-                  icon={faRocket}
-                  className="absolute top-10 left-10 text-yellow-500 
-                opacity-30 text-4xl"
-                />
-                <FontAwesomeIcon
-                  icon={faChartLine}
-                  className="absolute bottom-10 right-10 text-green-500 
-                opacity-30 text-4xl"
-                />
-                <FontAwesomeIcon
-                  icon={faGlobe}
-                  className="text-indigo-600 animate-pulse text-8xl"
-                />
+                {/* Network Connection Illustration */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 250 250"
+                  className="w-64 h-64 text-indigo-600"
+                >
+                  {/* Background Circle */}
+                  <circle
+                    cx="125"
+                    cy="125"
+                    r="120"
+                    fill="rgba(99, 102, 241, 0.1)"
+                    className="text-indigo-500"
+                  />
+
+                  {/* Network Nodes */}
+                  <motion.circle
+                    cx="125"
+                    cy="50"
+                    r="15"
+                    fill="#6366f1"
+                    initial={{ scale: 1 }}
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      translateY: [0, -10, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0,
+                    }}
+                  />
+                  <motion.circle
+                    cx="50"
+                    cy="175"
+                    r="15"
+                    fill="#10b981"
+                    initial={{ scale: 1 }}
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      translateY: [0, -10, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 0.5,
+                    }}
+                  />
+                  <motion.circle
+                    cx="200"
+                    cy="175"
+                    r="15"
+                    fill="#ec4899"
+                    initial={{ scale: 1 }}
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      translateY: [0, -10, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: 1,
+                    }}
+                  />
+
+                  {/* Connecting Lines */}
+                  <line
+                    x1="125"
+                    y1="65"
+                    x2="65"
+                    y2="160"
+                    stroke="#6366f1"
+                    strokeWidth="3"
+                    strokeDasharray="10 5"
+                    className="opacity-50"
+                  />
+                  <line
+                    x1="125"
+                    y1="65"
+                    x2="185"
+                    y2="160"
+                    stroke="#10b981"
+                    strokeWidth="3"
+                    strokeDasharray="10 5"
+                    className="opacity-50"
+                  />
+                  <line
+                    x1="65"
+                    y1="160"
+                    x2="185"
+                    y2="160"
+                    stroke="#ec4899"
+                    strokeWidth="3"
+                    strokeDasharray="10 5"
+                    className="opacity-50"
+                  />
+                </svg>
               </motion.div>
               <p className="mt-6 text-center text-gray-600 italic">
                 Simplify your financial connections
