@@ -245,23 +245,33 @@ export default function Dashboard() {
   if (!hasData) {
     return (
       <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 overflow-hidden">
-        {/* Subtle Background Patterns */}
-        <div className="absolute inset-0 opacity-10 pointer-events-none">
+        {/* Advanced Background Design */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Layered Gradient Backgrounds */}
           <div
-            className="absolute top-0 left-0 w-full h-full 
-          bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] 
-          from-indigo-100 via-white to-purple-100 
-          opacity-50 blur-3xl"
+            className="absolute inset-0 opacity-50 bg-gradient-to-br 
+          from-indigo-100/20 via-purple-100/10 to-blue-100/20 
+          animate-gradient-slow"
           ></div>
 
           {/* Geometric Background Shapes */}
           <div
             className="absolute top-0 right-0 w-96 h-96 
-          bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-2xl"
+          bg-indigo-200/20 rounded-full mix-blend-multiply 
+          filter blur-3xl animate-blob-1"
           ></div>
           <div
             className="absolute bottom-0 left-0 w-80 h-80 
-          bg-purple-200/30 rounded-full mix-blend-multiply filter blur-2xl"
+          bg-purple-200/20 rounded-full mix-blend-multiply 
+          filter blur-3xl animate-blob-2"
+          ></div>
+
+          {/* Subtle Grid Pattern */}
+          <div
+            className="absolute inset-0 opacity-5 
+          bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),
+          linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] 
+          bg-[size:20px_20px]"
           ></div>
         </div>
 
@@ -271,9 +281,13 @@ export default function Dashboard() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative z-10 bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl 
-            border border-gray-200/50 p-10 max-w-4xl w-full grid md:grid-cols-2 
-            gap-10 items-center"
+            className="relative z-10 bg-white/90 backdrop-blur-lg 
+          rounded-3xl shadow-2xl border border-gray-200/50 
+          p-10 max-w-4xl w-full grid md:grid-cols-2 
+          gap-10 items-center 
+          ring-4 ring-indigo-500/10 
+          hover:ring-indigo-500/20 
+          transition-all duration-300"
           >
             {/* Left Side: Welcome Message & Features */}
             <div>
@@ -292,7 +306,7 @@ export default function Dashboard() {
                 </p>
               </motion.div>
 
-              {/* Feature Highlights */}
+              {/* Feature Highlights with Enhanced Hover Effects */}
               <div className="space-y-6">
                 {[
                   {
@@ -335,19 +349,26 @@ export default function Dashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 + index * 0.2 }}
                     className="flex items-center space-x-4 p-4 
-                  bg-gray-50 rounded-xl hover:bg-gray-100 
-                  transition-all duration-300 group"
+                  bg-gray-50/60 rounded-xl 
+                  hover:bg-indigo-50 
+                  transition-all duration-300 
+                  group cursor-pointer 
+                  border border-transparent 
+                  hover:border-indigo-200 
+                  hover:shadow-md"
                   >
                     <div
-                      className="p-3 bg-white rounded-full shadow-md 
-                  group-hover:shadow-lg transition-shadow"
+                      className="p-3 bg-white rounded-full 
+                    shadow-md group-hover:shadow-lg 
+                    transition-shadow"
                     >
                       {feature.icon}
                     </div>
                     <div>
                       <h3
                         className="font-semibold text-gray-800 
-                    group-hover:text-indigo-600 transition"
+                      group-hover:text-indigo-600 
+                      transition"
                       >
                         {feature.title}
                       </h3>
@@ -359,7 +380,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons with Enhanced Interaction */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -373,7 +394,9 @@ export default function Dashboard() {
                 bg-indigo-600 text-white py-3 rounded-lg 
                 hover:bg-indigo-700 transition-colors 
                 font-semibold shadow-lg hover:shadow-xl 
-                transform hover:-translate-y-1"
+                transform hover:-translate-y-1
+                active:scale-95
+                group"
                   {...({ icon: faUsers } as any)}
                 />
                 <Button
@@ -383,16 +406,19 @@ export default function Dashboard() {
                 bg-green-600 text-white py-3 rounded-lg 
                 hover:bg-green-700 transition-colors 
                 font-semibold shadow-lg hover:shadow-xl 
-                transform hover:-translate-y-1"
+                transform hover:-translate-y-1
+                active:scale-95
+                group"
                   {...({ icon: faMoneyBill } as any)}
                 />
               </motion.div>
             </div>
 
-            {/* Right Side: Illustrative Graphic */}
+            {/* Right Side: Illustrative Graphic with Enhanced Animation */}
             <div
               className="hidden md:flex flex-col items-center justify-center 
-          bg-gray-100 rounded-3xl p-10 relative overflow-hidden"
+            bg-gradient-to-br from-indigo-50 to-purple-100 
+            rounded-3xl p-10 relative overflow-hidden"
             >
               <motion.div
                 animate={{
@@ -404,6 +430,7 @@ export default function Dashboard() {
                   repeat: Infinity,
                   ease: "easeInOut",
                 }}
+                className="relative"
               >
                 <FontAwesomeIcon
                   icon={faRocket}
