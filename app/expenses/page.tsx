@@ -59,6 +59,7 @@ interface Group {
   _id: string;
   name: string;
   members: Member[];
+  completed?: boolean;
 }
 
 interface ChartData {
@@ -134,6 +135,7 @@ export default function Expenses() {
         _id: group._id,
         name: group.name,
         members,
+        completed: group.completed || false, // Include completed status
       };
     });
   }, [contextGroups]);
@@ -359,11 +361,11 @@ export default function Expenses() {
       if (response.status === 201) {
         setToast({ message: "Expense added successfully!", type: "success" });
         setIsModalOpen(false);
-        // Refresh expenses list after adding a new expense
         fetchRecentExpenses();
       }
     } catch (error: any) {
-      console.error("Error saving expense:", error);
+      // More detailed error logging
+      console.error("Error saving expense:", error.response?.data || error);
       setToast({
         message: error.response?.data?.message || "Error adding expense",
         type: "error",
@@ -473,7 +475,7 @@ export default function Expenses() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-indigo-200 via-purple-100 to-pink-200 pt-20">
+    <div className="flex min-h-screen bg-gradient-to-b from-indigo-200 to-purple-100 pt-20">
       <Sidebar activePage="expenses" />
       <div className="flex-1 p-4 sm:p-6 md:p-8">
         {toast && (

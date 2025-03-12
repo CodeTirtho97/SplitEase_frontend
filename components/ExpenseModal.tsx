@@ -27,6 +27,7 @@ interface Group {
   _id: string;
   name: string;
   members: Member[];
+  completed?: boolean;
 }
 
 interface ExpenseModalProps {
@@ -319,9 +320,11 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     const totalAmount = parseFloat(amount);
     const numericSplitValues = splitValues.map((sv) => ({
       userId: sv.userId,
-      value: typeof sv.value === "string" ? 0 : sv.value,
+      value:
+        typeof sv.value === "string" ? parseFloat(sv.value) || 0 : sv.value,
     }));
 
+    // Format data exactly matching the expected structure from handleSaveExpense
     const expenseData = {
       groupId: selectedGroup,
       payeeId: payee,
@@ -330,26 +333,34 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
       currency,
       amount: totalAmount,
       splitMethod,
-      participants:
-        splitMethod === "Equal"
-          ? selectedParticipants.map((userId) => ({
-              userId,
-              amount: totalAmount / selectedParticipants.length,
-            }))
-          : splitMethod === "Percentage"
-          ? selectedParticipants.map((userId) => ({
-              userId,
-              percentage:
-                numericSplitValues.find((sv) => sv.userId === userId)?.value ||
-                0,
-            }))
-          : selectedParticipants.map((userId) => ({
-              userId,
-              amount:
-                numericSplitValues.find((sv) => sv.userId === userId)?.value ||
-                0,
-            })),
+      participants: selectedParticipants.map((userId) => {
+        // Find the split value for this user
+        const userSplitValue = numericSplitValues.find(
+          (sv) => sv.userId === userId
+        );
+
+        if (splitMethod === "Equal") {
+          return {
+            userId,
+            amount: totalAmount / selectedParticipants.length,
+          };
+        } else if (splitMethod === "Percentage") {
+          return {
+            userId,
+            percentage: userSplitValue?.value || 0,
+          };
+        } else {
+          // Custom
+          return {
+            userId,
+            amount: userSplitValue?.value || 0,
+          };
+        }
+      }),
     };
+
+    // Add debugging logs
+    console.log("Sending expense data:", JSON.stringify(expenseData, null, 2));
 
     handleSaveExpense(expenseData);
     resetForm();
@@ -453,11 +464,13 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
                       }`}
                     >
                       <option value="">Select Group</option>
-                      {groups.map((group) => (
-                        <option key={group._id} value={group._id}>
-                          {group.name}
-                        </option>
-                      ))}
+                      {groups
+                        .filter((group) => !group.completed) // Only show active (non-completed) groups
+                        .map((group) => (
+                          <option key={group._id} value={group._id}>
+                            {group.name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                   {validationErrors.group && (
