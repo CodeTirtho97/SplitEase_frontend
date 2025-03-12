@@ -10,6 +10,9 @@ import {
   faExclamationCircle,
   faFileInvoiceDollar,
   faChartLine,
+  faMoneyBillWave,
+  faUsers,
+  faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { Pie, Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
@@ -88,6 +91,7 @@ export default function Expenses() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("INR");
   const { refreshExpenses } = useTransactionContext();
+  const [animate, setAnimate] = useState(false);
 
   // Track if component has mounted to prevent multiple fetches in Strict Mode
   const [hasMounted, setHasMounted] = useState(false);
@@ -141,9 +145,14 @@ export default function Expenses() {
     try {
       const response = await expenseApi.getRecentExpenses();
       setExpenses(response.data.expenses || []);
+      // Don't show error toasts for empty expenses - it's an expected state
     } catch (error) {
       console.error("Error fetching recent expenses:", error);
-      setToast({ message: "Failed to load recent expenses", type: "error" });
+      // Only show error toast if it's a real error, not just empty data
+      const errorMessage = (error as any)?.response?.data?.message || "";
+      if (!errorMessage.includes("No expenses found")) {
+        setToast({ message: "Failed to load recent expenses", type: "error" });
+      }
     } finally {
       setIsFetching(false);
     }
@@ -159,9 +168,17 @@ export default function Expenses() {
       } else {
         setSummary({});
       }
+      // Don't show errors for empty summary data
     } catch (error) {
       console.error("Error fetching expense summary:", error);
-      setError("Failed to load summary");
+      // Only capture the error if it's not related to empty data
+      const errorMessage = (error as any)?.response?.data?.message || "";
+      if (
+        !errorMessage.includes("No summary") &&
+        !errorMessage.includes("not found")
+      ) {
+        setError("Failed to load summary");
+      }
     }
   }, [hasMounted]);
 
@@ -181,10 +198,18 @@ export default function Expenses() {
           monthlyTrendSettled: {},
         }
       );
+      // Don't show errors for empty chart data
     } catch (error) {
       console.error("Error fetching expense breakdown:", error);
       setChartData(null);
-      setToast({ message: "Failed to load chart data", type: "error" });
+      // Only show error toast if it's a real error, not just empty data
+      const errorMessage = (error as any)?.response?.data?.message || "";
+      if (
+        !errorMessage.includes("No data") &&
+        !errorMessage.includes("not found")
+      ) {
+        setToast({ message: "Failed to load chart data", type: "error" });
+      }
     } finally {
       setLoadingCharts(false);
     }
@@ -205,9 +230,22 @@ export default function Expenses() {
           await fetchRecentExpenses();
           await fetchSummary();
           await fetchExpenseBreakdown();
+
+          // Start animation after data is loaded (or attempted to load)
+          setTimeout(() => setAnimate(true), 300);
         } catch (error) {
           console.error("Error fetching initial data:", error);
-          setToast({ message: "Failed to load initial data", type: "error" });
+          // Only show toast for critical errors
+          if (
+            error instanceof Error &&
+            !error.message.includes("No data") &&
+            !error.message.includes("not found")
+          ) {
+            setToast({ message: "Failed to load initial data", type: "error" });
+          }
+
+          // Still trigger animation even if there's an error
+          setTimeout(() => setAnimate(true), 300);
         }
       };
       fetchInitialData();
@@ -304,14 +342,25 @@ export default function Expenses() {
     );
   };
 
-  // Empty state component for no expenses
+  // Empty state component for no expenses with animation
   const EmptyExpensesState = () => (
-    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg">
-      <div className="text-center mb-8">
-        <FontAwesomeIcon
-          icon={faFileInvoiceDollar}
-          className="text-6xl text-purple-400 mb-4"
-        />
+    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg transition-all duration-500 ease-in-out transform">
+      <div
+        className={`text-center mb-8 transition-all duration-700 ease-in-out transform ${
+          animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+        }`}
+      >
+        <div className="mb-4 relative mx-auto w-24 h-24 flex items-center justify-center">
+          <FontAwesomeIcon
+            icon={faFileInvoiceDollar}
+            className="text-6xl text-purple-400 absolute z-10"
+          />
+          <div
+            className={`absolute inset-0 bg-purple-100 rounded-full scale-0 ${
+              animate ? "animate-ping-slow" : ""
+            }`}
+          ></div>
+        </div>
         <h2 className="text-2xl font-bold text-gray-700 mb-2">
           No Expenses Yet!
         </h2>
@@ -323,7 +372,11 @@ export default function Expenses() {
       <Button
         text="Add Your First Expense"
         onClick={() => setIsModalOpen(true)}
-        className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2"
+        className={`bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-700 ease-in-out transform ${
+          animate
+            ? "translate-y-0 opacity-100 scale-100"
+            : "translate-y-10 opacity-0 scale-95"
+        }`}
       >
         <FontAwesomeIcon icon={faPlus} />
         <span>Add Your First Expense</span>
@@ -331,14 +384,47 @@ export default function Expenses() {
     </div>
   );
 
-  // Empty state component for charts
-  const EmptyChartsState = () => (
-    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg col-span-1 md:col-span-3">
-      <div className="text-center mb-6">
+  // Empty state component for summary data
+  const EmptySummaryState = () => (
+    <div
+      className={`rounded-lg bg-white shadow-md p-6 text-center mb-6 transition-all duration-500 ease-in-out transform ${
+        animate ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      }`}
+    >
+      <div className="flex items-center justify-center mb-2">
         <FontAwesomeIcon
           icon={faChartLine}
-          className="text-5xl text-blue-400 mb-4"
+          className="text-2xl text-blue-400 mr-2"
         />
+        <h3 className="text-lg font-medium text-gray-600">
+          No Summary Data Available
+        </h3>
+      </div>
+      <p className="text-sm text-gray-500">
+        Add your first expense to see financial summaries
+      </p>
+    </div>
+  );
+
+  // Empty state component for charts with animation
+  const EmptyChartsState = () => (
+    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg col-span-1 md:col-span-3 transition-all duration-500">
+      <div
+        className={`text-center mb-6 transition-all duration-700 ease-in-out transform ${
+          animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+        }`}
+      >
+        <div className="mb-4 relative mx-auto w-20 h-20 flex items-center justify-center">
+          <FontAwesomeIcon
+            icon={faChartLine}
+            className="text-5xl text-blue-400 absolute z-10"
+          />
+          <div
+            className={`absolute inset-0 bg-blue-100 rounded-full scale-0 ${
+              animate ? "animate-pulse" : ""
+            }`}
+          ></div>
+        </div>
         <h2 className="text-xl font-bold text-gray-700 mb-2">
           No Chart Data Available
         </h2>
@@ -350,9 +436,9 @@ export default function Expenses() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-20">
+    <div className="flex min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 pt-20">
       <Sidebar activePage="expenses" />
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-4 sm:p-6 md:p-8">
         {toast && (
           <div
             className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm z-50 ${
@@ -368,41 +454,54 @@ export default function Expenses() {
             <span>{toast.message}</span>
           </div>
         )}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Expenses
           </h1>
           <Button
             text="Add Expense"
             onClick={() => setIsModalOpen(true)}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-8 py-4 rounded-xl flex items-center gap-2 text-xl"
+            className="bg-purple-500 hover:bg-purple-600 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-2 text-lg md:text-xl transition-all duration-300 shadow-md hover:shadow-lg"
           >
             <FontAwesomeIcon icon={faPlus} />
-            <span>Add Expense</span>
+            <span className="hidden sm:inline">Add Expense</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
 
-        <DashboardCards
-          expenses={expenses}
-          summary={summary}
-          fetchSummary={fetchSummary}
-          error={error}
-          selectedCurrency={selectedCurrency}
-          setSelectedCurrency={setSelectedCurrency}
-        />
+        {/* Show empty summary state if summary is null or empty */}
+        {!summary || Object.keys(summary).length === 0 ? (
+          <EmptySummaryState />
+        ) : (
+          <DashboardCards
+            expenses={expenses}
+            summary={summary}
+            fetchSummary={fetchSummary}
+            error={null} // Hide error messages in the cards
+            selectedCurrency={selectedCurrency}
+            setSelectedCurrency={setSelectedCurrency}
+          />
+        )}
 
         <button
           onClick={() => setShowCharts(!showCharts)}
-          className="bg-gray-700 text-white px-4 py-2 rounded-md mb-6"
+          className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-md mb-6 transition-all duration-300 shadow-md hover:shadow-lg"
         >
           {showCharts ? "Hide Charts" : "Show Charts"}
         </button>
 
         {showCharts && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div
+            className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 transition-all duration-700 ease-in-out transform ${
+              animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+            }`}
+          >
             {loadingCharts ? (
               <div className="w-full text-center py-10 col-span-1 md:col-span-3">
-                <p className="text-xl text-gray-500">Loading charts...</p>
+                <div className="flex justify-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+                </div>
+                <p className="text-xl text-gray-500 mt-4">Loading charts...</p>
               </div>
             ) : !chartData ||
               (Object.keys(chartData?.breakdown || {}).length === 0 &&
@@ -410,7 +509,7 @@ export default function Expenses() {
               <EmptyChartsState />
             ) : (
               <>
-                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center">
+                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center transition-all duration-500 hover:shadow-xl">
                   <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
                     Expense Breakdown (Total)
                   </h2>
@@ -475,154 +574,307 @@ export default function Expenses() {
                   </div>
                 </div>
 
-                {/* Rest of the charts - same as original */}
-                {/* ...additional charts would go here... */}
+                <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center transition-all duration-500 hover:shadow-xl">
+                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
+                    Monthly Expense Trend (Total)
+                  </h2>
+                  <div className="w-full h-[250px]">
+                    <Line
+                      data={{
+                        labels: Object.keys(chartData?.monthlyTrend || {}),
+                        datasets: [
+                          {
+                            label: "Total Expenses",
+                            data: Object.values(chartData?.monthlyTrend || {}),
+                            borderColor: "#6200ea",
+                            backgroundColor: "rgba(98, 0, 234, 0.2)",
+                            fill: true,
+                            tension: 0.1,
+                          },
+                        ],
+                      }}
+                      options={{
+                        maintainAspectRatio: false,
+                        plugins: {
+                          title: {
+                            display: true,
+                            text: "Monthly Expense Trend (Total)",
+                            font: { size: 16 },
+                          },
+                          legend: {
+                            display: false,
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `Spending: ₹${value.toLocaleString()}`;
+                              },
+                            },
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            title: {
+                              display: true,
+                              text: "Amount (INR)",
+                            },
+                          },
+                          x: {
+                            title: {
+                              display: true,
+                              text: "Month",
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
               </>
             )}
           </div>
         )}
 
-        <div className="bg-white shadow-lg rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-orange-500 mb-4">
+        <div
+          className={`bg-white shadow-lg rounded-lg p-6 transition-all duration-500 ease-in-out transform ${
+            animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
+          }`}
+        >
+          <h2 className="text-lg font-semibold text-orange-500 mb-4 flex items-center">
+            <FontAwesomeIcon icon={faFileInvoiceDollar} className="mr-2" />
             Recent Expenses
           </h2>
           {expenses.length === 0 ? (
             <EmptyExpensesState />
           ) : (
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-200 text-gray-600">
-                  <th className="py-3 px-4 text-left">Description</th>
-                  <th className="py-3 px-4 text-left">Type</th>
-                  <th className="py-3 px-4 text-right">Amount</th>
-                  <th className="py-3 px-4 text-center">Date Added</th>
-                  <th className="py-3 px-4 text-center">Group</th>
-                  <th className="py-3 px-4 text-center">Completed?</th>
-                  <th className="py-3 px-4 text-center">Show Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((expense) => (
-                  <React.Fragment key={expense._id}>
-                    <tr className="border-t hover:bg-gray-100 transition">
-                      <td className="py-3 px-4">{expense.description}</td>
-                      <td className="py-3 px-4">{expense.type}</td>
-                      <td className="py-3 px-4 text-right text-indigo-500 font-bold">
-                        {expense.currency === "INR"
-                          ? "₹"
-                          : expense.currency === "EUR"
-                          ? "€"
-                          : expense.currency === "USD"
-                          ? "$"
-                          : expense.currency === "GBP"
-                          ? "£"
-                          : "¥"}
-                        {expense.totalAmount.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-center text-gray-500">
-                        {new Date(expense.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {expense.groupId
-                          ? groupMapping[expense.groupId] || "Unknown Group"
-                          : "-"}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {expense.expenseStatus ? "Yes" : "No"}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {expense.groupId ? (
-                          <button
-                            onClick={() => toggleExpand(expense._id)}
-                            className="text-blue-500 hover:text-blue-700 text-lg"
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600">
+                    <th className="py-3 px-4 text-left rounded-tl-lg">
+                      Description
+                    </th>
+                    <th className="py-3 px-4 text-left hidden md:table-cell">
+                      Type
+                    </th>
+                    <th className="py-3 px-4 text-right">Amount</th>
+                    <th className="py-3 px-4 text-center hidden md:table-cell">
+                      Date Added
+                    </th>
+                    <th className="py-3 px-4 text-center hidden lg:table-cell">
+                      Group
+                    </th>
+                    <th className="py-3 px-4 text-center hidden md:table-cell">
+                      Status
+                    </th>
+                    <th className="py-3 px-4 text-center rounded-tr-lg">
+                      Details
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map((expense, index) => (
+                    <React.Fragment key={expense._id}>
+                      <tr
+                        className={`border-t hover:bg-gray-50 transition-all duration-300 ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                        }`}
+                      >
+                        <td className="py-3 px-4 truncate max-w-[150px]">
+                          {expense.description}
+                        </td>
+                        <td className="py-3 px-4 hidden md:table-cell">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs text-white ${
+                              expense.type === "Food"
+                                ? "bg-red-400"
+                                : expense.type === "Transportation"
+                                ? "bg-blue-400"
+                                : expense.type === "Accommodation"
+                                ? "bg-yellow-500"
+                                : expense.type === "Utilities"
+                                ? "bg-green-500"
+                                : expense.type === "Entertainment"
+                                ? "bg-purple-500"
+                                : "bg-gray-500"
+                            }`}
                           >
-                            {expandedRows.includes(expense._id) ? "🔼" : "🔽"}
-                          </button>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                    </tr>
-                    {expense.groupId && expandedRows.includes(expense._id) && (
-                      <tr key={`details-${expense._id}`}>
-                        <td
-                          colSpan={7}
-                          className="bg-gray-50 p-4 rounded-lg shadow-inner"
-                        >
-                          <h3 className="font-semibold text-gray-700 mb-2">
-                            Expense Breakdown
-                          </h3>
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="bg-gray-200 text-gray-600">
-                                <th className="py-2 px-3 text-left">Who</th>
-                                <th className="py-2 px-3 text-center">Owes</th>
-                                <th className="py-2 px-3 text-center">Whom</th>
-                                <th className="py-2 px-3 text-center">
-                                  Payment Done?
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {expense.splitDetails
-                                ?.filter(
-                                  (member) =>
-                                    member.user?.fullName !==
-                                    expense.payer.fullName
-                                )
-                                .map((member, index) => {
-                                  const isPaymentDone = !!member.transactionId;
-                                  const amountColor = isPaymentDone
-                                    ? "text-green-500"
-                                    : "text-red-500";
-                                  const statusColor = isPaymentDone
-                                    ? "text-green-500"
-                                    : "text-red-500";
-
-                                  return (
-                                    <tr
-                                      key={`${expense._id}-member-${index}`}
-                                      className="border-t"
-                                    >
-                                      <td className="py-2 px-3">
-                                        {member.user?.fullName || "Unknown"}
-                                      </td>
-                                      <td
-                                        className={`py-2 px-3 text-center font-bold ${amountColor}`}
-                                      >
-                                        {expense.currency === "INR"
-                                          ? "₹"
-                                          : expense.currency === "EUR"
-                                          ? "€"
-                                          : expense.currency === "USD"
-                                          ? "$"
-                                          : expense.currency === "GBP"
-                                          ? "£"
-                                          : "¥"}
-                                        {Number(
-                                          member.amountOwed
-                                        ).toLocaleString()}
-                                      </td>
-                                      <td className="py-2 px-3 text-center">
-                                        {expense.payer.fullName || "Unknown"}
-                                      </td>
-                                      <td
-                                        className={`py-2 px-3 font-bold text-center ${statusColor}`}
-                                      >
-                                        {isPaymentDone ? "Yes" : "No"}
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                            </tbody>
-                          </table>
+                            {expense.type}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold">
+                          <span
+                            className={`${
+                              expense.expenseStatus
+                                ? "text-green-500"
+                                : "text-indigo-500"
+                            }`}
+                          >
+                            {expense.currency === "INR"
+                              ? "₹"
+                              : expense.currency === "EUR"
+                              ? "€"
+                              : expense.currency === "USD"
+                              ? "$"
+                              : expense.currency === "GBP"
+                              ? "£"
+                              : "¥"}
+                            {expense.totalAmount.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center text-gray-500 hidden md:table-cell">
+                          {new Date(expense.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-4 text-center hidden lg:table-cell">
+                          {expense.groupId ? (
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                              {groupMapping[expense.groupId] || "Unknown Group"}
+                            </span>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center hidden md:table-cell">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              expense.expenseStatus
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {expense.expenseStatus ? "Completed" : "Pending"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {expense.groupId ? (
+                            <button
+                              onClick={() => toggleExpand(expense._id)}
+                              className="bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 p-1 rounded-full transition-colors"
+                            >
+                              <FontAwesomeIcon
+                                icon={
+                                  expandedRows.includes(expense._id)
+                                    ? faCheckCircle
+                                    : faExclamationCircle
+                                }
+                              />
+                            </button>
+                          ) : (
+                            "-"
+                          )}
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
+                      {expense.groupId &&
+                        expandedRows.includes(expense._id) && (
+                          <tr key={`details-${expense._id}`}>
+                            <td
+                              colSpan={7}
+                              className="bg-gray-50 p-4 rounded-lg shadow-inner"
+                            >
+                              <h3 className="font-semibold text-gray-700 mb-2 flex items-center">
+                                <FontAwesomeIcon
+                                  icon={faFileInvoiceDollar}
+                                  className="mr-2 text-purple-500"
+                                />
+                                Expense Breakdown
+                              </h3>
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                  <thead>
+                                    <tr className="bg-gray-200 text-gray-600 rounded-lg">
+                                      <th className="py-2 px-3 text-left rounded-tl-lg">
+                                        Who
+                                      </th>
+                                      <th className="py-2 px-3 text-center">
+                                        Owes
+                                      </th>
+                                      <th className="py-2 px-3 text-center">
+                                        Whom
+                                      </th>
+                                      <th className="py-2 px-3 text-center rounded-tr-lg">
+                                        Payment Done?
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {expense.splitDetails
+                                      ?.filter(
+                                        (member) =>
+                                          member.user?.fullName !==
+                                          expense.payer.fullName
+                                      )
+                                      .map((member, index) => {
+                                        const isPaymentDone =
+                                          !!member.transactionId;
+                                        const amountColor = isPaymentDone
+                                          ? "text-green-500"
+                                          : "text-red-500";
+                                        const statusColor = isPaymentDone
+                                          ? "text-green-500"
+                                          : "text-red-500";
+
+                                        return (
+                                          <tr
+                                            key={`${expense._id}-member-${index}`}
+                                            className={`border-t transition-colors ${
+                                              index % 2 === 0
+                                                ? "bg-white"
+                                                : "bg-gray-50"
+                                            }`}
+                                          >
+                                            <td className="py-2 px-3 font-medium">
+                                              {member.user?.fullName ||
+                                                "Unknown"}
+                                            </td>
+                                            <td
+                                              className={`py-2 px-3 text-center font-bold ${amountColor}`}
+                                            >
+                                              {expense.currency === "INR"
+                                                ? "₹"
+                                                : expense.currency === "EUR"
+                                                ? "€"
+                                                : expense.currency === "USD"
+                                                ? "$"
+                                                : expense.currency === "GBP"
+                                                ? "£"
+                                                : "¥"}
+                                              {Number(
+                                                member.amountOwed
+                                              ).toLocaleString()}
+                                            </td>
+                                            <td className="py-2 px-3 text-center font-medium">
+                                              {expense.payer.fullName ||
+                                                "Unknown"}
+                                            </td>
+                                            <td
+                                              className={`py-2 px-3 text-center ${statusColor}`}
+                                            >
+                                              {isPaymentDone ? (
+                                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                                                  Paid
+                                                </span>
+                                              ) : (
+                                                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">
+                                                  Pending
+                                                </span>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        );
+                                      })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
