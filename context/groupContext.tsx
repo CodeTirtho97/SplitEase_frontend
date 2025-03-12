@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   fetchUserGroups,
   fetchUserFriends,
@@ -62,43 +56,25 @@ export const GroupProvider: React.FC<{ children: React.ReactNode }> = ({
   const { token } = useAuth() || {}; // Use token from AuthContext
 
   // ✅ Fetch Groups from API with token (Server-safe, async)
-  const refreshGroups = useCallback(async () => {
-    if (!token) return;
+  const refreshGroups = async () => {
+    if (!token) {
+      console.warn("User not authenticated, returning empty groups list.");
+      setGroups([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
-    setError(null);
-
     try {
-      // Implement a timeout to prevent infinite loading
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      const response = await fetch("/api/groups", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch groups");
-      }
-
-      const data = await response.json();
-      setGroups(data);
-      setError(null);
-    } catch (err: any) {
-      console.error("Groups fetch error:", err);
-      setError(err.message || "An error occurred while fetching groups");
-      setGroups([]); // Reset groups on error
+      const userGroups = await fetchUserGroups(token);
+      setGroups(userGroups);
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      setGroups([]); // Handle error gracefully
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  };
 
   // ✅ Fetch Friends from API with token (Server-safe, async)
   const refreshFriends = async () => {

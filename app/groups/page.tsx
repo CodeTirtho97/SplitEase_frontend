@@ -26,13 +26,7 @@ import { useAuth } from "@/context/authContext";
 
 export default function Groups() {
   const router = useRouter();
-  const {
-    groups,
-    refreshGroups,
-    friends,
-    loading: groupsLoading,
-    refreshFriends,
-  } = useGroups();
+  const { groups, refreshGroups, friends, refreshFriends } = useGroups();
   const { token, loading: authLoading } = useAuth() || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,19 +42,14 @@ export default function Groups() {
   // Enhanced state management
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const [shouldRefreshGroups, setShouldRefreshGroups] = useState(false);
+
   useEffect(() => {
     // If not loading and no token exists, redirect to login
     if (!authLoading && !token) {
       router.push("/login"); // Adjust the login route as needed
     }
   }, [token, authLoading, router]);
-
-  // Fetch groups only when token is available and not already loading
-  useEffect(() => {
-    if (token && !groupsLoading) {
-      refreshGroups();
-    }
-  }, [token, refreshGroups, groupsLoading]);
 
   // Fetch Who Owes Whom Data (Client-side only)
   useEffect(() => {
@@ -171,7 +160,7 @@ export default function Groups() {
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         setIsModalOpen(false);
-        refreshGroups();
+        setShouldRefreshGroups(true);
         setToast({ message: "Group created successfully!", type: "success" });
 
         // Reset fields
@@ -220,7 +209,7 @@ export default function Groups() {
       try {
         await updateGroup(selectedGroup._id, updatedData, token); // Use token from AuthContext
         setIsEditModalOpen(false);
-        refreshGroups();
+        setShouldRefreshGroups(true);
         setToast({ message: "Group updated successfully!", type: "success" });
       } catch (error) {
         console.error("Error updating group:", error);
@@ -242,7 +231,7 @@ export default function Groups() {
       try {
         await removeGroup(selectedGroup._id, token); // Use token from AuthContext
         setIsDeleteModalOpen(false);
-        refreshGroups();
+        setShouldRefreshGroups(true);
         setToast({ message: "Group deleted successfully!", type: "success" });
       } catch (error: any) {
         setToast({ message: error.message, type: "error" });
@@ -277,7 +266,16 @@ export default function Groups() {
     }
   };
 
-  if (authLoading || groupsLoading) {
+  // UseEffect to handle group refresh
+  useEffect(() => {
+    if (shouldRefreshGroups && token) {
+      refreshGroups();
+      // Reset the refresh flag
+      setShouldRefreshGroups(false);
+    }
+  }, [shouldRefreshGroups, token, refreshGroups]);
+
+  if (authLoading) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 pt-20 justify-center items-center">
         <div className="relative flex flex-col items-center justify-center p-8 bg-white/70 rounded-2xl shadow-2xl backdrop-blur-lg animate-pulse">
