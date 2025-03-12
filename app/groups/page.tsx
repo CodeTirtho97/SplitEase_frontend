@@ -26,7 +26,13 @@ import { useAuth } from "@/context/authContext";
 
 export default function Groups() {
   const router = useRouter();
-  const { groups, refreshGroups, friends, refreshFriends } = useGroups();
+  const {
+    groups,
+    refreshGroups,
+    friends,
+    loading: groupsLoading,
+    refreshFriends,
+  } = useGroups();
   const { token, loading: authLoading } = useAuth() || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,6 +54,13 @@ export default function Groups() {
       router.push("/login"); // Adjust the login route as needed
     }
   }, [token, authLoading, router]);
+
+  // Fetch groups only when token is available and not already loading
+  useEffect(() => {
+    if (token && !groupsLoading) {
+      refreshGroups();
+    }
+  }, [token, refreshGroups, groupsLoading]);
 
   // Fetch Who Owes Whom Data (Client-side only)
   useEffect(() => {
@@ -264,7 +277,7 @@ export default function Groups() {
     }
   };
 
-  if (authLoading) {
+  if (authLoading || groupsLoading) {
     return (
       <div className="flex min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 pt-20 justify-center items-center">
         <div className="relative flex flex-col items-center justify-center p-8 bg-white/70 rounded-2xl shadow-2xl backdrop-blur-lg animate-pulse">
