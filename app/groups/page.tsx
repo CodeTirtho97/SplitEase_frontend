@@ -1124,23 +1124,44 @@ export default function Groups() {
                   {/* Members Section */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-semibold text-gray-600">
+                      <h3 className="text-sm font-semibold text-gray-600 flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2 text-purple-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.5 17c0-2.757 2.243-5 5-5v-2c-3.157 0-5.868 2.167-6.72 5.007C10.399 14.766 8.666 13 6.5 13a4.5 4.5 0 00-4.5 4.5v2h10v-2z" />
+                        </svg>
                         Members
                       </h3>
-                      <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs">
+                      <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs font-medium">
                         {selectedGroup?.members?.length || 0}
                       </span>
                     </div>
-                    <div className="max-h-[200px] overflow-y-auto bg-white/50 border border-gray-200 rounded-lg p-3">
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
                       {selectedGroup?.members?.map(
                         (member: any, index: number) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between py-2 border-b last:border-b-0 border-gray-200"
+                            className="flex items-center justify-between py-2 border-b last:border-b-0 border-purple-200"
                           >
-                            <span className="text-gray-700">
-                              {member.fullName || "Unknown"}
-                            </span>
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center mr-3">
+                                <span className="text-purple-700 font-medium text-sm">
+                                  {member.fullName?.charAt(0).toUpperCase() ||
+                                    "?"}
+                                </span>
+                              </div>
+                              <span className="text-gray-800 font-medium">
+                                {member.fullName || "Unknown"}
+                              </span>
+                            </div>
+                            {member._id === selectedGroup.createdBy._id && (
+                              <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full">
+                                Owner
+                              </span>
+                            )}
                           </div>
                         )
                       )}
@@ -1148,19 +1169,47 @@ export default function Groups() {
                   </div>
 
                   {/* Group Metadata */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/50 p-3 rounded-lg border border-gray-200 text-center">
-                      <h4 className="text-xs font-semibold text-gray-600 mb-1">
-                        Start Date
-                      </h4>
-                      <p className="text-gray-800 font-medium">
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3 text-center">
+                      <div className="flex justify-center items-center mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2 text-blue-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <h4 className="text-xs font-semibold text-blue-700">
+                          Start Date
+                        </h4>
+                      </div>
+                      <p className="text-blue-800 font-bold">
                         {new Date(selectedGroup.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="bg-white/50 p-3 rounded-lg border border-gray-200 text-center">
-                      <h4 className="text-xs font-semibold text-gray-600 mb-1">
-                        Group Status
-                      </h4>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-3 text-center">
+                      <div className="flex justify-center items-center mb-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2 text-green-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <h4 className="text-xs font-semibold text-green-700">
+                          Group Status
+                        </h4>
+                      </div>
                       <p
                         className={`font-bold ${
                           selectedGroup.completed
@@ -1261,14 +1310,57 @@ export default function Groups() {
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <button
                     onClick={() => router.push("/expenses")}
-                    className="bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 transition-colors"
+                    className="
+      flex items-center justify-center 
+      bg-indigo-500 
+      text-white 
+      py-3 
+      rounded-lg 
+      hover:bg-indigo-600 
+      transition-colors 
+      group
+    "
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 text-white group-hover:animate-pulse"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                      <path
+                        fillRule="evenodd"
+                        d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 100-2 1 1 0 000 2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                     Check Expenses
                   </button>
                   <button
                     onClick={() => router.push("/payments")}
-                    className="bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-colors"
+                    className="
+      flex items-center justify-center 
+      bg-green-500 
+      text-white 
+      py-3 
+      rounded-lg 
+      hover:bg-green-600 
+      transition-colors 
+      group
+    "
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 text-white group-hover:animate-pulse"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                     Settle Payments
                   </button>
                 </div>
