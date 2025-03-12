@@ -1103,21 +1103,69 @@ export default function Groups() {
 
                 {/* Group Details Section */}
                 <div className="space-y-4">
+                  {/* Group Description Section */}
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-600 mb-2">
-                      Group Description
-                    </h3>
-                    <p className="text-gray-700 bg-white/50 p-3 rounded-lg border border-gray-200">
-                      {selectedGroup.description || "No description provided."}
-                    </p>
+                    <div className="flex items-center mb-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2 text-indigo-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 3H4zm3 6a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-gray-600">
+                        Group Description
+                      </h3>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-lg p-4">
+                      <p className="text-gray-800 italic">
+                        {selectedGroup.description || (
+                          <span className="text-gray-500">
+                            No description provided
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-600 mb-2">
-                      Group Owner
-                    </h3>
-                    <div className="bg-white/50 p-3 rounded-lg border border-gray-200 text-gray-700">
-                      {selectedGroup.createdBy?.fullName || "Unknown"}
+                  {/* Group Owner Section */}
+                  <div className="mt-4">
+                    <div className="flex items-center mb-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2 text-green-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <h3 className="text-sm font-semibold text-gray-600">
+                        Group Owner
+                      </h3>
+                    </div>
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center mr-4">
+                        <span className="text-green-700 font-bold text-lg">
+                          {selectedGroup.createdBy?.fullName
+                            ?.charAt(0)
+                            .toUpperCase() || "?"}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-gray-800 font-medium">
+                          {selectedGroup.createdBy?.fullName || "Unknown"}
+                        </p>
+                        <p className="text-xs text-gray-500">Group Creator</p>
+                      </div>
                     </div>
                   </div>
 
@@ -1228,21 +1276,62 @@ export default function Groups() {
                   <Button
                     text="Close"
                     onClick={() => setIsViewModalOpen(false)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg transition-colors"
-                  />
+                    className="
+      px-8 py-3 
+      bg-red-500 
+      text-white 
+      rounded-lg 
+      hover:bg-red-600 
+      transition-colors 
+      flex 
+      items-center 
+      justify-center 
+      mx-auto 
+      group
+    "
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 text-white group-hover:animate-pulse"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Close
+                  </Button>
                 </div>
               </div>
 
               {/* Right Panel: Financial Details */}
               <div className="p-8 bg-gray-50 flex flex-col justify-between">
                 <div>
-                  {/* Pending Transactions */}
-                  <div className="mb-6">
+                  {/* Pending Transactions Section */}
+                  <div className="mt-6">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-700">
-                        Pending Transactions
-                      </h3>
-                      <span className="bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2 text-yellow-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M4 4a2 2 0 00-2 2v4h16V6a2 2 0 00-2-2H4z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M18 11H2v5a2 2 0 002 2h12a2 2 0 002-2v-5zM4 15a1 1 0 100-2 1 1 0 000 2z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-gray-700">
+                          Pending Transactions
+                        </h3>
+                      </div>
+                      <span className="bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full text-xs font-medium">
                         {groupTransactions.pending.length}
                       </span>
                     </div>
@@ -1252,13 +1341,19 @@ export default function Groups() {
                           (txn: any, index: number) => (
                             <div
                               key={index}
-                              className="bg-white rounded-lg p-3 shadow-sm flex justify-between items-center"
+                              className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-3 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
                             >
-                              <span className="text-gray-700">
-                                {txn.sender?.fullName || "Unknown"} →{" "}
-                                {txn.receiver?.fullName || "Unknown"}
-                              </span>
-                              <span className="font-bold text-green-600">
+                              <div>
+                                <p className="text-gray-800 font-medium">
+                                  {txn.sender?.fullName || "Unknown"}
+                                  <span className="mx-2 text-gray-400">→</span>
+                                  {txn.receiver?.fullName || "Unknown"}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Pending Transaction
+                                </p>
+                              </div>
+                              <span className="font-bold text-yellow-700">
                                 ₹{txn.amount.toLocaleString()}
                               </span>
                             </div>
@@ -1266,19 +1361,35 @@ export default function Groups() {
                         )}
                       </div>
                     ) : (
-                      <p className="text-gray-500 italic text-center py-4">
-                        No pending transactions found.
-                      </p>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                        <p className="text-gray-500 italic">
+                          No pending transactions found
+                        </p>
+                      </div>
                     )}
                   </div>
 
-                  {/* Who Owes Whom */}
-                  <div>
+                  {/* Who Owes Whom Section */}
+                  <div className="mt-6">
                     <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-semibold text-gray-700">
-                        Who Owes Whom
-                      </h3>
-                      <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">
+                      <div className="flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2 text-blue-500"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-gray-700">
+                          Who Owes Whom
+                        </h3>
+                      </div>
+                      <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs font-medium">
                         {owesList.length}
                       </span>
                     </div>
@@ -1287,11 +1398,18 @@ export default function Groups() {
                         {owesList.map((entry, index) => (
                           <div
                             key={index}
-                            className="bg-white rounded-lg p-3 shadow-sm flex justify-between items-center"
+                            className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
                           >
-                            <span className="text-gray-700">
-                              {entry.from} owes {entry.to}
-                            </span>
+                            <div>
+                              <p className="text-gray-800 font-medium">
+                                {entry.from}
+                                <span className="mx-2 text-gray-400">owes</span>
+                                {entry.to}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Pending Settlement
+                              </p>
+                            </div>
                             <span className="font-bold text-red-600">
                               ₹{entry.amount.toLocaleString()}
                             </span>
@@ -1299,9 +1417,11 @@ export default function Groups() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500 italic text-center py-4">
-                        All payments settled!
-                      </p>
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                        <p className="text-gray-500 italic">
+                          All payments settled!
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
