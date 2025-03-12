@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import expenseApi from "@/utils/api/expense";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faMoneyBillWave,
+  faHourglassHalf,
+  faCheckCircle,
+  faSync,
+} from "@fortawesome/free-solid-svg-icons";
 
 // Define a type for currencies
 type Currency = "INR" | "USD" | "EUR" | "GBP" | "JPY";
@@ -17,7 +24,7 @@ interface DashboardCardsProps {
   fetchSummary: () => Promise<void>;
   error: string | null;
   selectedCurrency: Currency;
-  setSelectedCurrency: (currency: Currency) => void; // Ensure this is defined
+  setSelectedCurrency: (currency: Currency) => void;
 }
 
 export default function DashboardCards({
@@ -29,6 +36,7 @@ export default function DashboardCards({
   setSelectedCurrency,
 }: DashboardCardsProps) {
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
 
   const currencySymbols: Record<Currency, string> = {
     INR: "₹",
@@ -38,7 +46,7 @@ export default function DashboardCards({
     JPY: "¥",
   };
 
-  // Fetch summary only on mount (no real-time updates on expenses change)
+  // Fetch summary on mount
   useEffect(() => {
     const loadSummary = async () => {
       setLoadingSummary(true);
@@ -51,42 +59,30 @@ export default function DashboardCards({
       }
     };
     loadSummary();
-
-    // Cleanup function (optional, but included for consistency)
-    return () => {};
-  }, []); // Empty dependency array ensures one-time fetch on mount only
+  }, []);
 
   const updateExchangeRates = async () => {
+    setIsUpdatingRates(true);
     try {
-      await expenseApi.updateExchangeRates(); // Assuming you add this to expenseApi
-      await fetchSummary(); // Refresh summary with updated rates
+      await expenseApi.updateExchangeRates();
+      await fetchSummary();
     } catch (error) {
       console.error("Error updating exchange rates:", error);
+    } finally {
+      setIsUpdatingRates(false);
     }
   };
-
-  if (loadingSummary) {
-    return <div>Loading summary...</div>;
-  }
-
-  // if (error) {
-  //   return (
-  //     <div className="text-red-500 text-center">
-  //       {error}
-  //       <button
-  //         onClick={updateExchangeRates}
-  //         className="mt-2 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-  //       >
-  //         Update Exchange Rates
-  //       </button>
-  //     </div>
-  //   );
-  // }
 
   // Ensure summary is not null with a type guard
   if (!summary) {
     return (
-      <div className="text-red-500 text-center">No summary data available</div>
+      <div className="text-center p-8">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-12 w-12 bg-gray-300 rounded-full mb-4"></div>
+          <div className="h-4 w-48 bg-gray-300 rounded mb-2"></div>
+          <div className="h-4 w-32 bg-gray-300 rounded"></div>
+        </div>
+      </div>
     );
   }
 
@@ -96,61 +92,137 @@ export default function DashboardCards({
     totalSettled: 0,
   };
 
+  // Calculate the settled amount as Total - Pending
+  const settledAmount = Math.max(
+    0,
+    currentSummary.totalExpenses - currentSummary.totalPending
+  );
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      {/* Currency Dropdown and Update Button */}
-      <div className="col-span-1 md:col-span-3 flex justify-between mt-4">
-        <select
-          value={selectedCurrency}
-          onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
-          className="border p-2 rounded-md shadow-md"
-        >
-          <option value="INR">INR (₹)</option>
-          <option value="USD">USD ($)</option>
-          <option value="EUR">EUR (€)</option>
-          <option value="GBP">GBP (£)</option>
-          <option value="JPY">JPY (¥)</option>
-        </select>
-        {/* <button
+    <div className="mb-8">
+      {/* Currency selector */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-2">
+          <label
+            htmlFor="currency-select"
+            className="text-gray-700 font-medium"
+          >
+            Display Currency:
+          </label>
+          <select
+            id="currency-select"
+            value={selectedCurrency}
+            onChange={(e) => setSelectedCurrency(e.target.value as Currency)}
+            className="bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="INR">INR (₹)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="JPY">JPY (¥)</option>
+          </select>
+        </div>
+        <button
           onClick={updateExchangeRates}
-          className="ml-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          disabled={isUpdatingRates}
+          className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-300 disabled:opacity-70"
         >
-          Update Exchange Rates
-        </button> */}
+          <FontAwesomeIcon
+            icon={faSync}
+            className={isUpdatingRates ? "animate-spin" : ""}
+          />
+          <span>{isUpdatingRates ? "Updating..." : "Update Rates"}</span>
+        </button>
       </div>
-      <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-        <h2 className="text-lg font-semibold text-gray-700">Total Expenses</h2>
-        <p className="text-2xl font-bold text-red-500">
-          {currencySymbols[selectedCurrency]}
-          {currentSummary.totalExpenses.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </p>
-      </div>
-      <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-        <h2 className="text-lg font-semibold text-gray-700">
-          Pending Payments
-        </h2>
-        <p className="text-2xl font-bold text-yellow-500">
-          {currencySymbols[selectedCurrency]}
-          {currentSummary.totalPending.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </p>
-      </div>
-      <div className="bg-white shadow-lg rounded-lg p-6 text-center">
-        <h2 className="text-lg font-semibold text-gray-700">
-          Settled Payments
-        </h2>
-        <p className="text-2xl font-bold text-green-500">
-          {currencySymbols[selectedCurrency]}
-          {currentSummary.totalSettled.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </p>
+
+      {/* Expense Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total Expenses Card */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+          <div className="bg-gradient-to-r from-red-500 to-pink-500 p-1">
+            <div className="bg-white p-5 rounded-t-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Total Expenses
+                </h2>
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <FontAwesomeIcon
+                    icon={faMoneyBillWave}
+                    className="text-red-500 text-lg"
+                  />
+                </div>
+              </div>
+              <p className="text-3xl font-extrabold text-gray-900">
+                {currencySymbols[selectedCurrency]}
+                {currentSummary.totalExpenses.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                All transactions where you're involved
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Payments Card */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-1">
+            <div className="bg-white p-5 rounded-t-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Pending Payments
+                </h2>
+                <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                  <FontAwesomeIcon
+                    icon={faHourglassHalf}
+                    className="text-yellow-500 text-lg"
+                  />
+                </div>
+              </div>
+              <p className="text-3xl font-extrabold text-gray-900">
+                {currencySymbols[selectedCurrency]}
+                {currentSummary.totalPending.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Your net pending balance
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Settled Payments Card */}
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+          <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-1">
+            <div className="bg-white p-5 rounded-t-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-bold text-gray-800">
+                  Settled Payments
+                </h2>
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    className="text-green-500 text-lg"
+                  />
+                </div>
+              </div>
+              <p className="text-3xl font-extrabold text-gray-900">
+                {currencySymbols[selectedCurrency]}
+                {settledAmount.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Completed transactions
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
