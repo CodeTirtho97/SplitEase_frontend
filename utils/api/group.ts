@@ -157,38 +157,53 @@ export const calculateOwes = async (groupId: string, token?: string) => {
       return [];
     }
 
-    // Create a direct debt mapping based on pending transactions only
-    const directDebts: { [key: string]: { [key: string]: number } } = {};
+    // Create a map to store net debts between person pairs
+    const netDebts = new Map();
 
-    // Process each pending transaction to build direct debts
+    // Process each pending transaction
     pendingTransactions.forEach((txn: any) => {
       const sender = txn.sender?.fullName || "Unknown";
       const receiver = txn.receiver?.fullName || "Unknown";
       const amount = txn.amount || 0;
 
-      // Initialize nested objects if they don't exist
-      if (!directDebts[sender]) directDebts[sender] = {};
-      if (!directDebts[sender][receiver]) directDebts[sender][receiver] = 0;
+      // Skip if sender and receiver are the same or amount is 0
+      if (sender === receiver || amount === 0) return;
 
-      // Add to the direct debt
-      directDebts[sender][receiver] += amount;
-    });
-
-    // Convert the direct debts to the expected format
-    const owesList: { from: string; to: string; amount: number }[] = [];
-
-    // Iterate through all senders and their receivers
-    Object.entries(directDebts).forEach(([sender, receivers]) => {
-      Object.entries(receivers).forEach(([receiver, amount]) => {
-        if (amount > 0) {
-          owesList.push({
-            from: sender,
-            to: receiver,
-            amount
-          });
+      // Create a unique key for this pair (alphabetically sorted to ensure consistency)
+      const pairKey = [sender, receiver].sort().join('|');
+      
+      if (!netDebts.has(pairKey)) {
+        netDebts.set(pairKey, { from: sender, to: receiver, amount });
+      } else {
+        const currentDebt = netDebts.get(pairKey);
+        
+        // If the current direction matches the new transaction
+        if (currentDebt.from === sender && currentDebt.to === receiver) {
+          currentDebt.amount += amount;
+        } 
+        // If the direction is reversed
+        else if (currentDebt.from === receiver && currentDebt.to === sender) {
+          currentDebt.amount -= amount;
+          
+          // If the balance flips direction, swap from and to
+          if (currentDebt.amount < 0) {
+            currentDebt.amount = Math.abs(currentDebt.amount);
+            const temp = currentDebt.from;
+            currentDebt.from = currentDebt.to;
+            currentDebt.to = temp;
+          }
         }
-      });
+      }
     });
+
+    // Convert the map to an array of net debts, filtering out zero amounts
+    const owesList = Array.from(netDebts.values())
+      .filter(debt => debt.amount > 0)
+      .map(debt => ({
+        from: debt.from,
+        to: debt.to,
+        amount: debt.amount
+      }));
 
     return owesList;
   } catch (error: any) {
