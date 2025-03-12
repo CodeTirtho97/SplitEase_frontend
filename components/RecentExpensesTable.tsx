@@ -130,7 +130,7 @@ const RecentExpensesTable: React.FC<RecentExpensesTableProps> = ({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4 flex items-center">
+      <div className="bg-gradient-to-r from-orange-400 to-amber-300 px-6 py-4 flex items-center">
         <FontAwesomeIcon
           icon={faFileInvoiceDollar}
           className="text-white text-xl mr-3"

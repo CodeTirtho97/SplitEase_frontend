@@ -476,7 +476,7 @@ export default function Expenses() {
   );
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-indigo-200 to-purple-100 pt-20">
+    <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
       <Sidebar activePage="expenses" />
       <div className="flex-1 p-4 sm:p-6 md:p-8">
         {toast && (
