@@ -148,9 +148,18 @@ export default function Expenses() {
       // Don't show error toasts for empty expenses - it's an expected state
     } catch (error) {
       console.error("Error fetching recent expenses:", error);
-      // Only show error toast if it's a real error, not just empty data
+
+      // Never show error toasts for "No expenses found" or "No data" scenarios
+      // This suppresses "Failed to load recent expenses" messages when there are no expenses yet
       const errorMessage = (error as any)?.response?.data?.message || "";
-      if (!errorMessage.includes("No expenses found")) {
+      const errorStatus = (error as any)?.response?.status;
+
+      // Only show error toast if it's a real server/network error (not 404 or empty data)
+      if (
+        !errorMessage.includes("No expenses") &&
+        !errorMessage.includes("not found") &&
+        errorStatus !== 404
+      ) {
         setToast({ message: "Failed to load recent expenses", type: "error" });
       }
     } finally {
@@ -202,11 +211,18 @@ export default function Expenses() {
     } catch (error) {
       console.error("Error fetching expense breakdown:", error);
       setChartData(null);
-      // Only show error toast if it's a real error, not just empty data
+
+      // Never show error toasts for empty data scenarios
+      // This suppresses "Failed to load chart data" messages when there are no expenses yet
       const errorMessage = (error as any)?.response?.data?.message || "";
+      const errorStatus = (error as any)?.response?.status;
+
+      // Only show error toast if it's a real server/network error (not 404 or empty data)
       if (
         !errorMessage.includes("No data") &&
-        !errorMessage.includes("not found")
+        !errorMessage.includes("not found") &&
+        !errorMessage.includes("No expenses") &&
+        errorStatus !== 404
       ) {
         setToast({ message: "Failed to load chart data", type: "error" });
       }
@@ -227,17 +243,38 @@ export default function Expenses() {
       setHasMounted(true);
       const fetchInitialData = async () => {
         try {
-          await fetchRecentExpenses();
-          await fetchSummary();
-          await fetchExpenseBreakdown();
+          // Fetch expenses with a catch block to suppress error messages for no data
+          try {
+            await fetchRecentExpenses();
+          } catch (error) {
+            console.error("Error fetching recent expenses:", error);
+            // Don't show toast for empty expenses
+          }
+
+          // Fetch summary with a catch block to suppress error messages for no data
+          try {
+            await fetchSummary();
+          } catch (error) {
+            console.error("Error fetching summary:", error);
+            // Don't show toast for empty summary
+          }
+
+          // Fetch chart data with a catch block to suppress error messages for no data
+          try {
+            await fetchExpenseBreakdown();
+          } catch (error) {
+            console.error("Error fetching chart data:", error);
+            // Don't show toast for empty chart data
+          }
 
           // Start animation after data is loaded (or attempted to load)
           setTimeout(() => setAnimate(true), 300);
         } catch (error) {
-          console.error("Error fetching initial data:", error);
-          // Only show toast for critical errors
+          console.error("Error in fetchInitialData:", error);
+          // Only show toast for critical errors that don't involve missing data
           if (
             error instanceof Error &&
+            !error.message.includes("No expenses") &&
             !error.message.includes("No data") &&
             !error.message.includes("not found")
           ) {
