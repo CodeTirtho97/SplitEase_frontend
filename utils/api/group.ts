@@ -142,52 +142,53 @@ export const calculateOwes = async (groupId: string, token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token"); // Changed from userToken to token to match your auth implementation
       if (!token) throw new Error("User not authenticated!");
     }
 
-    const transactions = await fetchGroupTransactions(groupId, token);
+    const response = await axios.get(`${API_URL}/groups/${groupId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    if (transactions.completed.length === 0 && transactions.pending.length === 0) {
+    // Extract only pending transactions - we only care about unsettled debts
+    const pendingTransactions = response.data?.pendingTransactions || [];
+
+    if (pendingTransactions.length === 0) {
       return [];
     }
 
-    const memberTotals: { [key: string]: number } = {};
-    transactions.completed.forEach((txn: any) => {
-      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
-      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
-      memberTotals[txn.sender?.fullName] -= txn.amount;
-      memberTotals[txn.receiver?.fullName] += txn.amount;
-    });
-    transactions.pending.forEach((txn: any) => {
-      if (!memberTotals[txn.sender?.fullName]) memberTotals[txn.sender?.fullName] = 0;
-      if (!memberTotals[txn.receiver?.fullName]) memberTotals[txn.receiver?.fullName] = 0;
-      memberTotals[txn.sender?.fullName] -= txn.amount;
-      memberTotals[txn.receiver?.fullName] += txn.amount;
+    // Create a direct debt mapping based on pending transactions only
+    const directDebts: { [key: string]: { [key: string]: number } } = {};
+
+    // Process each pending transaction to build direct debts
+    pendingTransactions.forEach((txn: any) => {
+      const sender = txn.sender?.fullName || "Unknown";
+      const receiver = txn.receiver?.fullName || "Unknown";
+      const amount = txn.amount || 0;
+
+      // Initialize nested objects if they don't exist
+      if (!directDebts[sender]) directDebts[sender] = {};
+      if (!directDebts[sender][receiver]) directDebts[sender][receiver] = 0;
+
+      // Add to the direct debt
+      directDebts[sender][receiver] += amount;
     });
 
-    const balances = Object.entries(memberTotals).map(([name, balance]) => ({
-      name,
-      balance,
-    }));
-
+    // Convert the direct debts to the expected format
     const owesList: { from: string; to: string; amount: number }[] = [];
-    let creditors = balances.filter((m) => m.balance > 0).sort((a, b) => b.balance - a.balance);
-    let debtors = balances.filter((m) => m.balance < 0).sort((a, b) => a.balance - b.balance);
 
-    while (creditors.length > 0 && debtors.length > 0) {
-      let creditor = creditors[0];
-      let debtor = debtors[0];
-      let settleAmount = Math.min(creditor.balance, Math.abs(debtor.balance));
-
-      owesList.push({ from: debtor.name, to: creditor.name, amount: settleAmount });
-
-      creditor.balance -= settleAmount;
-      debtor.balance += settleAmount;
-
-      if (creditor.balance === 0) creditors.shift();
-      if (debtor.balance === 0) debtors.shift();
-    }
+    // Iterate through all senders and their receivers
+    Object.entries(directDebts).forEach(([sender, receivers]) => {
+      Object.entries(receivers).forEach(([receiver, amount]) => {
+        if (amount > 0) {
+          owesList.push({
+            from: sender,
+            to: receiver,
+            amount
+          });
+        }
+      });
+    });
 
     return owesList;
   } catch (error: any) {
