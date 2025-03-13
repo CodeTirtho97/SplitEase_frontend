@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
@@ -101,6 +102,7 @@ const ErrorScreen = ({
 };
 
 export default function PaymentsPage() {
+  const router = useRouter();
   const [pendingPayments, setPendingPayments] = useState<Transaction[]>([]);
   const [transactionHistory, setTransactionHistory] = useState<Transaction[]>(
     []
@@ -368,7 +370,7 @@ export default function PaymentsPage() {
               </p>
               <Button
                 text="Create New Expense"
-                onClick={() => (window.location.href = "/expenses")}
+                onClick={() => router.push("/expenses")}
                 className="px-6 py-2 bg-green-500 text-white text-sm font-medium rounded-full hover:bg-green-600 transition-colors"
               />
             </div>
