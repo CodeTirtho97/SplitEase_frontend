@@ -119,9 +119,9 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
               />
               <span>Last 12 Months</span>
             </div>
-            <button className="p-2 bg-white rounded-lg shadow-sm text-gray-500 hover:text-indigo-600 transition-colors">
+            {/* <button className="p-2 bg-white rounded-lg shadow-sm text-gray-500 hover:text-indigo-600 transition-colors">
               <FontAwesomeIcon icon={faFilter} />
-            </button>
+            </button> */}
           </div>
         )}
       </div>
