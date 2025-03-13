@@ -305,14 +305,16 @@ export default function PaymentsPage() {
 
       <div className="flex-1 p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-              Payments
-            </h1>
-            <div className="bg-purple-200 text-purple-700 px-4 py-2 rounded-lg flex items-center">
-              <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-              <span className="font-medium">Secured by TrustPay™</span>
+          {/* Page Header with Background Gradient */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+            Payments
+          </h1>
+          <div className="hidden md:block">
+            <div className="bg-indigo-600/20 backdrop-blur-md rounded-xl px-5 py-3 text-white">
+              <div className="bg-purple-200 text-purple-700 px-4 py-2 rounded-lg flex items-center">
+                <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+                <span className="font-medium">Secured by TrustPay™</span>
+              </div>
             </div>
           </div>
         </div>
