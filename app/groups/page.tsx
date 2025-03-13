@@ -453,21 +453,7 @@ export default function Groups() {
                         <Button
                           text="Edit"
                           onClick={() => handleEditGroup(group)}
-                          className="
-            px-4 py-2 
-            bg-white 
-            border border-gray-200 
-            text-gray-700 
-            rounded-lg 
-            text-sm 
-            font-medium 
-            hover:bg-gray-50 
-            hover:border-blue-500 
-            transition-colors 
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-blue-600/50
-          "
+                          className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600/50"
                         />
                         <Button
                           text="View"
@@ -583,7 +569,7 @@ export default function Groups() {
           text-gray-600 
           rounded-lg 
           text-sm 
-          font-medium 
+          font-medium   
           hover:bg-gray-200 
           hover:text-red-600
           transition-colors 

@@ -268,7 +268,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-gradient-to-r from-orange-300 to-red-400 rounded-xl overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-red-400 to-red-600 rounded-xl overflow-hidden mb-8">
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
@@ -376,7 +376,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-gradient-to-r from-orange-300 to-green-300 rounded-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-green-400 to-green-600 rounded-xl overflow-hidden">
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
