@@ -473,7 +473,7 @@ export default function Expenses() {
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
       <Sidebar activePage="expenses" />
-      <div className="flex-1 p-4 sm:p-6 md:p-8">
+      <div className="flex-1 p-6 md:p-8 bg-gray-50">
         {toast && (
           <div
             className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm z-50 ${
@@ -489,19 +489,18 @@ export default function Expenses() {
             <span>{toast.message}</span>
           </div>
         )}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Expenses
           </h1>
           <Button
             text="Add Expense"
             onClick={() => setIsModalOpen(true)}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-2 text-lg md:text-xl transition-all duration-300 shadow-md hover:shadow-lg"
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            <span className="hidden sm:inline">Add Expense</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+            icon={faPlus}
+            variant="primary"
+            size="lg"
+            className="shadow-md hover:shadow-lg"
+          />
         </div>
 
         {/* Show empty summary state if summary is null or empty */}

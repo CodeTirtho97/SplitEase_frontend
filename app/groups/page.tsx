@@ -293,7 +293,7 @@ export default function Groups() {
     >
       <Sidebar activePage="groups" />
 
-      <div className="flex-1 p-8 max-w-7xl mx-auto">
+      <div className="flex-1 p-6 md:p-8 max-w-7xl mx-auto">
         {/* Toast Notification with Modern Design */}
         {toast && typeof window !== "undefined" && (
           <div
@@ -317,22 +317,22 @@ export default function Groups() {
         )}
 
         {/* Modern Page Header */}
-        <div className="flex items-center justify-between mb-10">
-          <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Groups
           </h1>
           <Button
             text="Add Group"
             onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <FontAwesomeIcon icon={faPlus} className="text-xl" />
-            <span>Add Group</span>
-          </Button>
+            icon={faPlus}
+            variant="primary"
+            size="lg"
+            className="shadow-md hover:shadow-lg"
+          />
         </div>
 
         {/* Updated Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {[
             {
               label: "Total Groups",
@@ -375,8 +375,7 @@ export default function Groups() {
         {/* Updated Group Lists */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Active Groups with Energetic Design */}
-          {/* Active Groups with Energetic Design */}
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
             <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-green-600"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
@@ -496,7 +495,7 @@ export default function Groups() {
           </div>
 
           {/* Completed Groups with Subdued Design */}
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
             <div className="h-1.5 w-full bg-gradient-to-r from-gray-400 to-gray-500"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">

@@ -747,7 +747,7 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-6xl px-4 py-6 z-10 mt-28">
+      <div className="w-full max-w-6xl px-6 md:px-8 py-6 md:py-8 z-10 mt-20 md:mt-28">
         {/* Profile Header - Lighter color gradient */}
         <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white p-8 rounded-2xl mb-10 flex flex-col md:flex-row items-center shadow-xl">
           <div className="relative group">
@@ -873,7 +873,8 @@ export default function Profile() {
         {/* Dashboard Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Contacts Section Card */}
-          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-200">
+            <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-emerald-500"></div>
             <div className="border-b px-6 py-4 flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50">
               <div className="flex items-center">
                 <div className="bg-green-500 p-2 rounded-full text-white mr-3">
@@ -968,7 +969,8 @@ export default function Profile() {
           </div>
 
           {/* Payment Methods Card */}
-          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-200">
+            <div className="h-1.5 w-full bg-gradient-to-r from-purple-500 to-indigo-500"></div>
             <div className="border-b px-6 py-4 flex justify-between items-center bg-gradient-to-r from-purple-50 to-indigo-50">
               <div className="flex items-center">
                 <div className="bg-purple-500 p-2 rounded-full text-white mr-3">
