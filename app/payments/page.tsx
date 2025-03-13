@@ -300,17 +300,17 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 pt-20">
+    <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
       <Sidebar activePage="payments" />
 
       <div className="flex-1 p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           {/* Page Header with Background Gradient */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
-            Expenses
+            Payments
           </h1>
           <div className="hidden md:block">
-            <div className="bg-white/20 backdrop-blur-md rounded-xl px-5 py-3 text-white">
+            <div className="bg-indigo-400/20 backdrop-blur-md rounded-xl px-5 py-3 text-white">
               <div className="flex items-center">
                 <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
                 <span>Secured by TrustPay™</span>
@@ -320,7 +320,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+        <div className="bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl shadow-sm border border-blue-600 overflow-hidden mb-8">
           <div className="border-b border-gray-200">
             <div className="p-5 flex items-center justify-between">
               <div className="flex items-center">
@@ -444,7 +444,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-400 to-pink-400 rounded-xl shadow-sm border border-pink-500 overflow-hidden">
           <div className="border-b border-gray-200">
             <div className="p-5 flex items-center justify-between">
               <div className="flex items-center">
