@@ -624,7 +624,7 @@ export default function Groups() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-4 justify-between">
                     <Button
                       text="Cancel"
                       onClick={() => setIsDeleteModalOpen(false)}
@@ -814,12 +814,16 @@ export default function Groups() {
                 <Button
                   text="Cancel"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  variant="secondary"
+                  size="lg"
+                  className="font-medium"
                 />
                 <Button
                   text="Create Group"
                   onClick={handleAddGroup}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg"
+                  variant="success"
+                  size="lg"
+                  className="font-medium"
                 />
               </div>
             </div>
