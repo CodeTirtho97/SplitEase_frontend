@@ -547,7 +547,7 @@ export default function Dashboard() {
 
   // Modern Enterprise Dashboard
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
+    <div className="flex min-h-screen bg-white">
       {/* Sidebar - kept for reference but not part of this component */}
       <Sidebar activePage="dashboard" />
 
