@@ -253,21 +253,23 @@ export default function PaymentsPage() {
     <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
       <Sidebar activePage="payments" />
 
-      <div className="flex-1 p-6 md:p-8 bg-gray-50">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+      <div className="flex-1 p-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
           {/* Page Header with Background Gradient */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Payments
           </h1>
-          <div className="bg-white px-4 py-2 rounded-lg text-indigo-700 shadow-sm flex items-center">
-            <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-            <span className="font-medium">Secured by TrustPay™</span>
+          <div className="hidden md:block">
+            <div className="bg-purple-300 text-purple-700 px-4 py-2 rounded-lg flex items-center">
+              <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+              <span className="font-medium">Secured by TrustPay™</span>
+            </div>
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-200">
-          <div className="bg-gradient-to-r from-orange-400 to-red-500 p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-300 to-red-400 rounded-xl overflow-hidden mb-8">
+          <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
                 <FontAwesomeIcon
@@ -374,17 +376,17 @@ export default function PaymentsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-300 to-green-300 rounded-xl overflow-hidden">
+          <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
-                <FontAwesomeIcon icon={faHistory} className="text-indigo-500" />
+                <FontAwesomeIcon icon={faHistory} className="text-purple-500" />
               </div>
               <h2 className="text-xl font-bold text-white">
                 Transaction History
               </h2>
             </div>
-            <div className="bg-white text-indigo-600 text-sm font-medium px-4 py-1.5 rounded-full">
+            <div className="bg-white text-purple-600 text-sm font-medium px-4 py-1.5 rounded-full">
               {transactionHistory.length}{" "}
               {transactionHistory.length === 1 ? "transaction" : "transactions"}{" "}
               completed

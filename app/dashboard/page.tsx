@@ -552,363 +552,390 @@ export default function Dashboard() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <div className="flex-1 p-6 md:p-8 bg-gray-50">
+      <main className="flex-1 p-6 md:p-8 bg-gray-50">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
-            Dashboard
-          </h1>
+          <div>
+            <h1 className="text-4xl font-bold text-indigo-500">Dashboard</h1>
+            <p className="text-gray-500 mt-1">All your stats in one place!</p>
+          </div>
           <div className="mt-4 md:mt-0">
-            <h2 className="text-2xl font-semibold text-gray-700">
+            <h1 className="text-2xl font-semibold text-gray-700">
               Welcome, <span className="text-indigo-600">{firstName}</span>
               <span className="ml-2 inline-block">👋</span>
-            </h2>
+            </h1>
           </div>
         </div>
 
         {/* First Row: Expense & Payment Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
           {/* Total Expenses Card */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-            <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-red-600"></div>
-            <div className="p-6">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-red-500"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-                <path
-                  fillRule="evenodd"
-                  d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-gray-500 text-sm flex items-center">
-                Total Expenses
+          <div
+            className="rounded-lg overflow-hidden border border-red-200"
+            style={{ boxShadow: "0 2px 10px rgba(228, 45, 45, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-red-100 p-3 mr-4">
                 <svg
-                  className="h-4 w-4 ml-1 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-red-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                 >
+                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
                   <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    fillRule="evenodd"
+                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                    clipRule="evenodd"
                   />
                 </svg>
-              </p>
-              <h3 className="text-3xl font-bold text-gray-800">
-                ₹{(totalExpenses ?? 0).toLocaleString()}
-              </h3>
-              <p className="text-gray-500 text-xs mt-1">
-                Your personal spending
-              </p>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Total Expenses
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  ₹{(totalExpenses ?? 0).toLocaleString()}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">
+                  Your personal spending
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Payments Card */}
+          <div
+            className="rounded-lg overflow-hidden border border-yellow-200"
+            style={{ boxShadow: "0 2px 10px rgba(251, 191, 36, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-yellow-100 p-3 mr-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-yellow-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Pending Payments
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  ₹{(pendingPayments ?? 0).toLocaleString()}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">Unpaid balance</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Settled Payments Card */}
+          <div
+            className="rounded-lg overflow-hidden border border-green-200"
+            style={{ boxShadow: "0 2px 10px rgba(16, 185, 129, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-green-100 p-3 mr-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-green-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Settled Payments
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  ₹{(settledPayments ?? 0).toLocaleString()}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">
+                  Payments you've made
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Pending Payments Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-          <div className="h-1.5 w-full bg-gradient-to-r from-yellow-500 to-yellow-600"></div>
-          <div className="p-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-yellow-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
-                clipRule="evenodd"
-              />
-            </svg>
+        {/* Second Row: Group Related Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+          {/* Total Groups */}
+          <div
+            className="rounded-lg overflow-hidden border border-blue-200"
+            style={{ boxShadow: "0 2px 10px rgba(59, 130, 246, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-blue-100 p-3 mr-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-blue-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Total Groups
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalGroups ?? 0}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">
+                  Your shared expense groups
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-gray-500 text-sm flex items-center">
-              Pending Payments
-              <svg
-                className="h-4 w-4 ml-1 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </p>
-            <h3 className="text-3xl font-bold text-gray-800">
-              ₹{(pendingPayments ?? 0).toLocaleString()}
-            </h3>
-            <p className="text-gray-500 text-xs mt-1">Unpaid balance</p>
+
+          {/* Total Members */}
+          <div
+            className="rounded-lg overflow-hidden border border-indigo-200"
+            style={{ boxShadow: "0 2px 10px rgba(99, 102, 241, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-indigo-100 p-3 mr-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-indigo-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Total Members
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  {totalMembers ?? 0}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">
+                  People in your groups
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Group Expenses */}
+          <div
+            className="rounded-lg overflow-hidden border border-purple-200"
+            style={{ boxShadow: "0 2px 10px rgba(139, 92, 246, 0.07)" }}
+          >
+            <div className="p-5 flex items-center">
+              <div className="rounded-full bg-purple-100 p-3 mr-4">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-purple-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className="text-gray-500 text-sm flex items-center">
+                  Group Expenses
+                  <svg
+                    className="h-4 w-4 ml-1 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                  ₹{(groupExpenses ?? 0).toLocaleString()}
+                </h3>
+                <p className="text-gray-500 text-xs mt-1">
+                  Total shared group expenses
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Settled Payments Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-          <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-green-600"></div>
-          <div className="p-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-green-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm flex items-center">
-              Settled Payments
-              <svg
-                className="h-4 w-4 ml-1 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </p>
-            <h3 className="text-3xl font-bold text-gray-800">
-              ₹{(settledPayments ?? 0).toLocaleString()}
-            </h3>
-            <p className="text-gray-500 text-xs mt-1">Payments you've made</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Second Row: Group Related Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        {/* Total Groups */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-          <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 to-blue-600"></div>
-          <div className="p-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-blue-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm flex items-center">
-              Total Groups
-              <svg
-                className="h-4 w-4 ml-1 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </p>
-            <h3 className="text-3xl font-bold text-gray-800">
-              {totalGroups ?? 0}
-            </h3>
-            <p className="text-gray-500 text-xs mt-1">
-              Your shared expense groups
-            </p>
-          </div>
-        </div>
-
-        {/* Total Members */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-          <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
-          <div className="p-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-indigo-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm flex items-center">
-              Total Members
-              <svg
-                className="h-4 w-4 ml-1 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </p>
-            <h3 className="text-3xl font-bold text-gray-800">
-              {totalMembers ?? 0}
-            </h3>
-            <p className="text-gray-500 text-xs mt-1">People in your groups</p>
-          </div>
-        </div>
-
-        {/* Group Expenses */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
-          <div className="h-1.5 w-full bg-gradient-to-r from-purple-500 to-purple-600"></div>
-          <div className="p-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-purple-500"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
-              <path
-                fillRule="evenodd"
-                d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div>
-            <p className="text-gray-500 text-sm flex items-center">
-              Group Expenses
-              <svg
-                className="h-4 w-4 ml-1 text-gray-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </p>
-            <h3 className="text-3xl font-bold text-gray-800">
-              ₹{(groupExpenses ?? 0).toLocaleString()}
-            </h3>
-            <p className="text-gray-500 text-xs mt-1">
-              Total shared group expenses
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Transactions Table with Header */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-200">
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">
+        {/* Recent Transactions Table with Header */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-700">
               Recent Transactions
             </h2>
-            <button className="text-white text-sm bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition-colors">
+            <button className="text-indigo-600 text-sm hover:text-indigo-800">
               View All
             </button>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <th className="px-6 py-3">Sender</th>
-                <th className="px-6 py-3">Receiver</th>
-                <th className="px-6 py-3 text-right">Amount</th>
-                <th className="px-6 py-3">Mode</th>
-                <th className="px-6 py-3 text-center">Status</th>
-                <th className="px-6 py-3 text-center">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {recentTransactions.length > 0 ? (
-                recentTransactions.map((txn, index) => (
-                  <tr
-                    key={index}
-                    className={`hover:bg-gray-50 ${
-                      txn.status === "Settled" ? "bg-green-50" : ""
-                    }`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                      {txn.sender?.fullName || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {txn.receiver?.fullName || "Unknown"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
-                      ₹{txn.amount.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {txn.paymentMode === "UPI" ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          UPI
-                        </span>
-                      ) : txn.paymentMode === "PayPal" ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                          PayPal
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {txn.paymentMode}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      {txn.status === "Settled" ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <span className="h-2 w-2 mr-1 rounded-full bg-green-500"></span>
-                          Settled
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          <span className="h-2 w-2 mr-1 rounded-full bg-yellow-500"></span>
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
-                      {new Date(txn.createdAt).toLocaleDateString()}
+          <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3">Sender</th>
+                  <th className="px-6 py-3">Receiver</th>
+                  <th className="px-6 py-3 text-right">Amount</th>
+                  <th className="px-6 py-3">Mode</th>
+                  <th className="px-6 py-3 text-center">Status</th>
+                  <th className="px-6 py-3 text-center">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((txn, index) => (
+                    <tr
+                      key={index}
+                      className={`hover:bg-gray-50 ${
+                        txn.status === "Settled" ? "bg-green-50" : ""
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
+                        {txn.sender?.fullName || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {txn.receiver?.fullName || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
+                        ₹{txn.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {txn.paymentMode === "UPI" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            UPI
+                          </span>
+                        ) : txn.paymentMode === "PayPal" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            PayPal
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {txn.paymentMode}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        {txn.status === "Settled" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="h-2 w-2 mr-1 rounded-full bg-green-500"></span>
+                            Settled
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <span className="h-2 w-2 mr-1 rounded-full bg-yellow-500"></span>
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                        {new Date(txn.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic"
+                    >
+                      No recent transactions found.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic"
-                  >
-                    No recent transactions found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
