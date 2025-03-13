@@ -304,112 +304,94 @@ export default function PaymentsPage() {
       <Sidebar activePage="payments" />
 
       <div className="flex-1 p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-          {/* Page Header with Background Gradient */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
-            Payments
-          </h1>
-          <div className="hidden md:block">
-            <div className="bg-indigo-400/20 backdrop-blur-md rounded-xl px-5 py-3 text-white">
-              <div className="flex items-center">
-                <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-                <span>Secured by TrustPay™</span>
-              </div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
+          {/* Page Header */}
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
+              Payments
+            </h1>
+            <div className="bg-purple-200 text-purple-700 px-4 py-2 rounded-lg flex items-center">
+              <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+              <span className="font-medium">Secured by TrustPay™</span>
             </div>
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl shadow-sm border border-blue-600 overflow-hidden mb-8">
-          <div className="border-b border-gray-200">
-            <div className="p-5 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 flex items-center justify-center mr-3">
-                  <FontAwesomeIcon
-                    icon={faMoneyBillWave}
-                    className="text-orange-500"
-                  />
-                </div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Pending Payments
-                </h2>
+        <div className="bg-gradient-to-r from-blue-400 to-indigo-400 rounded-xl overflow-hidden mb-8">
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
+                <FontAwesomeIcon
+                  icon={faMoneyBillWave}
+                  className="text-orange-500"
+                />
               </div>
-              <div className="bg-orange-50 text-orange-700 text-sm font-medium px-3 py-1 rounded-full">
-                {pendingPayments.length}{" "}
-                {pendingPayments.length === 1 ? "payment" : "payments"} pending
-              </div>
+              <h2 className="text-xl font-bold text-white">Pending Payments</h2>
+            </div>
+            <div className="bg-white text-orange-500 text-sm font-medium px-4 py-1.5 rounded-full">
+              {pendingPayments.length}{" "}
+              {pendingPayments.length === 1 ? "payment" : "payments"} pending
             </div>
           </div>
 
           {pendingPayments.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white">
               <table className="w-full">
                 <thead>
-                  <tr>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Date
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Expense
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Group
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
+                    <th className="py-3 px-4 text-left font-medium">Date</th>
+                    <th className="py-3 px-4 text-left font-medium">Expense</th>
+                    <th className="py-3 px-4 text-left font-medium">Group</th>
+                    <th className="py-3 px-4 text-left font-medium">
                       Recipient
                     </th>
-                    <th className="py-3 px-4 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Amount
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    <th className="py-3 px-4 text-right font-medium">Amount</th>
+                    <th className="py-3 px-4 text-center font-medium">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {pendingPayments.map((payment, index) => (
                     <tr
                       key={index}
-                      className="hover:bg-gray-50 transition-colors"
+                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
                     >
-                      <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="py-4 px-4 text-gray-600">
                         {payment.date}
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
-                        <span className="font-medium text-gray-900">
-                          {payment.expenseName}
-                        </span>
+                      <td className="py-4 px-4 font-medium text-gray-800">
+                        {payment.expenseName}
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         <div className="flex items-center">
-                          <span className="h-2 w-2 flex-shrink-0 rounded-full bg-indigo-500 mr-2"></span>
-                          <span className="text-sm text-gray-600">
+                          <span className="h-2 w-2 rounded-full bg-indigo-500 mr-2"></span>
+                          <span className="text-gray-600">
                             {payment.groupName}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 flex-shrink-0 rounded-full bg-indigo-100 flex items-center justify-center mr-3 text-indigo-600 font-medium text-sm">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-indigo-600 font-medium">
                             {payment.owedFrom
                               .split(" ")
                               .map((name) => name[0])
                               .join("")}
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="font-medium text-gray-800">
                             {payment.owedFrom}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-right whitespace-nowrap">
-                        <span className="font-semibold text-red-600">
-                          {formatCurrency(payment.currency, payment.amount)}
-                        </span>
+                      <td className="py-4 px-4 text-right font-bold text-red-500">
+                        {formatCurrency(payment.currency, payment.amount)}
                       </td>
-                      <td className="py-4 px-4 text-center whitespace-nowrap">
+                      <td className="py-4 px-4 text-center">
                         <button
                           onClick={() => handlePayNow(payment)}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
                         >
                           Pay Now
                         </button>
@@ -420,7 +402,7 @@ export default function PaymentsPage() {
               </table>
             </div>
           ) : (
-            <div className="py-16 flex flex-col items-center justify-center text-center px-4">
+            <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                 <FontAwesomeIcon
                   icon={faCheckCircle}
@@ -437,98 +419,83 @@ export default function PaymentsPage() {
               <Button
                 text="Create New Expense"
                 onClick={() => (window.location.href = "/expenses/create")}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="px-6 py-2 bg-green-500 text-white text-sm font-medium rounded-full hover:bg-green-600 transition-colors"
               />
             </div>
           )}
         </div>
 
         {/* Transaction History */}
-        <div className="bg-gradient-to-r from-blue-400 to-pink-400 rounded-xl shadow-sm border border-pink-500 overflow-hidden">
-          <div className="border-b border-gray-200">
-            <div className="p-5 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mr-3">
-                  <FontAwesomeIcon
-                    icon={faHistory}
-                    className="text-purple-500"
-                  />
-                </div>
-                <h2 className="text-xl font-bold text-gray-800">
-                  Transaction History
-                </h2>
+        <div className="bg-gradient-to-r from-blue-400 to-pink-500 rounded-xl overflow-hidden">
+          <div className="p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
+                <FontAwesomeIcon icon={faHistory} className="text-purple-500" />
               </div>
-              <div className="bg-purple-50 text-purple-700 text-sm font-medium px-3 py-1 rounded-full">
-                {transactionHistory.length}{" "}
-                {transactionHistory.length === 1
-                  ? "transaction"
-                  : "transactions"}{" "}
-                completed
-              </div>
+              <h2 className="text-xl font-bold text-white">
+                Transaction History
+              </h2>
+            </div>
+            <div className="bg-white text-purple-600 text-sm font-medium px-4 py-1.5 rounded-full">
+              {transactionHistory.length}{" "}
+              {transactionHistory.length === 1 ? "transaction" : "transactions"}{" "}
+              completed
             </div>
           </div>
 
           {transactionHistory.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white">
               <table className="w-full">
                 <thead>
-                  <tr>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
+                    <th className="py-3 px-4 text-left font-medium">
                       Transaction ID
                     </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Date
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    <th className="py-3 px-4 text-left font-medium">Date</th>
+                    <th className="py-3 px-4 text-left font-medium">
                       Recipient
                     </th>
-                    <th className="py-3 px-4 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Amount
-                    </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    <th className="py-3 px-4 text-right font-medium">Amount</th>
+                    <th className="py-3 px-4 text-left font-medium">
                       Payment Method
                     </th>
-                    <th className="py-3 px-4 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
-                      Status
-                    </th>
+                    <th className="py-3 px-4 text-left font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody>
                   {transactionHistory.map((payment, index) => (
                     <tr
                       key={index}
-                      className="hover:bg-gray-50 transition-colors"
+                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
                     >
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                           {payment.transactionId.substring(0, 10)}...
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-500 whitespace-nowrap">
+                      <td className="py-4 px-4 text-gray-600">
                         {payment.paymentDate}
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 flex-shrink-0 rounded-full bg-purple-100 flex items-center justify-center mr-3 text-purple-600 font-medium text-sm">
+                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2 text-purple-600 font-medium">
                             {payment.paidTo
                               ?.split(" ")
                               .map((name) => name[0])
                               .join("") || "?"}
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="font-medium text-gray-800">
                             {payment.paidTo}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-right whitespace-nowrap">
-                        <span className="font-semibold text-green-600">
-                          {formatCurrency(payment.currency, payment.amount)}
-                        </span>
+                      <td className="py-4 px-4 text-right font-bold text-green-600">
+                        {formatCurrency(payment.currency, payment.amount)}
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         <div className="flex items-center">
                           <div
-                            className={`w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center mr-2
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center mr-2 
                     ${
                       payment.mode === "UPI"
                         ? "bg-orange-100 text-orange-500"
@@ -545,30 +512,27 @@ export default function PaymentsPage() {
                                   ? faPaypal
                                   : faStripe
                               }
-                              className="text-sm"
                             />
                           </div>
-                          <span className="text-sm text-gray-700">
+                          <span className="text-gray-700">
                             {payment.mode || "N/A"}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 whitespace-nowrap">
+                      <td className="py-4 px-4">
                         {payment.status === "Success" ? (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                             <FontAwesomeIcon
                               icon={faCheckCircle}
                               className="mr-1.5"
-                              size="xs"
                             />
                             Successful
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
                             <FontAwesomeIcon
                               icon={faTimesCircle}
                               className="mr-1.5"
-                              size="xs"
                             />
                             Failed
                           </span>
@@ -580,7 +544,7 @@ export default function PaymentsPage() {
               </table>
             </div>
           ) : (
-            <div className="py-16 flex flex-col items-center justify-center text-center px-4">
+            <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
                 <FontAwesomeIcon
                   icon={faHistory}
