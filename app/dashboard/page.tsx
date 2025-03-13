@@ -547,12 +547,12 @@ export default function Dashboard() {
 
   // Modern Enterprise Dashboard
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
       {/* Sidebar - kept for reference but not part of this component */}
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 bg-gray-50 mt-20">
+      <main className="flex-1 p-6 md:p-8">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
@@ -562,7 +562,7 @@ export default function Dashboard() {
             <p className="text-gray-500 mt-1">All your stats in one place!</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <h1 className="text-2xl font-semibold text-gray-700">
+            <h1 className="text-4xl font-semibold text-gray-700">
               Welcome, <span className="text-indigo-600">{firstName}</span>
               <span className="ml-2 inline-block">👋</span>
             </h1>
@@ -573,7 +573,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
           {/* Total Expenses Card */}
           <div
-            className="rounded-lg overflow-hidden border border-red-200"
+            className="rounded-lg overflow-hidden border border-red-400"
             style={{ boxShadow: "0 2px 10px rgba(228, 45, 45, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -595,7 +595,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Total Expenses
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -607,7 +607,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   ₹{(totalExpenses ?? 0).toLocaleString()}
@@ -621,7 +621,7 @@ export default function Dashboard() {
 
           {/* Pending Payments Card */}
           <div
-            className="rounded-lg overflow-hidden border border-yellow-200"
+            className="rounded-lg overflow-hidden border border-yellow-400"
             style={{ boxShadow: "0 2px 10px rgba(251, 191, 36, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -642,7 +642,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Pending Payments
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -654,7 +654,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   ₹{(pendingPayments ?? 0).toLocaleString()}
@@ -666,7 +666,7 @@ export default function Dashboard() {
 
           {/* Settled Payments Card */}
           <div
-            className="rounded-lg overflow-hidden border border-green-200"
+            className="rounded-lg overflow-hidden border border-green-400"
             style={{ boxShadow: "0 2px 10px rgba(16, 185, 129, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -687,7 +687,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Settled Payments
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -699,7 +699,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   ₹{(settledPayments ?? 0).toLocaleString()}
@@ -716,7 +716,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
           {/* Total Groups */}
           <div
-            className="rounded-lg overflow-hidden border border-blue-200"
+            className="rounded-lg overflow-hidden border border-blue-400"
             style={{ boxShadow: "0 2px 10px rgba(59, 130, 246, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -733,7 +733,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Total Groups
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -745,7 +745,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   {totalGroups ?? 0}
@@ -759,7 +759,7 @@ export default function Dashboard() {
 
           {/* Total Members */}
           <div
-            className="rounded-lg overflow-hidden border border-indigo-200"
+            className="rounded-lg overflow-hidden border border-indigo-400"
             style={{ boxShadow: "0 2px 10px rgba(99, 102, 241, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -776,7 +776,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Total Members
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -788,7 +788,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   {totalMembers ?? 0}
@@ -802,7 +802,7 @@ export default function Dashboard() {
 
           {/* Group Expenses */}
           <div
-            className="rounded-lg overflow-hidden border border-purple-200"
+            className="rounded-lg overflow-hidden border border-purple-400"
             style={{ boxShadow: "0 2px 10px rgba(139, 92, 246, 0.07)" }}
           >
             <div className="p-5 flex items-center">
@@ -824,7 +824,7 @@ export default function Dashboard() {
               <div>
                 <p className="text-gray-500 text-sm flex items-center">
                   Group Expenses
-                  <svg
+                  {/* <svg
                     className="h-4 w-4 ml-1 text-gray-400"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -836,7 +836,7 @@ export default function Dashboard() {
                       strokeWidth={2}
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     />
-                  </svg>
+                  </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
                   ₹{(groupExpenses ?? 0).toLocaleString()}
@@ -855,15 +855,15 @@ export default function Dashboard() {
             <h2 className="text-xl font-semibold text-gray-700">
               Recent Transactions
             </h2>
-            <button className="text-indigo-600 text-sm hover:text-indigo-800">
+            {/* <button className="text-indigo-600 text-sm hover:text-indigo-800">
               View All
-            </button>
+            </button> */}
           </div>
 
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                   <th className="px-6 py-3">Sender</th>
                   <th className="px-6 py-3">Receiver</th>
                   <th className="px-6 py-3 text-right">Amount</th>

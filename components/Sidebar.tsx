@@ -25,13 +25,13 @@ const Sidebar = ({ activePage }: SidebarProps) => {
       }}
     >
       <div className="w-64 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700 text-white fixed top-24 mt-8 mb-8 left-0 flex-col shadow-xl rounded-r-xl overflow-hidden border-r border-white/10">
-        {/* App Logo & Name */}
+        {/* App Logo & Name
         <div className="flex items-center gap-3 py-4 px-6 bg-white/10 border-b border-white/10">
           <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
             <span className="text-indigo-700 font-bold text-xl">S</span>
           </div>
           <span className="font-semibold text-xl tracking-wide">SplitEase</span>
-        </div>
+        </div> */}
 
         {/* Dashboard Link */}
         <Link

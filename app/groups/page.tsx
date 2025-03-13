@@ -293,7 +293,7 @@ export default function Groups() {
     >
       <Sidebar activePage="groups" />
 
-      <div className="flex-1 p-8 max-w-7xl mx-auto">
+      <div className="flex-1 p-8">
         {/* Toast Notification with Modern Design */}
         {toast && typeof window !== "undefined" && (
           <div
@@ -318,7 +318,7 @@ export default function Groups() {
 
         {/* Modern Page Header */}
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Groups
           </h1>
           <Button
@@ -374,7 +374,6 @@ export default function Groups() {
 
         {/* Updated Group Lists */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Active Groups with Energetic Design */}
           {/* Active Groups with Energetic Design */}
           <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 overflow-hidden">
             <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-green-600"></div>
