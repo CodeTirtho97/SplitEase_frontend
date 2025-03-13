@@ -310,11 +310,9 @@ export default function PaymentsPage() {
             Payments
           </h1>
           <div className="hidden md:block">
-            <div className="bg-indigo-600/20 backdrop-blur-md rounded-xl px-5 py-3 text-white">
-              <div className="bg-purple-200 text-purple-700 px-4 py-2 rounded-lg flex items-center">
-                <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-                <span className="font-medium">Secured by TrustPay™</span>
-              </div>
+            <div className="bg-purple-200 text-purple-700 px-4 py-2 rounded-lg flex items-center">
+              <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
+              <span className="font-medium">Secured by TrustPay™</span>
             </div>
           </div>
         </div>
