@@ -642,6 +642,7 @@ export default function Groups() {
                   <div className="flex space-x-4">
                     <Button
                       text="Cancel"
+                      variant="danger"
                       onClick={() => setIsDeleteModalOpen(false)}
                       className="
                 flex-1 
