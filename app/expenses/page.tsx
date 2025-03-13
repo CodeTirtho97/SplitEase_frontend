@@ -99,6 +99,11 @@ export default function Expenses() {
   // Track if component has mounted to prevent multiple fetches in Strict Mode
   const [hasMounted, setHasMounted] = useState(false);
 
+  const currentSummary =
+    summary && selectedCurrency && summary[selectedCurrency as Currency]
+      ? summary[selectedCurrency as Currency]
+      : null;
+
   // Transform context groups to match ExpenseModal's expected type
   const transformedGroups: Group[] = useMemo(() => {
     if (!contextGroups || contextGroups.length === 0) return [];
@@ -531,6 +536,7 @@ export default function Expenses() {
           loadingCharts={loadingCharts}
           animate={animate}
           selectedCurrency={selectedCurrency}
+          summary={currentSummary}
         />
 
         <RecentExpensesTable

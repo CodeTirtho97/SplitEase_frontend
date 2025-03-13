@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Pie, Line, Bar } from "react-chartjs-2";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -7,7 +7,6 @@ import {
   faSpinner,
   faChartSimple,
   faMoneyBillTrendUp,
-  faFilter,
   faCalendarAlt,
   faEye,
   faEyeSlash,
@@ -29,6 +28,11 @@ interface ExpenseChartsProps {
   loadingCharts: boolean;
   animate: boolean;
   selectedCurrency: string;
+  summary?: {
+    totalExpenses: number;
+    totalPending: number;
+    totalSettled: number;
+  } | null;
 }
 
 // Custom gradient background plugin for Chart.js
@@ -51,7 +55,141 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
   loadingCharts,
   animate,
   selectedCurrency,
+  summary,
 }) => {
+  const [syncedChartData, setSyncedChartData] = useState<ChartData | null>(
+    null
+  );
+
+  // Sync chart data with summary values
+  useEffect(() => {
+    if (chartData && summary) {
+      // Calculate the scale factor to adjust chart data
+      const calculateScaleFactor = (
+        originalTotal: number,
+        targetTotal: number
+      ) => {
+        return originalTotal > 0 ? targetTotal / originalTotal : 1;
+      };
+
+      // Get the original totals from chart data
+      const originalBreakdownTotal = Object.values(chartData.breakdown).reduce(
+        (sum, val) => sum + val,
+        0
+      );
+      const originalPendingTotal = Object.values(
+        chartData.breakdownPending
+      ).reduce((sum, val) => sum + val, 0);
+      const originalSettledTotal = Object.values(
+        chartData.breakdownSettled
+      ).reduce((sum, val) => sum + val, 0);
+
+      // Calculate scale factors
+      const breakdownScaleFactor = calculateScaleFactor(
+        originalBreakdownTotal,
+        summary.totalExpenses
+      );
+      const pendingScaleFactor = calculateScaleFactor(
+        originalPendingTotal,
+        summary.totalPending
+      );
+      const settledScaleFactor = calculateScaleFactor(
+        originalSettledTotal,
+        summary.totalSettled
+      );
+
+      // Scale the data
+      const scaledBreakdown = Object.fromEntries(
+        Object.entries(chartData.breakdown).map(([key, value]) => [
+          key,
+          value * breakdownScaleFactor,
+        ])
+      );
+
+      const scaledBreakdownPending = Object.fromEntries(
+        Object.entries(chartData.breakdownPending).map(([key, value]) => [
+          key,
+          value * pendingScaleFactor,
+        ])
+      );
+
+      const scaledBreakdownSettled = Object.fromEntries(
+        Object.entries(chartData.breakdownSettled).map(([key, value]) => [
+          key,
+          value * settledScaleFactor,
+        ])
+      );
+
+      // Original months from trend data
+      const months = Object.keys(chartData.monthlyTrend);
+
+      // Create scaled monthly trends
+      let scaledMonthlyTrend: { [key: string]: number } = {};
+      let scaledMonthlyTrendPending: { [key: string]: number } = {};
+      let scaledMonthlyTrendSettled: { [key: string]: number } = {};
+
+      // If we have only one month, allocate all values to it
+      if (months.length === 1) {
+        const month = months[0];
+        scaledMonthlyTrend[month] = summary.totalExpenses;
+        scaledMonthlyTrendPending[month] = summary.totalPending;
+        scaledMonthlyTrendSettled[month] = summary.totalSettled;
+      }
+      // If we have multiple months, distribute proportionally
+      else if (months.length > 1) {
+        const originalMonthlyTotal = Object.values(
+          chartData.monthlyTrend
+        ).reduce((sum, val) => sum + val, 0);
+        const monthlyScaleFactor =
+          originalMonthlyTotal > 0
+            ? summary.totalExpenses / originalMonthlyTotal
+            : 1;
+
+        months.forEach((month) => {
+          scaledMonthlyTrend[month] =
+            chartData.monthlyTrend[month] * monthlyScaleFactor;
+
+          // Create pending/settled trends based on original proportions
+          const originalPendingForMonth =
+            chartData.monthlyTrendPending[month] || 0;
+          const originalSettledForMonth =
+            chartData.monthlyTrendSettled[month] || 0;
+          const originalTotalForMonth =
+            originalPendingForMonth + originalSettledForMonth;
+
+          if (originalTotalForMonth > 0) {
+            const pendingRatio =
+              originalPendingForMonth / originalTotalForMonth;
+            scaledMonthlyTrendPending[month] =
+              scaledMonthlyTrend[month] * pendingRatio;
+            scaledMonthlyTrendSettled[month] =
+              scaledMonthlyTrend[month] * (1 - pendingRatio);
+          } else {
+            // If no data for this month, distribute based on overall ratio
+            const overallPendingRatio =
+              summary.totalPending / (summary.totalExpenses || 1);
+            scaledMonthlyTrendPending[month] =
+              scaledMonthlyTrend[month] * overallPendingRatio;
+            scaledMonthlyTrendSettled[month] =
+              scaledMonthlyTrend[month] * (1 - overallPendingRatio);
+          }
+        });
+      }
+
+      // Set the synced chart data
+      setSyncedChartData({
+        breakdown: scaledBreakdown,
+        breakdownPending: scaledBreakdownPending,
+        breakdownSettled: scaledBreakdownSettled,
+        monthlyTrend: scaledMonthlyTrend,
+        monthlyTrendPending: scaledMonthlyTrendPending,
+        monthlyTrendSettled: scaledMonthlyTrendSettled,
+      });
+    } else {
+      setSyncedChartData(chartData);
+    }
+  }, [chartData, summary]);
+
   const currencySymbol =
     selectedCurrency === "INR"
       ? "₹"
@@ -94,6 +232,9 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
     </div>
   );
 
+  // Get the chart data to display (either synced or original)
+  const displayData = syncedChartData || chartData;
+
   return (
     <div className="mb-10">
       {/* Toggle Charts Button */}
@@ -119,9 +260,6 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
               />
               <span>Last 12 Months</span>
             </div>
-            {/* <button className="p-2 bg-white rounded-lg shadow-sm text-gray-500 hover:text-indigo-600 transition-colors">
-              <FontAwesomeIcon icon={faFilter} />
-            </button> */}
           </div>
         )}
       </div>
@@ -145,9 +283,9 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                 Loading your financial insights...
               </p>
             </div>
-          ) : !chartData ||
-            (Object.keys(chartData?.breakdown || {}).length === 0 &&
-              Object.keys(chartData?.monthlyTrend || {}).length === 0) ? (
+          ) : !displayData ||
+            (Object.keys(displayData?.breakdown || {}).length === 0 &&
+              Object.keys(displayData?.monthlyTrend || {}).length === 0) ? (
             <EmptyChartsState />
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -175,9 +313,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                       </div>
                       <div className="text-2xl font-bold text-gray-800">
                         {currencySymbol}
-                        {Object.values(chartData?.breakdown || {})
-                          .reduce((sum, val) => sum + (val || 0), 0)
-                          .toLocaleString()}
+                        {(summary?.totalExpenses || 0).toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
                       </div>
                     </div>
 
@@ -186,7 +328,7 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                         Top Category
                       </div>
                       <div className="text-xl font-bold text-gray-800">
-                        {Object.entries(chartData?.breakdown || {}).sort(
+                        {Object.entries(displayData?.breakdown || {}).sort(
                           (a, b) => b[1] - a[1]
                         )[0]?.[0] || "None"}
                       </div>
@@ -197,7 +339,7 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                         Categories
                       </div>
                       <div className="text-xl font-bold text-gray-800">
-                        {Object.keys(chartData?.breakdown || {}).length}
+                        {Object.keys(displayData?.breakdown || {}).length}
                       </div>
                     </div>
                   </div>
@@ -205,11 +347,11 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                   <div className="h-[300px] flex items-center justify-center">
                     <Pie
                       data={{
-                        labels: Object.keys(chartData?.breakdown || {}),
+                        labels: Object.keys(displayData?.breakdown || {}),
                         datasets: [
                           {
                             label: "Expenses",
-                            data: Object.values(chartData?.breakdown || {}),
+                            data: Object.values(displayData?.breakdown || {}),
                             backgroundColor: pieColors,
                             borderColor: pieBorderColors,
                             borderWidth: 1,
@@ -249,14 +391,20 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                               label: (context) => {
                                 const value = context.raw as number;
                                 const total = Object.values(
-                                  chartData?.breakdown || {}
+                                  displayData?.breakdown || {}
                                 ).reduce((sum, val) => sum + (val || 0), 0);
                                 const percentage = total
                                   ? ((value / total) * 100).toFixed(1)
                                   : "0.0";
                                 return ` ${
                                   context.label
-                                }: ${currencySymbol}${value.toLocaleString()} (${percentage}%)`;
+                                }: ${currencySymbol}${value.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )} (${percentage}%)`;
                               },
                             },
                           },
@@ -290,11 +438,11 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                         Highest Month
                       </div>
                       <div className="text-lg font-bold text-gray-800">
-                        {Object.entries(chartData?.monthlyTrend || {}).length >
-                        0
-                          ? Object.entries(chartData?.monthlyTrend || {}).sort(
-                              (a, b) => b[1] - a[1]
-                            )[0]?.[0]
+                        {Object.entries(displayData?.monthlyTrend || {})
+                          .length > 0
+                          ? Object.entries(
+                              displayData?.monthlyTrend || {}
+                            ).sort((a, b) => b[1] - a[1])[0]?.[0]
                           : "N/A"}
                       </div>
                     </div>
@@ -302,17 +450,19 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                     <div className="flex-1 min-w-[150px] bg-cyan-50 rounded-lg p-4">
                       <div className="text-sm text-cyan-600 mb-1">Average</div>
                       <div className="text-lg font-bold text-gray-800">
-                        {Object.values(chartData?.monthlyTrend || {}).length > 0
+                        {Object.values(displayData?.monthlyTrend || {}).length >
+                        0
                           ? `${currencySymbol}${(
                               Object.values(
-                                chartData?.monthlyTrend || {}
+                                displayData?.monthlyTrend || {}
                               ).reduce((sum, val) => sum + (val || 0), 0) /
-                              Object.values(chartData?.monthlyTrend || {})
+                              Object.values(displayData?.monthlyTrend || {})
                                 .length
                             ).toLocaleString(undefined, {
-                              maximumFractionDigits: 0,
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
                             })}`
-                          : `${currencySymbol}0`}
+                          : `${currencySymbol}0.00`}
                       </div>
                     </div>
                   </div>
@@ -320,11 +470,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                   <div className="h-[250px]">
                     <Line
                       data={{
-                        labels: Object.keys(chartData?.monthlyTrend || {}),
+                        labels: Object.keys(displayData?.monthlyTrend || {}),
                         datasets: [
                           {
                             label: "Expenses",
-                            data: Object.values(chartData?.monthlyTrend || {}),
+                            data: Object.values(
+                              displayData?.monthlyTrend || {}
+                            ),
                             borderColor: "rgb(59, 130, 246)",
                             backgroundColor: (context) => {
                               const chart = context.chart;
@@ -378,7 +530,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                             callbacks: {
                               label: (context) => {
                                 const value = context.raw as number;
-                                return `Expenses: ${currencySymbol}${value.toLocaleString()}`;
+                                return `Expenses: ${currencySymbol}${value.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}`;
                               },
                             },
                           },
@@ -447,9 +605,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                       </div>
                       <div className="text-2xl font-bold text-gray-800">
                         {currencySymbol}
-                        {Object.values(chartData?.breakdownSettled || {})
-                          .reduce((sum, val) => sum + (val || 0), 0)
-                          .toLocaleString()}
+                        {(summary?.totalSettled || 0).toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
                       </div>
                     </div>
 
@@ -459,9 +621,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                       </div>
                       <div className="text-2xl font-bold text-gray-800">
                         {currencySymbol}
-                        {Object.values(chartData?.breakdownPending || {})
-                          .reduce((sum, val) => sum + (val || 0), 0)
-                          .toLocaleString()}
+                        {(summary?.totalPending || 0).toLocaleString(
+                          undefined,
+                          {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          }
+                        )}
                       </div>
                     </div>
 
@@ -471,14 +637,10 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                       </div>
                       <div className="text-xl font-bold text-gray-800">
                         {(() => {
-                          const settled = Object.values(
-                            chartData?.breakdownSettled || {}
-                          ).reduce((sum, val) => sum + (val || 0), 0);
+                          const settled = summary?.totalSettled || 0;
                           const total =
-                            settled +
-                            Object.values(
-                              chartData?.breakdownPending || {}
-                            ).reduce((sum, val) => sum + (val || 0), 0);
+                            (summary?.totalSettled || 0) +
+                            (summary?.totalPending || 0);
                           return total > 0
                             ? `${Math.round((settled / total) * 100)}%`
                             : "0%";
@@ -490,12 +652,12 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                   <div className="h-[300px]">
                     <Bar
                       data={{
-                        labels: Object.keys(chartData?.breakdown || {}),
+                        labels: Object.keys(displayData?.breakdown || {}),
                         datasets: [
                           {
                             label: "Settled",
-                            data: Object.keys(chartData?.breakdown || {}).map(
-                              (key) => chartData?.breakdownSettled?.[key] || 0
+                            data: Object.keys(displayData?.breakdown || {}).map(
+                              (key) => displayData?.breakdownSettled?.[key] || 0
                             ),
                             backgroundColor: "rgba(16, 185, 129, 0.7)",
                             borderRadius: 6,
@@ -503,8 +665,8 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                           },
                           {
                             label: "Pending",
-                            data: Object.keys(chartData?.breakdown || {}).map(
-                              (key) => chartData?.breakdownPending?.[key] || 0
+                            data: Object.keys(displayData?.breakdown || {}).map(
+                              (key) => displayData?.breakdownPending?.[key] || 0
                             ),
                             backgroundColor: "rgba(245, 158, 11, 0.7)",
                             borderRadius: 6,
@@ -548,7 +710,13 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
                                 const value = context.raw as number;
                                 return `${
                                   context.dataset.label
-                                }: ${currencySymbol}${value.toLocaleString()}`;
+                                }: ${currencySymbol}${value.toLocaleString(
+                                  undefined,
+                                  {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  }
+                                )}`;
                               },
                             },
                           },
