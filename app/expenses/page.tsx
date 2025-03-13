@@ -8,13 +8,7 @@ import {
   faPlus,
   faCheckCircle,
   faExclamationCircle,
-  faFileInvoiceDollar,
-  faChartLine,
-  faMoneyBillWave,
-  faUsers,
-  faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
-import { Pie, Bar, Line } from "react-chartjs-2";
 import "chart.js/auto";
 import expenseApi from "@/utils/api/expense";
 import DashboardCards from "@/components/ExpenseCard";
@@ -22,6 +16,7 @@ import { useGroups } from "@/context/groupContext";
 import ExpenseModal from "@/components/ExpenseModal";
 import RecentExpensesTable from "@/components/RecentExpensesTable";
 import ExpenseCharts from "@/components/ExpenseCharts";
+import ExpenseLoadingScreen from "@/components/ExpenseLoadingScreen";
 import { useTransactionContext } from "@/context/transactionContext";
 import { useAuth } from "@/context/authContext";
 
@@ -96,6 +91,14 @@ export default function Expenses() {
   const { refreshExpenses } = useTransactionContext();
   const [animate, setAnimate] = useState(false);
 
+  // NEW: State to track overall loading status
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState({
+    summary: false,
+    expenses: false,
+    charts: false,
+  });
+
   // Track if component has mounted to prevent multiple fetches in Strict Mode
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -147,6 +150,23 @@ export default function Expenses() {
     });
   }, [contextGroups]);
 
+  // Function to check if all data is loaded
+  const checkAllLoaded = useCallback(() => {
+    const allLoaded =
+      loadingProgress.summary &&
+      loadingProgress.expenses &&
+      loadingProgress.charts;
+
+    if (allLoaded) {
+      // Add a small delay to make loading screen feel natural
+      setTimeout(() => {
+        setIsLoading(false);
+        // Trigger animations after loading is complete
+        setTimeout(() => setAnimate(true), 300);
+      }, 800);
+    }
+  }, [loadingProgress]);
+
   // Fetch recent expenses only on page mount
   const fetchRecentExpenses = useCallback(async () => {
     if (isFetching || hasMounted) return;
@@ -154,16 +174,16 @@ export default function Expenses() {
     try {
       const response = await expenseApi.getRecentExpenses();
       setExpenses(response.data.expenses || []);
-      // Don't show error toasts for empty expenses - it's an expected state
+      // Mark expenses as loaded
+      setLoadingProgress((prev) => ({ ...prev, expenses: true }));
     } catch (error) {
       console.error("Error fetching recent expenses:", error);
+      // Still mark as loaded even on error to prevent indefinite loading
+      setLoadingProgress((prev) => ({ ...prev, expenses: true }));
 
-      // Never show error toasts for "No expenses found" or "No data" scenarios
-      // This suppresses "Failed to load recent expenses" messages when there are no expenses yet
+      // Handle error messaging for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       const errorStatus = (error as any)?.response?.status;
-
-      // Only show error toast if it's a real server/network error (not 404 or empty data)
       if (
         !errorMessage.includes("No expenses") &&
         !errorMessage.includes("not found") &&
@@ -186,10 +206,14 @@ export default function Expenses() {
       } else {
         setSummary({});
       }
-      // Don't show errors for empty summary data
+      // Mark summary as loaded
+      setLoadingProgress((prev) => ({ ...prev, summary: true }));
     } catch (error) {
       console.error("Error fetching expense summary:", error);
-      // Only capture the error if it's not related to empty data
+      // Still mark as loaded even on error
+      setLoadingProgress((prev) => ({ ...prev, summary: true }));
+
+      // Handle error for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       if (
         !errorMessage.includes("No summary") &&
@@ -216,17 +240,17 @@ export default function Expenses() {
           monthlyTrendSettled: {},
         }
       );
-      // Don't show errors for empty chart data
+      // Mark charts as loaded
+      setLoadingProgress((prev) => ({ ...prev, charts: true }));
     } catch (error) {
       console.error("Error fetching expense breakdown:", error);
       setChartData(null);
+      // Still mark as loaded even on error
+      setLoadingProgress((prev) => ({ ...prev, charts: true }));
 
-      // Never show error toasts for empty data scenarios
-      // This suppresses "Failed to load chart data" messages when there are no expenses yet
+      // Handle error for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       const errorStatus = (error as any)?.response?.status;
-
-      // Only show error toast if it's a real server/network error (not 404 or empty data)
       if (
         !errorMessage.includes("No data") &&
         !errorMessage.includes("not found") &&
@@ -240,6 +264,11 @@ export default function Expenses() {
     }
   }, [hasMounted]);
 
+  // Check if all data has loaded whenever loading progress changes
+  useEffect(() => {
+    checkAllLoaded();
+  }, [loadingProgress, checkAllLoaded]);
+
   // Auth check and data fetching
   useEffect(() => {
     // Check for authentication using cookies/authContext
@@ -252,35 +281,21 @@ export default function Expenses() {
       setHasMounted(true);
       const fetchInitialData = async () => {
         try {
-          // Fetch expenses with a catch block to suppress error messages for no data
-          try {
-            await fetchRecentExpenses();
-          } catch (error) {
-            console.error("Error fetching recent expenses:", error);
-            // Don't show toast for empty expenses
-          }
-
-          // Fetch summary with a catch block to suppress error messages for no data
-          try {
-            await fetchSummary();
-          } catch (error) {
-            console.error("Error fetching summary:", error);
-            // Don't show toast for empty summary
-          }
-
-          // Fetch chart data with a catch block to suppress error messages for no data
-          try {
-            await fetchExpenseBreakdown();
-          } catch (error) {
-            console.error("Error fetching chart data:", error);
-            // Don't show toast for empty chart data
-          }
-
-          // Start animation after data is loaded (or attempted to load)
-          setTimeout(() => setAnimate(true), 300);
+          // Fetch data in parallel
+          await Promise.all([
+            fetchRecentExpenses(),
+            fetchSummary(),
+            fetchExpenseBreakdown(),
+          ]);
         } catch (error) {
           console.error("Error in fetchInitialData:", error);
-          // Only show toast for critical errors that don't involve missing data
+          // Ensure we don't get stuck in loading state
+          setLoadingProgress({
+            summary: true,
+            expenses: true,
+            charts: true,
+          });
+
           if (
             error instanceof Error &&
             !error.message.includes("No expenses") &&
@@ -289,9 +304,6 @@ export default function Expenses() {
           ) {
             setToast({ message: "Failed to load initial data", type: "error" });
           }
-
-          // Still trigger animation even if there's an error
-          setTimeout(() => setAnimate(true), 300);
         }
       };
       fetchInitialData();
@@ -398,7 +410,7 @@ export default function Expenses() {
       >
         <div className="mb-4 relative mx-auto w-24 h-24 flex items-center justify-center">
           <FontAwesomeIcon
-            icon={faFileInvoiceDollar}
+            icon={faExclamationCircle}
             className="text-6xl text-purple-400 absolute z-10"
           />
           <div
@@ -439,7 +451,7 @@ export default function Expenses() {
     >
       <div className="flex items-center justify-center mb-2">
         <FontAwesomeIcon
-          icon={faChartLine}
+          icon={faExclamationCircle}
           className="text-2xl text-blue-400 mr-2"
         />
         <h3 className="text-lg font-medium text-gray-600">
@@ -452,35 +464,12 @@ export default function Expenses() {
     </div>
   );
 
-  // Empty state component for charts with animation
-  const EmptyChartsState = () => (
-    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg col-span-1 md:col-span-3 transition-all duration-500">
-      <div
-        className={`text-center mb-6 transition-all duration-700 ease-in-out transform ${
-          animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-        }`}
-      >
-        <div className="mb-4 relative mx-auto w-20 h-20 flex items-center justify-center">
-          <FontAwesomeIcon
-            icon={faChartLine}
-            className="text-5xl text-blue-400 absolute z-10"
-          />
-          <div
-            className={`absolute inset-0 bg-blue-100 rounded-full scale-0 ${
-              animate ? "animate-pulse" : ""
-            }`}
-          ></div>
-        </div>
-        <h2 className="text-xl font-bold text-gray-700 mb-2">
-          No Chart Data Available
-        </h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          Add some expenses to see your spending patterns and analysis here.
-        </p>
-      </div>
-    </div>
-  );
+  // If still loading, show the loading screen
+  if (isLoading) {
+    return <ExpenseLoadingScreen logoSrc="/logo.png" />;
+  }
 
+  // Main content renders only when loading is complete
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
       <Sidebar activePage="expenses" />

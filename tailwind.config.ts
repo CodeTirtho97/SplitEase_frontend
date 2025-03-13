@@ -51,6 +51,9 @@ const config: Config = {
         'dot-2': 'dot-2 1.5s infinite',
         'dot-3': 'dot-3 1.5s infinite',
         'pulse': 'pulse 2s infinite',
+        'spin-reverse': 'spin-reverse 3s linear infinite',
+        'pulse-linear': 'pulse-linear 2s ease-in-out infinite',
+        'pulse-delay': 'pulse-delay 2.5s ease-in-out infinite',
       },
       backgroundImage: {
         'monitor-gradient': 'linear-gradient(to bottom, #444, #333, #222)',
