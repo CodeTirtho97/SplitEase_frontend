@@ -556,7 +556,9 @@ export default function Dashboard() {
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-indigo-500">Dashboard</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+              Dashboard
+            </h1>
             <p className="text-gray-500 mt-1">All your stats in one place!</p>
           </div>
           <div className="mt-4 md:mt-0">
