@@ -125,7 +125,7 @@ export default function DashboardCards({
         <button
           onClick={updateExchangeRates}
           disabled={isUpdatingRates}
-          className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md shadow-md transition-colors duration-300 disabled:opacity-70"
+          className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-300 disabled:opacity-70"
         >
           <FontAwesomeIcon
             icon={faSync}
@@ -138,89 +138,84 @@ export default function DashboardCards({
       {/* Expense Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Expenses Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-          <div className="bg-gradient-to-r from-red-500 to-pink-500 p-1">
-            <div className="bg-white p-5 rounded-t-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">
-                  Total Expenses
-                </h2>
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <FontAwesomeIcon
-                    icon={faMoneyBillWave}
-                    className="text-red-500 text-lg"
-                  />
-                </div>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
+          <div className="h-1.5 w-full bg-gradient-to-r from-red-500 to-pink-500"></div>
+          <div className="p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                Total Expenses
+              </h2>
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <FontAwesomeIcon
+                  icon={faMoneyBillWave}
+                  className="text-red-500 text-lg"
+                />
               </div>
-              <p className="text-3xl font-extrabold text-gray-900">
-                {currencySymbols[selectedCurrency]}
-                {currentSummary.totalExpenses.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                All transactions where you're involved
-              </p>
             </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {currencySymbols[selectedCurrency]}
+              {currentSummary.totalExpenses.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              All transactions where you're involved
+            </p>
           </div>
         </div>
 
         {/* Pending Payments Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-          <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-1">
-            <div className="bg-white p-5 rounded-t-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">
-                  Pending Payments
-                </h2>
-                <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
-                  <FontAwesomeIcon
-                    icon={faHourglassHalf}
-                    className="text-yellow-500 text-lg"
-                  />
-                </div>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
+          <div className="h-1.5 w-full bg-gradient-to-r from-yellow-400 to-orange-500"></div>
+          <div className="p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                Pending Payments
+              </h2>
+              <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                <FontAwesomeIcon
+                  icon={faHourglassHalf}
+                  className="text-yellow-500 text-lg"
+                />
               </div>
-              <p className="text-3xl font-extrabold text-gray-900">
-                {currencySymbols[selectedCurrency]}
-                {currentSummary.totalPending.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Your net pending balance
-              </p>
             </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {currencySymbols[selectedCurrency]}
+              {currentSummary.totalPending.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Your net pending balance
+            </p>
           </div>
         </div>
 
         {/* Settled Payments Card */}
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
-          <div className="bg-gradient-to-r from-green-400 to-emerald-500 p-1">
-            <div className="bg-white p-5 rounded-t-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-bold text-gray-800">
-                  Settled Payments
-                </h2>
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <FontAwesomeIcon
-                    icon={faCheckCircle}
-                    className="text-green-500 text-lg"
-                  />
-                </div>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1 border border-gray-200">
+          <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-emerald-500"></div>
+          <div className="p-5">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                Settled Payments
+              </h2>
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <FontAwesomeIcon
+                  icon={faCheckCircle}
+                  className="text-green-500 text-lg"
+                />
               </div>
-              <p className="text-3xl font-extrabold text-gray-900">
-                {currencySymbols[selectedCurrency]}
-                {settledAmount.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                Completed transactions
-              </p>
             </div>
+            <p className="text-3xl font-bold text-gray-900">
+              {currencySymbols[selectedCurrency]}
+              {settledAmount.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">Completed transactions</p>
           </div>
         </div>
       </div>

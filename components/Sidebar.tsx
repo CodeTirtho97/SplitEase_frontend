@@ -1,4 +1,3 @@
-"use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,10 +6,11 @@ import {
   faMoneyBill,
   faUsers,
   faCreditCard,
+  faTachometerAlt, // Dashboard icon
 } from "@fortawesome/free-solid-svg-icons";
 
 interface SidebarProps {
-  activePage: string; // Accept activePage prop
+  activePage: string;
 }
 
 const Sidebar = ({ activePage }: SidebarProps) => {
@@ -20,25 +20,53 @@ const Sidebar = ({ activePage }: SidebarProps) => {
     <aside
       className="flex flex-col w-64 bg-gradient-to-b from-indigo-700 via-indigo-600 to-purple-700 text-white shadow-xl top-8 rounded-r-xl"
       style={{
-        marginTop: "0.25rem", // Start below navbar
-        marginBottom: "0.75rem", // Stop before footer
+        marginTop: "0.25rem",
+        marginBottom: "0.75rem",
       }}
     >
-      {/* Back Button */}
       <div className="w-64 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700 text-white fixed top-24 mt-8 mb-8 left-0 flex-col shadow-xl rounded-r-xl overflow-hidden border-r border-white/10">
-        {/* Back Button */}
+        {/* App Logo & Name */}
+        <div className="flex items-center gap-3 py-4 px-6 bg-white/10 border-b border-white/10">
+          <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
+            <span className="text-indigo-700 font-bold text-xl">S</span>
+          </div>
+          <span className="font-semibold text-xl tracking-wide">SplitEase</span>
+        </div>
+
+        {/* Dashboard Link */}
         <Link
           href="/dashboard"
-          className="flex items-center gap-3 py-4 px-6 text-xl font-semibold bg-white/10 hover:bg-white/20 transition-all duration-300 border-b border-white/10"
+          className={`flex items-center gap-4 px-6 py-4 transition-all duration-300 ${
+            activePage === "dashboard"
+              ? "bg-white/20 shadow-md"
+              : "hover:bg-white/10 hover:translate-x-1"
+          }`}
         >
-          <div className="bg-indigo-500 w-8 h-8 rounded-lg flex items-center justify-center shadow-md">
-            <FontAwesomeIcon icon={faArrowLeft} className="text-white" />
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              activePage === "dashboard"
+                ? "bg-indigo-500 shadow-md"
+                : "bg-white/10"
+            }`}
+          >
+            <FontAwesomeIcon
+              icon={faTachometerAlt}
+              className={
+                activePage === "dashboard" ? "text-white" : "text-white/90"
+              }
+            />
           </div>
-          <span className="font-medium tracking-wide">Dashboard</span>
+          <span
+            className={
+              activePage === "dashboard" ? "text-white" : "text-white/90"
+            }
+          >
+            Dashboard
+          </span>
         </Link>
 
         {/* Sidebar Menu */}
-        <nav className="flex-1 mt-6 mb-8">
+        <nav className="flex-1 mt-4">
           <ul className="space-y-3">
             <li>
               <Link
@@ -141,12 +169,19 @@ const Sidebar = ({ activePage }: SidebarProps) => {
           </ul>
         </nav>
 
-        {/* SplitEase branding at bottom */}
-        {/* <div className="mt-auto mb-6 px-6 flex items-center gap-3">
-          <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md">
-            <span className="text-indigo-700 font-bold text-lg">S</span>
-          </div>
-          <span className="font-semibold text-white">SplitEase</span>
+        {/* User Profile Link (Optional)
+        <div className="mt-auto">
+          <Link
+            href="/profile"
+            className={`flex items-center gap-4 px-6 py-4 border-t border-white/10 transition-all duration-300 ${
+              activePage === "profile" ? "bg-white/20" : "hover:bg-white/10"
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <span className="text-white font-medium">U</span>
+            </div>
+            <span className="text-white/90">Profile</span>
+          </Link>
         </div> */}
       </div>
     </aside>

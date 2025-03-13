@@ -24,6 +24,7 @@ import {
   faCcMastercard,
 } from "@fortawesome/free-brands-svg-icons";
 import transactionApi from "@/utils/api/transaction"; // Updated transaction API with cookies
+import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
 import { useTransactionContext } from "@/context/transactionContext";
 import { motion, AnimatePresence } from "framer-motion"; // For animations
 
@@ -46,62 +47,11 @@ interface Transaction {
 // Full-page loader component
 const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 z-50">
-      {/* Purple gradient background - matching the screenshot exactly */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900 to-purple-700"></div>
-
-      {/* Center content */}
-      <div className="relative h-full flex flex-col items-center justify-center">
-        <div className="text-white text-center">
-          {/* Card icon with spinner */}
-          <div className="mb-12 relative flex items-center justify-center">
-            {/* Outer circle */}
-            <div className="w-24 h-24 rounded-full border border-white/30 absolute"></div>
-
-            {/* Spinner */}
-            <div className="w-24 h-24 rounded-full border-t-2 border-white animate-spin absolute"></div>
-
-            {/* Center icon container */}
-            <div className="z-10 relative">
-              <svg
-                className="w-12 h-12 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="1.5"
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-            </div>
-          </div>
-
-          {/* Text content */}
-          <h2 className="text-2xl font-bold mb-4">Loading Your Finances</h2>
-          <div className="flex items-center justify-center space-x-2 text-sm text-white/80">
-            <span>Securing connection</span>
-            <span className="text-white/50">•</span>
-            <span>Fetching transactions</span>
-            <span className="text-white/50">•</span>
-            <span>Processing data</span>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="absolute bottom-8 flex flex-col items-center">
-          <FontAwesomeIcon
-            icon={faShieldAlt}
-            className="text-white mb-2 text-lg opacity-80"
-          />
-          <p className="text-white/70 text-sm">
-            End-to-end encrypted payment system
-          </p>
-        </div>
-      </div>
-    </div>
+    <UnifiedLoadingScreen
+      message="Loading Your Payments"
+      section="payments"
+      showTips={true}
+    />
   );
 };
 

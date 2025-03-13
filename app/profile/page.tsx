@@ -21,6 +21,7 @@ import {
   faStripe,
 } from "@fortawesome/free-brands-svg-icons";
 import { ProfileContext } from "@/context/profileContext";
+import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
 import { useAuth } from "@/context/authContext"; // Import useAuth explicitly
 
 // Define PaymentMethod interface inline
@@ -677,22 +678,11 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center bg-gradient-to-b from-indigo-50 to-purple-50">
-        <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-pulse">
-          <div className="w-16 h-16 relative">
-            <div className="absolute inset-0 rounded-full border-4 border-indigo-200 border-t-indigo-500 animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center text-indigo-500 text-2xl font-bold">
-              S
-            </div>
-          </div>
-          <p className="mt-4 text-xl font-medium text-gray-600">
-            Loading Profile...
-          </p>
-          <p className="text-sm text-gray-500">
-            Please wait while we fetch your profile data securely.
-          </p>
-        </div>
-      </div>
+      <UnifiedLoadingScreen
+        message="Loading Your Profile"
+        section="profile"
+        showTips={false}
+      />
     );
   }
 
