@@ -547,7 +547,7 @@ export default function Dashboard() {
 
   // Modern Enterprise Dashboard
   return (
-    <div className="flex mt-0">
+    <div className="flex mt-20">
       {/* Sidebar */}
       <Sidebar activePage="dashboard" />
 
