@@ -12,6 +12,9 @@ import {
   faExclamationCircle,
   faUser,
   faRupeeSign,
+  faTrash,
+  faEye,
+  faPenAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useGroups } from "@/context/groupContext";
 import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
@@ -452,26 +455,18 @@ export default function Groups() {
                         <Button
                           text="Edit"
                           onClick={() => handleEditGroup(group)}
-                          className="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 hover:border-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-600/50"
+                          variant="secondary"
+                          size="sm"
+                          icon={faPenAlt} // or faTrash if you prefer
+                          className="font-medium"
                         />
                         <Button
                           text="View"
                           onClick={() => handleViewGroup(group)}
-                          className="
-            px-4 py-2 
-            bg-blue-600 
-            text-white 
-            rounded-lg 
-            text-sm 
-            font-medium 
-            hover:bg-blue-700 
-            transition-colors 
-            focus:outline-none 
-            focus:ring-2 
-            focus:ring-blue-500
-            shadow-md 
-            hover:shadow-lg
-          "
+                          variant="info"
+                          size="sm"
+                          icon={faEye} // or faTrash if you prefer
+                          className="font-medium"
                         />
                       </div>
                     </div>
@@ -562,20 +557,10 @@ export default function Groups() {
                       <Button
                         text="Delete"
                         onClick={() => handleDeleteGroup(group)}
-                        className="
-          px-4 py-2 
-          bg-gray-100 
-          text-gray-600 
-          rounded-lg 
-          text-sm 
-          font-medium   
-          hover:bg-gray-200 
-          hover:text-red-600
-          transition-colors 
-          focus:outline-none 
-          focus:ring-2 
-          focus:ring-red-700/100
-        "
+                        variant="danger"
+                        size="sm"
+                        icon={faTrash} // or faTrash if you prefer
+                        className="font-medium"
                       />
                     </div>
                   ))
@@ -642,35 +627,16 @@ export default function Groups() {
                   <div className="flex space-x-4">
                     <Button
                       text="Cancel"
-                      variant="danger"
                       onClick={() => setIsDeleteModalOpen(false)}
-                      className="
-                flex-1 
-                bg-white 
-                border border-gray-300 
-                text-gray-700 
-                px-5 
-                py-3 
-                rounded-lg 
-                hover:bg-gray-100 
-                transition-colors
-              "
+                      variant="secondary"
+                      size="md"
                     />
                     <Button
                       text="Delete"
                       onClick={handleConfirmDelete}
-                      className="
-                flex-1 
-                bg-red-500 
-                text-white 
-                px-5 
-                py-3 
-                rounded-lg 
-                hover:bg-red-600 
-                transition-colors 
-                shadow-md 
-                hover:shadow-lg
-              "
+                      variant="danger"
+                      size="md"
+                      loading={isUpdating} // Use your loading state if applicable
                     />
                   </div>
                 </div>
