@@ -552,7 +552,7 @@ export default function Dashboard() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8">
+      <main className="flex-1 p-6 md:p-8 mt-20">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
