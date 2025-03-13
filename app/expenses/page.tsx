@@ -21,6 +21,7 @@ import DashboardCards from "@/components/ExpenseCard";
 import { useGroups } from "@/context/groupContext";
 import ExpenseModal from "@/components/ExpenseModal";
 import RecentExpensesTable from "@/components/RecentExpensesTable";
+import ExpenseCharts from "@/components/ExpenseCharts";
 import { useTransactionContext } from "@/context/transactionContext";
 import { useAuth } from "@/context/authContext";
 
@@ -523,159 +524,14 @@ export default function Expenses() {
           />
         )}
 
-        <button
-          onClick={() => setShowCharts(!showCharts)}
-          className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-md mb-6 transition-all duration-300 shadow-md hover:shadow-lg"
-        >
-          {showCharts ? "Hide Charts" : "Show Charts"}
-        </button>
-
-        {showCharts && (
-          <div
-            className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 transition-all duration-700 ease-in-out transform ${
-              animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-            }`}
-          >
-            {loadingCharts ? (
-              <div className="w-full text-center py-10 col-span-1 md:col-span-3">
-                <div className="flex justify-center">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
-                </div>
-                <p className="text-xl text-gray-500 mt-4">Loading charts...</p>
-              </div>
-            ) : !chartData ||
-              (Object.keys(chartData?.breakdown || {}).length === 0 &&
-                Object.keys(chartData?.monthlyTrend || {}).length === 0) ? (
-              <EmptyChartsState />
-            ) : (
-              <>
-                <div className="bg-white shadow-lg rounded-lg p-6 col-span-1 md:col-span-2 flex flex-col items-center transition-all duration-500 hover:shadow-xl">
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
-                    Expense Breakdown (Total)
-                  </h2>
-                  <div className="w-full h-[300px]">
-                    <Pie
-                      data={{
-                        labels: Object.keys(chartData?.breakdown || {}),
-                        datasets: [
-                          {
-                            label: "Total Expenses",
-                            data: Object.values(chartData?.breakdown || {}),
-                            backgroundColor: [
-                              "#FF6384",
-                              "#36A2EB",
-                              "#FFCE56",
-                              "#4CAF50",
-                              "#8A2BE2",
-                              "#00FA9A",
-                            ],
-                            borderColor: [
-                              "#FF6384",
-                              "#36A2EB",
-                              "#FFCE56",
-                              "#4CAF50",
-                              "#8A2BE2",
-                              "#00FA9A",
-                            ],
-                            borderWidth: 1,
-                          },
-                        ],
-                      }}
-                      options={{
-                        maintainAspectRatio: false,
-                        plugins: {
-                          title: {
-                            display: true,
-                            text: "Expense Breakdown (Total)",
-                            font: { size: 16 },
-                          },
-                          legend: {
-                            position: "top",
-                          },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = context.raw as number;
-                                const total = Object.values(
-                                  chartData?.breakdown || {}
-                                ).reduce((sum, val) => sum + (val || 0), 0);
-                                const percentage = total
-                                  ? ((value / total) * 100).toFixed(1)
-                                  : "0.0";
-                                return `${
-                                  context.label
-                                }: ₹${value.toLocaleString()} (${percentage}%)`;
-                              },
-                            },
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-white shadow-lg rounded-lg p-6 flex flex-col items-center transition-all duration-500 hover:shadow-xl">
-                  <h2 className="text-lg font-semibold text-gray-700 mb-4 self-start">
-                    Monthly Expense Trend (Total)
-                  </h2>
-                  <div className="w-full h-[250px]">
-                    <Line
-                      data={{
-                        labels: Object.keys(chartData?.monthlyTrend || {}),
-                        datasets: [
-                          {
-                            label: "Total Expenses",
-                            data: Object.values(chartData?.monthlyTrend || {}),
-                            borderColor: "#6200ea",
-                            backgroundColor: "rgba(98, 0, 234, 0.2)",
-                            fill: true,
-                            tension: 0.1,
-                          },
-                        ],
-                      }}
-                      options={{
-                        maintainAspectRatio: false,
-                        plugins: {
-                          title: {
-                            display: true,
-                            text: "Monthly Expense Trend (Total)",
-                            font: { size: 16 },
-                          },
-                          legend: {
-                            display: false,
-                          },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = context.raw as number;
-                                return `Spending: ₹${value.toLocaleString()}`;
-                              },
-                            },
-                          },
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            title: {
-                              display: true,
-                              text: "Amount (INR)",
-                            },
-                          },
-                          x: {
-                            title: {
-                              display: true,
-                              text: "Month",
-                            },
-                          },
-                        },
-                      }}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+        <ExpenseCharts
+          showCharts={showCharts}
+          setShowCharts={setShowCharts}
+          chartData={chartData}
+          loadingCharts={loadingCharts}
+          animate={animate}
+          selectedCurrency={selectedCurrency}
+        />
 
         <RecentExpensesTable
           expenses={expenses}
