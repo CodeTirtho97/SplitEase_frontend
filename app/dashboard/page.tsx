@@ -545,242 +545,651 @@ export default function Dashboard() {
     );
   }
 
-  // Existing dashboard content for users with data
+  // Modern Enterprise Dashboard
   return (
-    <div className="flex mt-20">
+    <div className="flex mt-0">
       {/* Sidebar */}
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 min-h-screen p-6 bg-gray-100">
+      <main className="flex-1 min-h-screen p-8 bg-gray-50">
         {/* Heading & Greeting */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text">
-              Dashboard
+            <h1 className="text-4xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+                Dashboard
+              </span>
             </h1>
-            <p className="text-gray-600 text-lg mt-1">
+            <p className="text-gray-500 text-lg mt-1">
               All your stats in one place!
             </p>
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
-            Welcome, <span className="text-purple-600">{firstName}</span> 👋
-          </h1>
+          <div className="mt-4 md:mt-0 bg-white shadow-sm rounded-xl p-3 border border-gray-100">
+            <h1 className="text-2xl font-semibold text-gray-800">
+              Welcome, <span className="text-violet-600">{firstName}</span>
+              <span className="ml-2 inline-block animate-wave">👋</span>
+            </h1>
+          </div>
         </div>
 
-        {/* ✅ Dashboard Summary Cards (Expenses & Payments) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+        {/* Dashboard Summary Cards (Expenses & Payments) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           {/* Total Expenses Card */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-red-500 group">
-            <div className="p-4 bg-red-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faMoneyBill}
-                className="text-red-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-red-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-red-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Total Expenses
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Total amount YOU have spent personally in all transactions."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    ₹{(totalExpenses ?? 0).toLocaleString()}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-red-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Total Expenses
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Total amount YOU have spent personally in all transactions."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                ₹{(totalExpenses ?? 0).toLocaleString()}
-              </p>
-              <p className="text-gray-500 text-sm">Your personal spending</p>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">Your personal spending</p>
             </div>
           </div>
 
           {/* Pending Payments Card */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-yellow-500 group">
-            <div className="p-4 bg-yellow-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faExclamationCircle}
-                className="text-yellow-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-amber-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-amber-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Pending Payments
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Amount you still need to pay in split expenses."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    ₹{(pendingPayments ?? 0).toLocaleString()}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-amber-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Pending Payments
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Amount you still need to pay in split expenses."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                ₹{(pendingPayments ?? 0).toLocaleString()}
-              </p>
-              <p className="text-gray-500 text-sm">Unpaid balance</p>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">Unpaid balance</p>
             </div>
           </div>
 
           {/* Settled Payments Card */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-green-500 group">
-            <div className="p-4 bg-green-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faCheckCircle}
-                className="text-green-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-green-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Settled Payments
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Total amount you have paid in cleared expenses."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    ₹{(settledPayments ?? 0).toLocaleString()}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Settled Payments
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Total amount you have paid in cleared expenses."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                ₹{(settledPayments ?? 0).toLocaleString()}
-              </p>
-              <p className="text-gray-500 text-sm">Payments you've made</p>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">Payments you've made</p>
             </div>
           </div>
         </div>
 
         {/* Group Related Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Total Groups */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-blue-500 group">
-            <div className="p-4 bg-blue-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faUsers}
-                className="text-blue-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-blue-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Total Groups
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Total number of groups you are part of."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    {totalGroups ?? 0}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Total Groups
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Total number of groups you are part of."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                {totalGroups ?? 0}
-              </p>
-              <p className="text-gray-500 text-sm">
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
                 Your shared expense groups
               </p>
             </div>
           </div>
 
           {/* Total Members */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-indigo-500 group">
-            <div className="p-4 bg-indigo-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faUserFriends}
-                className="text-indigo-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-indigo-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-indigo-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Total Members
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Total number of people across all groups."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    {totalMembers ?? 0}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-indigo-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Total Members
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Total number of people across all groups."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                {totalMembers ?? 0}
-              </p>
-              <p className="text-gray-500 text-sm">People in your groups</p>
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">People in your groups</p>
             </div>
           </div>
 
           {/* Group Expenses */}
-          <div className="relative bg-white shadow-lg rounded-lg p-6 flex items-center gap-4 border-t-4 border-purple-500 group">
-            <div className="p-4 bg-purple-100 rounded-full">
-              <FontAwesomeIcon
-                icon={faWallet}
-                className="text-purple-600 text-2xl"
-              />
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 transition-all duration-300 hover:shadow-md">
+            <div className="px-6 py-5 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-3 rounded-lg bg-purple-50 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-purple-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 flex items-center">
+                    Group Expenses
+                    <span
+                      className="ml-1 text-gray-400 cursor-pointer hover:text-blue-600 transition-all"
+                      title="Total expenses contributed by all members across all shared groups."
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                  </p>
+                  <h3 className="text-2xl font-bold text-gray-800">
+                    ₹{(groupExpenses ?? 0).toLocaleString()}
+                  </h3>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <div className="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-purple-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                </div>
+              </div>
             </div>
-            <div>
-              <h3 className="text-gray-700 text-lg font-semibold flex items-center">
-                Group Expenses
-                <span
-                  className="ml-2 text-gray-400 text-sm cursor-pointer hover:text-blue-700 transition-transform duration-300 transform hover:scale-125"
-                  title="Total expenses contributed by all members across all shared groups."
-                >
-                  ℹ️
-                </span>
-              </h3>
-              <p className="text-3xl font-bold text-gray-900">
-                ₹{(groupExpenses ?? 0).toLocaleString()}
-              </p>
-              <p className="text-gray-500 text-sm">
+            <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
                 Total shared group expenses
               </p>
             </div>
           </div>
         </div>
 
-        {/* ✅ Recent Transactions Table */}
-        <div className="mt-6 bg-white shadow-lg rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
-            Recent Transactions
-          </h3>
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-200 text-gray-600">
-                <th className="py-3 px-4 text-left">Sender</th>
-                <th className="py-3 px-4 text-left">Receiver</th>
-                <th className="py-3 px-4 text-right">Amount</th>
-                <th className="py-3 px-4 text-left">Mode</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTransactions.length > 0 ? (
-                recentTransactions.map((txn, index) => (
-                  <tr
-                    key={index}
-                    className={`border-t hover:bg-gray-100 transition ${
-                      txn.status === "Settled" ? "bg-green-100" : ""
-                    }`}
-                  >
-                    <td className="py-3 px-4">
-                      {txn.sender?.fullName || "Unknown"}
-                    </td>
-                    <td className="py-3 px-4">
-                      {txn.receiver?.fullName || "Unknown"}
-                    </td>
-                    <td className="py-3 px-4 text-right text-indigo-500 font-bold">
-                      ₹{txn.amount.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4">{txn.paymentMode}</td>
-                    <td className="py-3 px-4 text-center">{txn.status}</td>
-                    <td className="py-3 px-4 text-center text-gray-500">
-                      {new Date(txn.createdAt).toLocaleDateString()}
+        {/* Recent Transactions Table */}
+        <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-8">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Recent Transactions
+            </h3>
+            <button className="text-sm px-3 py-1 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors">
+              View All
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 border-b border-gray-100">Sender</th>
+                  <th className="px-6 py-3 border-b border-gray-100">
+                    Receiver
+                  </th>
+                  <th className="px-6 py-3 border-b border-gray-100 text-right">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 border-b border-gray-100">Mode</th>
+                  <th className="px-6 py-3 border-b border-gray-100 text-center">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 border-b border-gray-100 text-center">
+                    Date
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((txn, index) => (
+                    <tr
+                      key={index}
+                      className={`hover:bg-gray-50 transition-colors ${
+                        txn.status === "Settled" ? "bg-green-50" : ""
+                      }`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
+                        {txn.sender?.fullName || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {txn.receiver?.fullName || "Unknown"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
+                        ₹{txn.amount.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {txn.paymentMode === "UPI" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            UPI
+                          </span>
+                        ) : txn.paymentMode === "PayPal" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                            PayPal
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {txn.paymentMode}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                        {txn.status === "Settled" ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg
+                              className="h-2 w-2 mr-1 text-green-500"
+                              fill="currentColor"
+                              viewBox="0 0 8 8"
+                            >
+                              <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            Settled
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                            <svg
+                              className="h-2 w-2 mr-1 text-yellow-500"
+                              fill="currentColor"
+                              viewBox="0 0 8 8"
+                            >
+                              <circle cx="4" cy="4" r="3" />
+                            </svg>
+                            Pending
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                        {new Date(txn.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic"
+                    >
+                      No recent transactions found.
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="py-4 text-center text-gray-500 italic"
-                  >
-                    No recent transactions found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer with Pagination */}
+          <div className="px-6 py-3 flex items-center justify-between border-t border-gray-100 bg-gray-50">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+              </button>
+              <button className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+              </button>
+            </div>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-500">
+                  Showing <span className="font-medium">1</span> to{" "}
+                  <span className="font-medium">
+                    {recentTransactions.length}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-medium">
+                    {recentTransactions.length}
+                  </span>{" "}
+                  results
+                </p>
+              </div>
+              <div>
+                <nav
+                  className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                  aria-label="Pagination"
+                >
+                  <button className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span className="sr-only">Previous</span>
+                    <svg
+                      className="h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                  <button className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-indigo-600 hover:bg-gray-50">
+                    1
+                  </button>
+                  <button className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <span className="sr-only">Next</span>
+                    <svg
+                      className="h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </nav>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
     </div>
