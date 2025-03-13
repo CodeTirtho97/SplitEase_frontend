@@ -102,8 +102,8 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
           onClick={() => setShowCharts(!showCharts)}
           className={`flex items-center gap-2 px-5 py-3 rounded-lg transition-all duration-300 ${
             showCharts
-              ? "bg-indigo-600 text-white hover:bg-indigo-700"
-              : "bg-white text-indigo-600 border border-indigo-600 hover:bg-indigo-50"
+              ? "bg-indigo-400 text-white hover:bg-indigo-500"
+              : "bg-white text-indigo-400 border border-indigo-400 hover:bg-indigo-100"
           } shadow-md hover:shadow-lg`}
         >
           <FontAwesomeIcon icon={showCharts ? faEyeSlash : faEye} />
@@ -153,7 +153,7 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Expense Breakdown Chart (Pie) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden lg:col-span-2 transition-all duration-300 hover:shadow-xl">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-4 px-6">
+                <div className="bg-gradient-to-r from-indigo-400 to-purple-400 py-4 px-6">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
                       <FontAwesomeIcon
@@ -269,7 +269,7 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
 
               {/* Monthly Trend Chart (Line) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden lg:col-span-1 transition-all duration-300 hover:shadow-xl">
-                <div className="bg-gradient-to-r from-blue-500 to-cyan-500 py-4 px-6">
+                <div className="bg-gradient-to-r from-blue-400 to-cyan-400 py-4 px-6">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
                       <FontAwesomeIcon
@@ -425,7 +425,7 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
 
               {/* Split by Status (Bar Chart) */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden lg:col-span-3 transition-all duration-300 hover:shadow-xl">
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 py-4 px-6">
+                <div className="bg-gradient-to-r from-emerald-400 to-teal-400 py-4 px-6">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-4">
                       <FontAwesomeIcon
