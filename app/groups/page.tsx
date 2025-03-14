@@ -327,7 +327,8 @@ export default function Groups() {
           <Button
             text="Add Group"
             onClick={() => setIsModalOpen(true)}
-            className="bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 text-white px-8 py-4 rounded-xl flex items-center gap-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+            variant="primary"
+            size="lg"
           >
             <FontAwesomeIcon icon={faPlus} className="text-xl" />
             <span>Add Group</span>
@@ -1011,12 +1012,14 @@ export default function Groups() {
                 <Button
                   text="Cancel"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  variant="danger"
+                  size="md"
                 />
                 <Button
                   text="Save Changes"
                   onClick={handleSaveGroup}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md hover:shadow-lg"
+                  variant="success"
+                  size="md"
                 />
               </div>
             </div>
@@ -1228,19 +1231,8 @@ export default function Groups() {
                   <Button
                     text="Close"
                     onClick={() => setIsViewModalOpen(false)}
-                    className="
-      px-8 py-3 
-      bg-red-500 
-      text-white 
-      rounded-lg 
-      hover:bg-red-600 
-      transition-colors 
-      flex 
-      items-center 
-      justify-center 
-      mx-auto 
-      group
-    "
+                    variant="danger"
+                    size="md"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

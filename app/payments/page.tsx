@@ -371,7 +371,8 @@ export default function PaymentsPage() {
               <Button
                 text="Create New Expense"
                 onClick={() => router.push("/expenses")}
-                className="px-6 py-2 bg-green-500 text-white text-sm font-medium rounded-full hover:bg-green-600 transition-colors"
+                variant="ghost"
+                size="md"
               />
             </div>
           )}

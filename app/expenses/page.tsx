@@ -496,7 +496,8 @@ export default function Expenses() {
           <Button
             text="Add Expense"
             onClick={() => setIsModalOpen(true)}
-            className="bg-purple-500 hover:bg-purple-600 text-white px-4 sm:px-6 md:px-8 py-3 md:py-4 rounded-xl flex items-center justify-center gap-2 text-lg md:text-xl transition-all duration-300 shadow-md hover:shadow-lg"
+            variant="primary"
+            size="lg"
           >
             <FontAwesomeIcon icon={faPlus} />
             <span className="hidden sm:inline">Add Expense</span>
