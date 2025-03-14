@@ -392,26 +392,16 @@ export default function Dashboard() {
                 <Button
                   text="Create Groups"
                   onClick={() => router.push("/groups")}
-                  className="flex-1 flex items-center justify-center 
-                bg-indigo-600 text-white py-3 rounded-lg 
-                hover:bg-indigo-700 transition-colors 
-                font-semibold shadow-lg hover:shadow-xl 
-                transform hover:-translate-y-1
-                active:scale-95
-                group"
-                  {...({ icon: faUsers } as any)}
+                  icon={faUsers}
+                  variant="danger"
+                  size="lg"
                 />
                 <Button
                   text="Add Expenses"
                   onClick={() => router.push("/expenses")}
-                  className="flex-1 flex items-center justify-center 
-                bg-green-600 text-white py-3 rounded-lg 
-                hover:bg-green-700 transition-colors 
-                font-semibold shadow-lg hover:shadow-xl 
-                transform hover:-translate-y-1
-                active:scale-95
-                group"
-                  {...({ icon: faMoneyBill } as any)}
+                  icon={faMoneyBill}
+                  variant="success"
+                  size="lg"
                 />
               </motion.div>
             </div>
