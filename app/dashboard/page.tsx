@@ -394,14 +394,14 @@ export default function Dashboard() {
                   onClick={() => router.push("/groups")}
                   icon={faUsers}
                   variant="danger"
-                  size="lg"
+                  size="md"
                 />
                 <Button
                   text="Add Expenses"
                   onClick={() => router.push("/expenses")}
                   icon={faMoneyBill}
                   variant="success"
-                  size="lg"
+                  size="md"
                 />
               </motion.div>
             </div>
