@@ -343,7 +343,7 @@ export default function PaymentsPage() {
                       <td className="py-4 px-4 text-center">
                         <button
                           onClick={() => handlePayNow(payment)}
-                          className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-md hover:from-yellow-500 hover:to-orange-600 shadow-md hover:shadow-lg transition-colors"
+                          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-sm font-medium rounded-md hover:from-blue-600 hover:to-cyan-700 shadow-md hover:shadow-lg transition-colors"
                         >
                           Pay Now
                         </button>
@@ -700,7 +700,7 @@ export default function PaymentsPage() {
 
                     <button
                       onClick={handleCancel}
-                      className="w-full py-3 px-4 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors duration-200 flex items-center justify-center"
+                      className="w-full py-3 px-4 rounded-xl border border-red-500 text-gray-800 hover:bg-red-500 hover:text-white font-medium transition-colors duration-200 flex items-center justify-center"
                     >
                       Cancel
                     </button>
