@@ -122,17 +122,17 @@ export default function DashboardCards({
             <option value="JPY">JPY (¥)</option>
           </select>
         </div>
-        <button
+        {/* <button
           onClick={updateExchangeRates}
           disabled={isUpdatingRates}
-          className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-300 disabled:opacity-70"
+          className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-300 disabled:opacity-70"
         >
           <FontAwesomeIcon
             icon={faSync}
             className={isUpdatingRates ? "animate-spin" : ""}
           />
           <span>{isUpdatingRates ? "Updating..." : "Update Rates"}</span>
-        </button>
+        </button> */}
       </div>
 
       {/* Expense Cards */}

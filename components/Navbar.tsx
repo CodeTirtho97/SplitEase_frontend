@@ -175,7 +175,7 @@ export default function Navbar() {
                 text="Sign Out"
                 onClick={handleLogout}
                 variant="danger"
-                size="lg"
+                size="md"
               />
             </>
           ) : (

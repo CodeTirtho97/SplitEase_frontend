@@ -343,7 +343,7 @@ export default function PaymentsPage() {
                       <td className="py-4 px-4 text-center">
                         <button
                           onClick={() => handlePayNow(payment)}
-                          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors"
+                          className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium rounded-md hover:from-yellow-500 hover:to-orange-600 shadow-md hover:shadow-lg transition-colors"
                         >
                           Pay Now
                         </button>

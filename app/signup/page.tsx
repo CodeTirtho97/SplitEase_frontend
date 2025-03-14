@@ -589,7 +589,7 @@ const Signup = () => {
           {/* Signup Button */}
           <button
             type="submit"
-            className={`w-full py-2.5 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 active:scale-95 ${
+            className={`w-full py-2.5 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg active:scale-95 ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={loading}
