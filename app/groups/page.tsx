@@ -816,14 +816,14 @@ export default function Groups() {
                   text="Cancel"
                   onClick={() => setIsModalOpen(false)}
                   variant="secondary"
-                  size="lg"
+                  size="md"
                   className="font-medium"
                 />
                 <Button
                   text="Create Group"
                   onClick={handleAddGroup}
                   variant="success"
-                  size="lg"
+                  size="md"
                   className="font-medium"
                 />
               </div>
