@@ -560,10 +560,15 @@ export default function Home() {
                   number, or sharing a unique link.
                 </p>
               </div>
-              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  Step 1
-                </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6 overflow-hidden">
+                <Image
+                  src="/Step1_AddGroup.png"
+                  alt="Create a Group"
+                  width={128}
+                  height={96}
+                  className="w-full h-full object-cover"
+                  priority
+                />
               </div>
             </motion.div>
 
@@ -589,10 +594,15 @@ export default function Home() {
                   gets notified instantly.
                 </p>
               </div>
-              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  Step 2
-                </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6 overflow-hidden">
+                <Image
+                  src="/Step2_AddExpense.png"
+                  alt="Add Expenses"
+                  width={128}
+                  height={96}
+                  className="w-full h-full object-cover"
+                  priority
+                />
               </div>
             </motion.div>
 
@@ -618,10 +628,15 @@ export default function Home() {
                   just one tap.
                 </p>
               </div>
-              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6">
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  Step 3
-                </div>
+              <div className="hidden md:block w-32 h-24 bg-gray-200 rounded-lg mt-4 md:mt-0 md:ml-6 overflow-hidden">
+                <Image
+                  src="/Step3_MakePayment.png"
+                  alt="Settle Payments"
+                  width={128}
+                  height={96}
+                  className="w-full h-full object-cover"
+                  priority
+                />
               </div>
             </motion.div>
           </div>
