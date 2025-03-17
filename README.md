@@ -17,6 +17,9 @@
 <div align="center">
   <h3>🔥 Effortlessly Split Bills, Track Expenses & Settle Payments with Friends 🔥</h3>
   <p><i>Never have another awkward "who owes what" conversation again!</i></p>
+  <a href="https://split-ease-v1-tirth.vercel.app/" target="_blank">
+    <img src="https://img.shields.io/badge/LIVE_DEMO-Check_it_out!-FF5757?style=for-the-badge&logo=vercel" alt="Live Demo" />
+  </a>
 </div>
 
 ## 🎬 Demo & Screenshots
@@ -32,13 +35,6 @@
 <summary>💻 Desktop Dashboard</summary>
 <div align="center">
   <img src="/public/home_laptops.png" alt="Desktop Dashboard" width="600">
-</div>
-</details>
-
-<details>
-<summary>📊 Expense Analytics</summary>
-<div align="center">
-  <img src="/public/home_tablet.png" alt="Expense Analytics" width="450">
 </div>
 </details>
 
