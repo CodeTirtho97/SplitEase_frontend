@@ -4,13 +4,15 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/Button";
-import { useAuth } from "@/context/authContext"; // Import useAuth from AuthContext
-import Cookies from "js-cookie"; // Import Cookies for token persistence
+import { useAuth } from "@/context/authContext";
+import Cookies from "js-cookie";
+import { useSocket } from "@/context/socketContext"; // Import useSocket to disconnect on logout
 
 export default function Navbar() {
   const router = useRouter();
-  const pathname = usePathname(); // Get the current route
-  const { user, token, logout, loading: authLoading } = useAuth() || {}; // Use useAuth for authentication state
+  const pathname = usePathname();
+  const { user, token, logout, loading: authLoading } = useAuth() || {};
+  const { isConnected } = useSocket(); // Use socket context to show connection status
   const [showToast, setShowToast] = useState<{
     message: string;
     type: "success" | "error";
@@ -19,11 +21,12 @@ export default function Navbar() {
   // State to track login status (derived from AuthContext)
   const [isLoggedIn, setIsLoggedIn] = useState(!!token);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Add state for logout progress
 
   // Update login status when token or user changes from AuthContext
   useEffect(() => {
     setIsLoggedIn(!!token);
-  }, [token]); // Re-run when token changes
+  }, [token]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -61,16 +64,14 @@ export default function Navbar() {
     };
   }, [mobileMenuOpen]);
 
-  // Logout function using AuthContext
+  // Logout function using AuthContext and Redis
   const handleLogout = async () => {
     if (logout) {
       try {
-        // First, call the logout function from AuthContext
-        await logout();
+        setIsLoggingOut(true); // Show loading state
 
-        // Manually clear cookies to ensure immediate effect
-        Cookies.remove("token");
-        Cookies.remove("user");
+        // Call the enhanced logout function that uses Redis
+        await logout();
 
         // Show success toast
         setShowToast({ message: "Logged out successfully!", type: "success" });
@@ -92,6 +93,8 @@ export default function Navbar() {
           message: "Logout failed. Please try again.",
           type: "error",
         });
+      } finally {
+        setIsLoggingOut(false); // Reset loading state
       }
     }
   };
@@ -134,6 +137,20 @@ export default function Navbar() {
           >
             SplitEase<span className="text-indigo-600">.</span>
           </Link>
+
+          {/* Connection Status Indicator - Only show when logged in */}
+          {isLoggedIn && (
+            <div className="ml-2 flex items-center">
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  isConnected ? "bg-green-500" : "bg-red-500"
+                }`}
+              ></div>
+              <span className="ml-1 text-xs text-gray-500">
+                {isConnected ? "Connected" : "Offline"}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Desktop Navigation Links */}
@@ -172,10 +189,11 @@ export default function Navbar() {
 
               {/* Sign Out Button */}
               <Button
-                text="Sign Out"
+                text={isLoggingOut ? "Signing Out..." : "Sign Out"}
                 onClick={handleLogout}
                 variant="danger"
                 size="md"
+                disabled={isLoggingOut}
               />
             </>
           ) : (
@@ -269,10 +287,11 @@ export default function Navbar() {
                   Profile
                 </Link>
                 <Button
-                  text="Sign Out"
+                  text={isLoggingOut ? "Signing Out..." : "Sign Out"}
                   onClick={handleLogout}
                   variant="danger"
                   size="lg"
+                  disabled={isLoggingOut}
                 />
               </>
             ) : (

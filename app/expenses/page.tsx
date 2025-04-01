@@ -19,6 +19,9 @@ import ExpenseCharts from "@/components/ExpenseCharts";
 import ExpenseLoadingScreen from "@/components/ExpenseLoadingScreen";
 import { useTransactionContext } from "@/context/transactionContext";
 import { useAuth } from "@/context/authContext";
+import { useSocket } from "@/context/socketContext";
+import NotificationPanel from "@/components/NotificationPanel";
+import ConnectionStatus from "@/components/ConnectionStatus";
 
 // Define types at the top of the file
 type Currency = "INR" | "USD" | "EUR" | "GBP" | "JPY";
@@ -76,6 +79,7 @@ export default function Expenses() {
     message: string;
     type: "success" | "error";
   } | null>(null);
+  const { addEventListener, removeEventListener } = useSocket();
   const { groups: contextGroups, refreshGroups } = useGroups();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -264,6 +268,55 @@ export default function Expenses() {
     }
   }, [hasMounted]);
 
+  useEffect(() => {
+    // Handler for expense updates
+    const handleExpenseUpdate = (data: any) => {
+      console.log("Expense update received:", data);
+
+      if (
+        data.event === "expense_created" ||
+        data.event === "expense_deleted"
+      ) {
+        // Refresh expenses
+        fetchRecentExpenses();
+        // Refresh summary
+        fetchSummary();
+        // Refresh charts
+        fetchExpenseBreakdown();
+      }
+    };
+
+    // Handler for transaction updates affecting expenses
+    const handleTransactionUpdate = (data: any) => {
+      console.log("Transaction update received:", data);
+
+      if (
+        data.event === "transaction_settled" ||
+        data.event === "transaction_failed"
+      ) {
+        // Refresh expenses and summary
+        fetchRecentExpenses();
+        fetchSummary();
+      }
+    };
+
+    // Register event listeners
+    addEventListener("expense_update", handleExpenseUpdate);
+    addEventListener("transaction_update", handleTransactionUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      removeEventListener("expense_update", handleExpenseUpdate);
+      removeEventListener("transaction_update", handleTransactionUpdate);
+    };
+  }, [
+    addEventListener,
+    removeEventListener,
+    fetchRecentExpenses,
+    fetchSummary,
+    fetchExpenseBreakdown,
+  ]);
+
   // Check if all data has loaded whenever loading progress changes
   useEffect(() => {
     checkAllLoaded();
@@ -380,10 +433,11 @@ export default function Expenses() {
       if (response.status === 201) {
         setToast({ message: "Expense added successfully!", type: "success" });
         setIsModalOpen(false);
-        fetchRecentExpenses();
+
+        // No need to manually fetch expenses here as WebSocket will trigger updates
+        // The event listeners will handle refreshing the data
       }
     } catch (error: any) {
-      // More detailed error logging
       console.error("Error saving expense:", error.response?.data || error);
       setToast({
         message: error.response?.data?.message || "Error adding expense",
@@ -473,6 +527,10 @@ export default function Expenses() {
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
       <Sidebar activePage="expenses" />
+      <div className="fixed top-5 right-5 z-50">
+        <NotificationPanel />
+      </div>
+      <ConnectionStatus />
       <div className="flex-1 p-4 sm:p-6 md:p-8">
         {toast && (
           <div

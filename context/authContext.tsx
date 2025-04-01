@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
-import { signup, login } from "../utils/api/auth"; // Only import server-safe functions
+import { signup, login, logout as apiLogout } from "../utils/api/auth"; // Only import server-safe functions
 
 interface AuthContextType {
   user: any;
@@ -116,20 +116,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Handle logout
-  const handleLogout = () => {
-    setUser(null);
-    setToken(null);
-    setLoading(false);
+  const handleLogout = async () => {
+    setLoading(true);
     setError(null);
 
-    Cookies.remove("token");
-    Cookies.remove("user");
-    Cookies.remove("rememberedEmail");
+    try {
+      // Call the logout API to invalidate Redis session if token exists
+      if (token) {
+        await apiLogout(token);
+      }
 
-    // Clear any localStorage items if you're using them
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // Clear local state
+      setUser(null);
+      setToken(null);
+
+      // Clear cookies (the API call also does this, but we do it here as well for robustness)
+      Cookies.remove("token");
+      Cookies.remove("user");
+      Cookies.remove("rememberedEmail");
+
+      // Clear any localStorage items if you're using them
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
+      return Promise.resolve();
+    } catch (error: any) {
+      console.error("Logout error:", error);
+
+      // Still clear local state and cookies even if API call fails
+      setUser(null);
+      setToken(null);
+      Cookies.remove("token");
+      Cookies.remove("user");
+      Cookies.remove("rememberedEmail");
+
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
+      // Don't set error state since we're logging out anyway
+      return Promise.resolve();
+    } finally {
+      setLoading(false);
     }
   };
 

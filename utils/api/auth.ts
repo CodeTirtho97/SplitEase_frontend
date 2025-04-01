@@ -29,6 +29,42 @@ export const login = async (credentials: { email: string; password: string }) =>
   }
 };
 
+// 🔹 Logout API Call with Redis Session Invalidation
+export const logout = async (token: string) => {
+  try {
+    await axios.post(
+      `${API_URL}/auth/logout`, 
+      {}, // Empty body
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+    
+    // Remove cookies regardless of API success
+    if (typeof window !== "undefined") {
+      Cookies.remove("token");
+      Cookies.remove("user");
+      Cookies.remove("rememberedEmail");
+    }
+    
+    return { success: true, message: "Logged out successfully" };
+  } catch (error: any) {
+    console.error("Logout error:", error.response?.data || error.message);
+    
+    // Still remove cookies even if API fails
+    if (typeof window !== "undefined") {
+      Cookies.remove("token");
+      Cookies.remove("user");
+      Cookies.remove("rememberedEmail");
+    }
+    
+    // Throw error for handling
+    throw new Error(error.response?.data?.message || "Logout failed");
+  }
+};
+
 // 🔹 Google OAuth Redirect
 export const googleAuth = () => {
   if (typeof window !== "undefined") {

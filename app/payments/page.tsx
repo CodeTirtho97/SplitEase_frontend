@@ -27,6 +27,9 @@ import {
 import transactionApi from "@/utils/api/transaction"; // Updated transaction API with cookies
 import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
 import { useTransactionContext } from "@/context/transactionContext";
+import { useSocket } from "@/context/socketContext";
+import NotificationPanel from "@/components/NotificationPanel";
+import ConnectionStatus from "@/components/ConnectionStatus";
 import { motion, AnimatePresence } from "framer-motion"; // For animations
 
 // Updated TypeScript Interface for Transaction Data
@@ -102,6 +105,7 @@ const ErrorScreen = ({
 };
 
 export default function PaymentsPage() {
+  const { addEventListener, removeEventListener } = useSocket();
   const router = useRouter();
   const [pendingPayments, setPendingPayments] = useState<Transaction[]>([]);
   const [transactionHistory, setTransactionHistory] = useState<Transaction[]>(
@@ -185,22 +189,17 @@ export default function PaymentsPage() {
         }
       );
 
-      // Update state after settlement
-      setPendingPayments((prev) =>
-        prev.filter(
-          (t) => t.transactionId !== selectedTransaction.transactionId
-        )
-      );
-      setTransactionHistory((prev) => [
-        ...prev,
-        response.data.transaction as Transaction,
-      ]);
-      refreshExpenses();
+      // No need to manually update state here as WebSocket events will trigger update
+      // The data will be refreshed when we receive the transaction_settled event
+      // Just close the modals and reset state
       setIsConfirmModalOpen(false);
       setSelectedTransaction(null);
       setSelectedMode(null);
       setPin("");
       setError(null);
+
+      // We still call refreshExpenses since it might not be automatically triggered
+      refreshExpenses();
     } catch (err: any) {
       console.error("Error settling transaction:", err.response?.data || err);
       setError(
@@ -251,9 +250,53 @@ export default function PaymentsPage() {
     return <ErrorScreen error={error} onRetry={fetchPayments} />;
   }
 
+  // Add real-time transaction updates
+  useEffect(() => {
+    // Handler for transaction updates
+    const handleTransactionUpdate = (data: any) => {
+      console.log("Transaction update received:", data);
+
+      if (
+        data.event === "transaction_settled" ||
+        data.event === "transaction_failed"
+      ) {
+        // Refresh transactions
+        fetchPayments();
+      }
+    };
+
+    // Handler for expense updates that might affect transactions
+    const handleExpenseUpdate = (data: any) => {
+      console.log("Expense update received:", data);
+
+      if (
+        data.event === "expense_created" ||
+        data.event === "expense_deleted"
+      ) {
+        // Refresh transactions
+        fetchPayments();
+      }
+    };
+
+    // Register event listeners
+    addEventListener("transaction_update", handleTransactionUpdate);
+    addEventListener("expense_update", handleExpenseUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      removeEventListener("transaction_update", handleTransactionUpdate);
+      removeEventListener("expense_update", handleExpenseUpdate);
+    };
+  }, [addEventListener, removeEventListener, fetchPayments]);
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
       <Sidebar activePage="payments" />
+
+      <div className="fixed top-5 right-5 z-50">
+        <NotificationPanel />
+      </div>
+      <ConnectionStatus />
 
       <div className="flex-1 p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">

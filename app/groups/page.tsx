@@ -27,6 +27,9 @@ import {
 } from "@/utils/api/group";
 import Cookies from "js-cookie";
 import { useAuth } from "@/context/authContext";
+import { useSocket } from "@/context/socketContext";
+import NotificationPanel from "@/components/NotificationPanel";
+import ConnectionStatus from "@/components/ConnectionStatus";
 
 export default function Groups() {
   const router = useRouter();
@@ -41,6 +44,12 @@ export default function Groups() {
     completed: [],
     pending: [],
   });
+  const {
+    addEventListener,
+    removeEventListener,
+    joinGroupRoom,
+    leaveGroupRoom,
+  } = useSocket();
   const [owesList, setOwesList] = useState<any[]>([]);
 
   // Enhanced state management
@@ -70,6 +79,31 @@ export default function Groups() {
 
     fetchOwesData();
   }, [selectedGroup, token]);
+
+  // Add this useEffect for real-time group updates
+  useEffect(() => {
+    // Handler for group updates
+    const handleGroupUpdate = (data: any) => {
+      console.log("Group update received:", data);
+
+      if (
+        data.event === "group_created" ||
+        data.event === "group_updated" ||
+        data.event === "group_deleted"
+      ) {
+        // Refresh groups
+        refreshGroups();
+      }
+    };
+
+    // Register event listeners
+    addEventListener("group_update", handleGroupUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      removeEventListener("group_update", handleGroupUpdate);
+    };
+  }, [addEventListener, removeEventListener, refreshGroups]);
 
   const [newGroup, setNewGroup] = useState({
     name: "",
@@ -159,12 +193,12 @@ export default function Groups() {
 
       try {
         setIsUpdating(true);
-        await createNewGroup(newGroup, token); // Use token from AuthContext
+        const response = await createNewGroup(newGroup, token);
 
         await new Promise((resolve) => setTimeout(resolve, 500));
 
         setIsModalOpen(false);
-        setShouldRefreshGroups(true);
+        // No need to manually refresh groups here as the WebSocket event will trigger it
         setToast({ message: "Group created successfully!", type: "success" });
 
         // Reset fields
@@ -177,7 +211,7 @@ export default function Groups() {
       } catch (error: any) {
         setToast({ message: error.message, type: "error" });
       } finally {
-        setIsUpdating(false); // End update state
+        setIsUpdating(false);
       }
     }
   };
@@ -255,11 +289,14 @@ export default function Groups() {
       setSelectedGroup(group);
       setIsViewModalOpen(true);
 
+      // Join the group's socket room for real-time updates
+      joinGroupRoom(group._id);
+
       try {
-        const transactions = await fetchGroupTransactions(group._id, token); // Use token from AuthContext
+        const transactions = await fetchGroupTransactions(group._id, token);
         setGroupTransactions(transactions || { completed: [], pending: [] });
 
-        const owes = await calculateOwes(group._id, token); // Use token from AuthContext
+        const owes = await calculateOwes(group._id, token);
         setOwesList(owes || []);
       } catch (error: any) {
         console.error("Error fetching transactions:", error.message || error);
@@ -268,6 +305,14 @@ export default function Groups() {
         setOwesList([]);
       }
     }
+  };
+
+  const closeViewModal = () => {
+    if (selectedGroup && selectedGroup._id) {
+      // Leave the socket room when modal closes
+      leaveGroupRoom(selectedGroup._id);
+    }
+    setIsViewModalOpen(false);
   };
 
   // UseEffect to handle group refresh
@@ -295,6 +340,11 @@ export default function Groups() {
       suppressHydrationWarning
     >
       <Sidebar activePage="groups" />
+
+      <div className="fixed top-5 right-5 z-50">
+        <NotificationPanel />
+      </div>
+      <ConnectionStatus />
 
       <div className="flex-1 p-8">
         {/* Toast Notification with Modern Design */}
@@ -1230,7 +1280,7 @@ export default function Groups() {
                 <div className="mt-6 text-center">
                   <Button
                     text="Close"
-                    onClick={() => setIsViewModalOpen(false)}
+                    onClick={closeViewModal}
                     variant="danger"
                     size="md"
                   >

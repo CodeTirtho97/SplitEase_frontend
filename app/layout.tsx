@@ -7,6 +7,10 @@ import { AuthProvider } from "@/context/authContext";
 import { ProfileProvider } from "@/context/profileContext";
 import { GroupProvider } from "@/context/groupContext";
 import { TransactionProvider } from "@/context/transactionContext";
+import { SocketProvider } from "@/context/socketContext";
+import SessionManager from "@/components/SessionManager"; // Import Session Manager
+import { ToastContainer } from "react-toastify"; // Import ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // Import toastify styles
 
 export const metadata: Metadata = {
   title: "SplitEase - Split Bills With Friends Easily",
@@ -29,10 +33,25 @@ export default function RootLayout({
           <ProfileProvider>
             <GroupProvider>
               <TransactionProvider>
-                <Navbar />
-                <CustomScrollbar />
-                {children}
-                <Footer />
+                <SocketProvider>
+                  <SessionManager>
+                    <Navbar />
+                    <CustomScrollbar />
+                    {children}
+                  </SessionManager>
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                  />
+                  <Footer />
+                </SocketProvider>
               </TransactionProvider>
             </GroupProvider>
           </ProfileProvider>
