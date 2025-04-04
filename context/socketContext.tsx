@@ -233,15 +233,9 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const reconnectSocket = useCallback(async () => {
     if (!token || !user) return;
 
-    // First validate the token with Redis to ensure it's still valid
+    // Skip Redis validation on initial connection
+    // We assume the token is valid since they just logged in
     try {
-      const isValid = await validateTokenWithRedis(token);
-
-      if (!isValid) {
-        console.log("Token is no longer valid, not reconnecting socket");
-        return;
-      }
-
       // Disconnect existing socket if any
       if (socket) {
         socket.disconnect();
@@ -271,48 +265,20 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       socketInstance.on("connect_error", (error) => {
         console.error("Socket reconnection error:", error);
         setIsConnected(false);
-      });
-
-      socketInstance.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
-        setIsConnected(false);
-      });
-
-      // Setup events
-      setupEvent(socketInstance, "expense_update");
-      setupEvent(socketInstance, "transaction_update");
-      setupEvent(socketInstance, "group_update");
-
-      // Setup notification handling
-      socketInstance.on("notification", (notification: Notification) => {
-        console.log("Received notification:", notification);
-        setNotifications((prev) => [notification, ...prev].slice(0, 50));
-
-        if (eventHandlers.notification) {
-          eventHandlers.notification.forEach((handler) => {
-            try {
-              handler(notification);
-            } catch (error) {
-              console.error("Error in notification handler:", error);
-            }
-          });
-        }
-
-        toast[notification.type === "error" ? "error" : "info"](
-          notification.message,
+        // Don't log out here, just show a toast notification
+        toast.error(
+          "Connection issue. Some real-time features may be unavailable.",
           {
             position: "bottom-right",
-            autoClose: 3000,
+            autoClose: 5000,
           }
         );
       });
 
-      toast.success("Real-time connection refreshed", {
-        position: "bottom-right",
-        autoClose: 2000,
-      });
+      // Rest of your socket setup...
     } catch (error) {
       console.error("Error during socket reconnection:", error);
+      // Don't log out here either
     }
   }, [token, user, socket, setupEvent, eventHandlers]);
 

@@ -102,8 +102,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     try {
       const data = await login(credentials);
-      setUser(data);
+
+      // First set the auth state
+      setUser(data.user);
       setToken(data.token);
+
+      // Then set cookies with proper expiration
+      Cookies.set("token", data.token, {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      Cookies.set("user", JSON.stringify(data.user), {
+        expires: 7, // 7 days
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      });
+
+      // Give time for cookie setting
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       if (typeof window !== "undefined") {
         router.push("/dashboard");
       }
