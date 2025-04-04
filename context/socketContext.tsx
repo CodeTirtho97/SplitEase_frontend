@@ -131,7 +131,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
         ? process.env.NEXT_PUBLIC_API_URL
         : "http://localhost:5000");
 
-    const socketInstance = io(socketUrl, {
+    const socketInstance = io(socketUrl + "/", {
       auth: { token },
       reconnection: true,
       reconnectionAttempts: 10,
