@@ -173,19 +173,16 @@ export default function Expenses() {
 
   // Fetch recent expenses only on page mount
   const fetchRecentExpenses = useCallback(async () => {
-    if (isFetching || hasMounted) return;
+    if (isFetching) return;
     setIsFetching(true);
     try {
       const response = await expenseApi.getRecentExpenses();
       setExpenses(response.data.expenses || []);
-      // Mark expenses as loaded
       setLoadingProgress((prev) => ({ ...prev, expenses: true }));
     } catch (error) {
       console.error("Error fetching recent expenses:", error);
-      // Still mark as loaded even on error to prevent indefinite loading
       setLoadingProgress((prev) => ({ ...prev, expenses: true }));
 
-      // Handle error messaging for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       const errorStatus = (error as any)?.response?.status;
       if (
@@ -198,11 +195,10 @@ export default function Expenses() {
     } finally {
       setIsFetching(false);
     }
-  }, [isFetching, hasMounted]);
+  }, [isFetching]);
 
   // Fetch expense summary only on page mount
   const fetchSummary = useCallback(async () => {
-    if (hasMounted) return;
     try {
       const response = await expenseApi.getExpenseSummary();
       if (response.data?.summary) {
@@ -210,14 +206,11 @@ export default function Expenses() {
       } else {
         setSummary({});
       }
-      // Mark summary as loaded
       setLoadingProgress((prev) => ({ ...prev, summary: true }));
     } catch (error) {
       console.error("Error fetching expense summary:", error);
-      // Still mark as loaded even on error
       setLoadingProgress((prev) => ({ ...prev, summary: true }));
 
-      // Handle error for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       if (
         !errorMessage.includes("No summary") &&
@@ -226,11 +219,10 @@ export default function Expenses() {
         setError("Failed to load summary");
       }
     }
-  }, [hasMounted]);
+  }, []);
 
   // Fetch chart data only on page mount
   const fetchExpenseBreakdown = useCallback(async () => {
-    if (hasMounted) return;
     setLoadingCharts(true);
     try {
       const response = await expenseApi.getExpenseBreakdown("INR");
@@ -244,15 +236,12 @@ export default function Expenses() {
           monthlyTrendSettled: {},
         }
       );
-      // Mark charts as loaded
       setLoadingProgress((prev) => ({ ...prev, charts: true }));
     } catch (error) {
       console.error("Error fetching expense breakdown:", error);
       setChartData(null);
-      // Still mark as loaded even on error
       setLoadingProgress((prev) => ({ ...prev, charts: true }));
 
-      // Handle error for UI
       const errorMessage = (error as any)?.response?.data?.message || "";
       const errorStatus = (error as any)?.response?.status;
       if (
@@ -266,7 +255,7 @@ export default function Expenses() {
     } finally {
       setLoadingCharts(false);
     }
-  }, [hasMounted]);
+  }, []);
 
   useEffect(() => {
     // Handler for expense updates
@@ -277,12 +266,14 @@ export default function Expenses() {
         data.event === "expense_created" ||
         data.event === "expense_deleted"
       ) {
-        // Refresh expenses
-        fetchRecentExpenses();
-        // Refresh summary
-        fetchSummary();
-        // Refresh charts
-        fetchExpenseBreakdown();
+        // Directly fetch data instead of using state flags
+        Promise.all([
+          fetchRecentExpenses(),
+          fetchSummary(),
+          fetchExpenseBreakdown(),
+        ]).catch((err) => {
+          console.error("Error refreshing data after socket event:", err);
+        });
       }
     };
 
@@ -294,28 +285,24 @@ export default function Expenses() {
         data.event === "transaction_settled" ||
         data.event === "transaction_failed"
       ) {
-        // Refresh expenses and summary
-        fetchRecentExpenses();
-        fetchSummary();
+        Promise.all([fetchRecentExpenses(), fetchSummary()]).catch((err) => {
+          console.error("Error refreshing data after transaction event:", err);
+        });
       }
     };
 
-    // Register event listeners
-    addEventListener("expense_update", handleExpenseUpdate);
-    addEventListener("transaction_update", handleTransactionUpdate);
+    if (addEventListener && removeEventListener) {
+      // Register event listeners
+      addEventListener("expense_update", handleExpenseUpdate);
+      addEventListener("transaction_update", handleTransactionUpdate);
 
-    // Cleanup on unmount
-    return () => {
-      removeEventListener("expense_update", handleExpenseUpdate);
-      removeEventListener("transaction_update", handleTransactionUpdate);
-    };
-  }, [
-    addEventListener,
-    removeEventListener,
-    fetchRecentExpenses,
-    fetchSummary,
-    fetchExpenseBreakdown,
-  ]);
+      // Cleanup on unmount
+      return () => {
+        removeEventListener("expense_update", handleExpenseUpdate);
+        removeEventListener("transaction_update", handleTransactionUpdate);
+      };
+    }
+  }, [addEventListener, removeEventListener]);
 
   // Check if all data has loaded whenever loading progress changes
   useEffect(() => {
@@ -429,13 +416,21 @@ export default function Expenses() {
     };
 
     try {
+      // First close the modal to prevent UI glitches
+      setIsModalOpen(false);
+
+      // Then make the API call
       const response = await expenseApi.createExpense(payload);
+
       if (response.status === 201) {
         setToast({ message: "Expense added successfully!", type: "success" });
-        setIsModalOpen(false);
 
-        // No need to manually fetch expenses here as WebSocket will trigger updates
-        // The event listeners will handle refreshing the data
+        // Fallback - in case sockets are not working, refresh data manually after a delay
+        setTimeout(() => {
+          fetchRecentExpenses();
+          fetchSummary();
+          fetchExpenseBreakdown();
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Error saving expense:", error.response?.data || error);
@@ -443,6 +438,8 @@ export default function Expenses() {
         message: error.response?.data?.message || "Error adding expense",
         type: "error",
       });
+      // Reopen the modal if there was an error
+      setIsModalOpen(true);
     }
   };
 
