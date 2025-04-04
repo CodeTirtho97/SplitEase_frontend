@@ -10,7 +10,6 @@ import { TransactionProvider } from "@/context/transactionContext";
 import { SocketProvider } from "@/context/socketContext";
 import SessionManager from "@/components/SessionManager"; // Import Session Manager
 import { ToastContainer } from "react-toastify"; // Import ToastContainer
-import TestSocket from "../components/TestSocket";
 import "react-toastify/dist/ReactToastify.css"; // Import toastify styles
 
 export const metadata: Metadata = {
@@ -30,7 +29,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {process.env.NODE_ENV === "development" && <TestSocket />}
         <AuthProvider>
           <ProfileProvider>
             <GroupProvider>
