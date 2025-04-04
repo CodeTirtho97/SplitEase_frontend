@@ -126,19 +126,20 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     if (!token || !user) return;
 
     const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL ||
-      (process.env.NEXT_PUBLIC_API_URL
-        ? process.env.NEXT_PUBLIC_API_URL
-        : "http://localhost:5000");
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-    const socketInstance = io(socketUrl + "/", {
-      auth: { token },
+    // Log the URL we're connecting to for debugging
+    console.log("Attempting to connect socket to:", socketUrl);
+
+    const socketInstance = io(socketUrl, {
+      auth: { token }, // Send token for authentication
       reconnection: true,
-      reconnectionAttempts: 10,
+      reconnectionAttempts: 5,
       reconnectionDelay: 1000,
-      transports: ["websocket", "polling"], // Important to have polling as fallback
-      timeout: 20000, // Increased timeout
-      query: { userId: user?.id }, // Add user ID to query
+      timeout: 10000,
+      // Do NOT specify a namespace or path unless your server uses custom ones
+      // The default path is '/socket.io' which matches your server setup
+      transports: ["websocket", "polling"], // Important to include polling as fallback
     });
 
     setSocket(socketInstance);
@@ -156,12 +157,12 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       });
     });
 
-    socketInstance.on("connect_error", (error: any) => {
-      console.error("Socket connection error details:", {
+    socketInstance.on("connect_error", (error) => {
+      console.error("Socket connection error:", {
         message: error.message,
-        description: error.description,
-        context: error.context,
-        type: error.type,
+        details: error,
+        connectionURL: socketUrl,
+        transportOptions: socketInstance.io.opts.transports,
       });
       setIsConnected(false);
 
@@ -173,6 +174,10 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
           autoClose: 5000,
         }
       );
+    });
+
+    socketInstance.on("connection_success", (data) => {
+      console.log("Server confirmed connection:", data);
     });
 
     socketInstance.on("reconnect_attempt", (attemptNumber) => {
