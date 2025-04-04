@@ -125,14 +125,15 @@ export default function PaymentsPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const { refreshExpenses } = useTransactionContext();
 
+  useEffect(() => {
+    console.log("Socket context:", { addEventListener, removeEventListener });
+  }, [addEventListener, removeEventListener]);
+
   // Use useCallback to memoize the fetchPayments function
   const fetchPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Removed delay for production
-      // await new Promise((resolve) => setTimeout(resolve, 1500));
-
       const [pendingResponse, historyResponse] = await Promise.all([
         transactionApi.getPendingTransactions(),
         transactionApi.getTransactionHistory(),
@@ -140,8 +141,10 @@ export default function PaymentsPage() {
       setPendingPayments(pendingResponse.data.transactions || []);
       setTransactionHistory(historyResponse.data.transactions || []);
 
-      // Fetch user's PIN (dummy or API call, since schema isn't modified)
-      const dummyUserPin = "1234"; // Use a dummy PIN for testing
+      console.log("API responses:", { pendingResponse, historyResponse });
+
+      // Fetch user's PIN
+      const dummyUserPin = "1234";
       setUserPin(dummyUserPin);
     } catch (err: any) {
       console.error("Error fetching payments:", err);
@@ -299,43 +302,43 @@ export default function PaymentsPage() {
   }
 
   // Add real-time transaction updates
-  useEffect(() => {
-    // Handler for transaction updates
-    const handleTransactionUpdate = (data: any) => {
-      console.log("Transaction update received:", data);
+  // useEffect(() => {
+  //   // Handler for transaction updates
+  //   const handleTransactionUpdate = (data: any) => {
+  //     console.log("Transaction update received:", data);
 
-      if (
-        data.event === "transaction_settled" ||
-        data.event === "transaction_failed"
-      ) {
-        // Refresh transactions
-        fetchPayments();
-      }
-    };
+  //     if (
+  //       data.event === "transaction_settled" ||
+  //       data.event === "transaction_failed"
+  //     ) {
+  //       // Refresh transactions
+  //       fetchPayments();
+  //     }
+  //   };
 
-    // Handler for expense updates that might affect transactions
-    const handleExpenseUpdate = (data: any) => {
-      console.log("Expense update received:", data);
+  //   // Handler for expense updates that might affect transactions
+  //   const handleExpenseUpdate = (data: any) => {
+  //     console.log("Expense update received:", data);
 
-      if (
-        data.event === "expense_created" ||
-        data.event === "expense_deleted"
-      ) {
-        // Refresh transactions
-        fetchPayments();
-      }
-    };
+  //     if (
+  //       data.event === "expense_created" ||
+  //       data.event === "expense_deleted"
+  //     ) {
+  //       // Refresh transactions
+  //       fetchPayments();
+  //     }
+  //   };
 
-    // Register event listeners
-    addEventListener("transaction_update", handleTransactionUpdate);
-    addEventListener("expense_update", handleExpenseUpdate);
+  //   // Register event listeners
+  //   addEventListener("transaction_update", handleTransactionUpdate);
+  //   addEventListener("expense_update", handleExpenseUpdate);
 
-    // Cleanup on unmount
-    return () => {
-      removeEventListener("transaction_update", handleTransactionUpdate);
-      removeEventListener("expense_update", handleExpenseUpdate);
-    };
-  }, [addEventListener, removeEventListener, fetchPayments]);
+  //   // Cleanup on unmount
+  //   return () => {
+  //     removeEventListener("transaction_update", handleTransactionUpdate);
+  //     removeEventListener("expense_update", handleExpenseUpdate);
+  //   };
+  // }, [addEventListener, removeEventListener, fetchPayments]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
