@@ -126,16 +126,19 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     if (!token || !user) return;
 
     const socketUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      "https://splitease-backend-34tz.onrender.com";
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (process.env.NEXT_PUBLIC_API_URL
+        ? process.env.NEXT_PUBLIC_API_URL
+        : "http://localhost:5000");
 
     const socketInstance = io(socketUrl, {
       auth: { token },
       reconnection: true,
-      reconnectionAttempts: 10, // Increase retry attempts
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      transports: ["websocket", "polling"], // Add polling as fallback
-      timeout: 10000, // Increase timeout
+      transports: ["websocket", "polling"], // Important to have polling as fallback
+      timeout: 20000, // Increased timeout
+      query: { userId: user?.id }, // Add user ID to query
     });
 
     setSocket(socketInstance);
@@ -153,9 +156,23 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       });
     });
 
-    socketInstance.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
+    socketInstance.on("connect_error", (error: any) => {
+      console.error("Socket connection error details:", {
+        message: error.message,
+        description: error.description,
+        context: error.context,
+        type: error.type,
+      });
       setIsConnected(false);
+
+      // Show more specific error message
+      toast.error(
+        `Connection error: ${error.message}. Trying to reconnect...`,
+        {
+          position: "bottom-right",
+          autoClose: 5000,
+        }
+      );
     });
 
     socketInstance.on("reconnect_attempt", (attemptNumber) => {
