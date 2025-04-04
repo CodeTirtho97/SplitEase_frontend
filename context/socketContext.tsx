@@ -125,12 +125,12 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!token || !user) return;
 
-    const socketUrl = "https://splitease-backend-34tz.onrender.com";
+    const socketUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
     // Log the URL we're connecting to for debugging
     console.log("Attempting to connect socket to:", socketUrl);
 
-    const socketInstance = io("https://splitease-backend-34tz.onrender.com", {
+    const socketInstance = io(process.env.NEXT_PUBLIC_BASE_URL, {
       auth: { token },
       transports: ["websocket", "polling"],
       // Do not add any path, namespace, or extra options
@@ -280,7 +280,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       // Create a new socket connection
-      const socketUrl = "https://splitease-backend-34tz.onrender.com";
+      const socketUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
       const socketInstance = io(socketUrl, {
         auth: { token },
