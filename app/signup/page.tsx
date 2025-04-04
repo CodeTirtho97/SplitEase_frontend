@@ -440,7 +440,8 @@ const Signup = () => {
           <button
             onClick={() => {
               if (typeof window !== "undefined") {
-                window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/google/login`;
+                // Remove the duplicate /api segment
+                window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
               }
             }}
             className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 font-semibold shadow-sm hover:shadow-md hover:border-indigo-300 hover:bg-gray-50 active:scale-98 transition-all duration-300 relative overflow-hidden group"
