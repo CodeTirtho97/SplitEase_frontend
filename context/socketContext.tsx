@@ -126,13 +126,15 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     if (!token || !user) return;
 
     const socketUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_API_URL ||
+      "https://splitease-backend-34tz.onrender.com";
 
     // Log the URL we're connecting to for debugging
     console.log("Attempting to connect socket to:", socketUrl);
 
     const socketInstance = io(
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+      process.env.NEXT_PUBLIC_API_URL ||
+        "https://splitease-backend-34tz.onrender.com",
       {
         auth: { token },
         transports: ["websocket", "polling"],
