@@ -46,6 +46,11 @@ export default function DashboardCards({
     JPY: "¥",
   };
 
+  // Log summary data for debugging
+  useEffect(() => {
+    console.log("Summary data in ExpenseCard:", summary);
+  }, [summary]);
+
   // Fetch summary on mount
   useEffect(() => {
     const loadSummary = async () => {
@@ -59,8 +64,9 @@ export default function DashboardCards({
       }
     };
     loadSummary();
-  }, []);
+  }, [fetchSummary]);
 
+  // Update exchange rates function
   const updateExchangeRates = async () => {
     setIsUpdatingRates(true);
     try {
@@ -86,17 +92,16 @@ export default function DashboardCards({
     );
   }
 
+  // Get current summary or provide default values
   const currentSummary: Summary = summary[selectedCurrency] || {
     totalExpenses: 0,
     totalPending: 0,
     totalSettled: 0,
   };
 
-  // Calculate the settled amount as Total - Pending
-  const settledAmount = Math.max(
-    0,
-    currentSummary.totalExpenses - currentSummary.totalPending
-  );
+  // Calculate the settled amount directly from summary data
+  // This ensures consistency with backend calculations
+  const settledAmount = currentSummary.totalSettled;
 
   return (
     <div className="mb-8">
@@ -122,7 +127,7 @@ export default function DashboardCards({
             <option value="JPY">JPY (¥)</option>
           </select>
         </div>
-        {/* <button
+        <button
           onClick={updateExchangeRates}
           disabled={isUpdatingRates}
           className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white px-4 py-2 rounded-lg shadow-md transition-colors duration-300 disabled:opacity-70"
@@ -132,7 +137,7 @@ export default function DashboardCards({
             className={isUpdatingRates ? "animate-spin" : ""}
           />
           <span>{isUpdatingRates ? "Updating..." : "Update Rates"}</span>
-        </button> */}
+        </button>
       </div>
 
       {/* Expense Cards */}
