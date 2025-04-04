@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react"; // Added useCallback
 import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
 import { useRouter } from "next/navigation";
@@ -125,11 +125,14 @@ export default function PaymentsPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const { refreshExpenses } = useTransactionContext();
 
-  const fetchPayments = async () => {
+  // Use useCallback to memoize the fetchPayments function
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulating network delay for demo
+      // Removed delay for production
+      // await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const [pendingResponse, historyResponse] = await Promise.all([
         transactionApi.getPendingTransactions(),
         transactionApi.getTransactionHistory(),
@@ -149,7 +152,7 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty dependency array since it doesn't depend on any props or state
 
   const handlePayNow = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -200,6 +203,9 @@ export default function PaymentsPage() {
 
       // We still call refreshExpenses since it might not be automatically triggered
       refreshExpenses();
+
+      // Add an explicit fetch call to update the UI immediately
+      fetchPayments();
     } catch (err: any) {
       console.error("Error settling transaction:", err.response?.data || err);
       setError(
@@ -220,9 +226,51 @@ export default function PaymentsPage() {
     setError(null);
   };
 
+  // Use a separate effect for initial data loading
   useEffect(() => {
     fetchPayments();
-  }, []);
+  }, [fetchPayments]);
+
+  // Add real-time transaction updates in a separate effect
+  useEffect(() => {
+    if (!addEventListener || !removeEventListener) return;
+
+    // Handler for transaction updates
+    const handleTransactionUpdate = (data: any) => {
+      console.log("Transaction update received:", data);
+
+      if (
+        data.event === "transaction_settled" ||
+        data.event === "transaction_failed"
+      ) {
+        // Refresh transactions
+        fetchPayments();
+      }
+    };
+
+    // Handler for expense updates that might affect transactions
+    const handleExpenseUpdate = (data: any) => {
+      console.log("Expense update received:", data);
+
+      if (
+        data.event === "expense_created" ||
+        data.event === "expense_deleted"
+      ) {
+        // Refresh transactions
+        fetchPayments();
+      }
+    };
+
+    // Register event listeners
+    addEventListener("transaction_update", handleTransactionUpdate);
+    addEventListener("expense_update", handleExpenseUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      removeEventListener("transaction_update", handleTransactionUpdate);
+      removeEventListener("expense_update", handleExpenseUpdate);
+    };
+  }, [addEventListener, removeEventListener, fetchPayments]);
 
   // Format currency display
   const formatCurrency = (currency: string, amount: number) => {
@@ -598,134 +646,141 @@ export default function PaymentsPage() {
         </div>
 
         {/* Payment Options Modal */}
-        <AnimatePresence>
-          {isModalOpen && selectedTransaction && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-                onClick={handleCancel}
-              ></motion.div>
+        {typeof window !== "undefined" && (
+          <>
+            <AnimatePresence>
+              {isModalOpen && selectedTransaction && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+                    onClick={handleCancel}
+                  ></motion.div>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-white rounded-2xl shadow-2xl p-0 w-[500px] max-w-[90%] z-50 overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Header with Gradient */}
-                <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 text-white">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Choose Payment Method</h2>
-                    <div className="flex items-center">
-                      <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-                      <span className="text-sm">Secure Payment</span>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="bg-white rounded-2xl shadow-2xl p-0 w-[500px] max-w-[90%] z-50 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Header with Gradient */}
+                    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 text-white">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold">
+                          Choose Payment Method
+                        </h2>
+                        <div className="flex items-center">
+                          <FontAwesomeIcon
+                            icon={faShieldAlt}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">Secure Payment</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-4">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div className="text-white/80">Recipient:</div>
+                          <div className="font-medium text-right">
+                            {selectedTransaction.owedFrom}
+                          </div>
+
+                          <div className="text-white/80">Amount:</div>
+                          <div className="font-bold text-right text-white">
+                            {formatCurrency(
+                              selectedTransaction.currency,
+                              selectedTransaction.amount
+                            )}
+                          </div>
+
+                          <div className="text-white/80">For:</div>
+                          <div className="text-right">
+                            {selectedTransaction.expenseName}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-6 bg-white/10 backdrop-blur-md rounded-xl p-4">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="text-white/80">Recipient:</div>
-                      <div className="font-medium text-right">
-                        {selectedTransaction.owedFrom}
-                      </div>
+                    {/* Payment Methods */}
+                    <div className="p-6">
+                      <p className="text-gray-600 mb-5 text-center">
+                        Select your preferred payment method
+                      </p>
 
-                      <div className="text-white/80">Amount:</div>
-                      <div className="font-bold text-right text-white">
-                        {formatCurrency(
-                          selectedTransaction.currency,
-                          selectedTransaction.amount
-                        )}
-                      </div>
-
-                      <div className="text-white/80">For:</div>
-                      <div className="text-right">
-                        {selectedTransaction.expenseName}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Methods */}
-                <div className="p-6">
-                  <p className="text-gray-600 mb-5 text-center">
-                    Select your preferred payment method
-                  </p>
-
-                  <div className="space-y-3">
-                    {/* UPI Button */}
-                    <button
-                      onClick={() => handleSelectMode("UPI")}
-                      className="w-full p-4 rounded-xl border-2 border-transparent hover:border-orange-200 bg-orange-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
-                    >
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-orange-400 text-white flex items-center justify-center mr-4">
-                          <FontAwesomeIcon icon={faGooglePay} />
-                        </div>
-                        <div>
-                          <div className="font-semibold">UPI Payment</div>
-                          <div className="text-sm text-gray-500">
-                            Google Pay, PhonePe, etc.
+                      <div className="space-y-3">
+                        {/* UPI Button */}
+                        <button
+                          onClick={() => handleSelectMode("UPI")}
+                          className="w-full p-4 rounded-xl border-2 border-transparent hover:border-orange-200 bg-orange-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
+                        >
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-orange-400 text-white flex items-center justify-center mr-4">
+                              <FontAwesomeIcon icon={faGooglePay} />
+                            </div>
+                            <div>
+                              <div className="font-semibold">UPI Payment</div>
+                              <div className="text-sm text-gray-500">
+                                Google Pay, PhonePe, etc.
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <FontAwesomeIcon
-                        icon={faChevronRight}
-                        className="text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </button>
+                          <FontAwesomeIcon
+                            icon={faChevronRight}
+                            className="text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </button>
 
-                    {/* PayPal Button */}
-                    <button
-                      onClick={() => handleSelectMode("PayPal")}
-                      className="w-full p-4 rounded-xl border-2 border-transparent hover:border-blue-200 bg-blue-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
-                    >
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mr-4">
-                          <FontAwesomeIcon icon={faPaypal} />
-                        </div>
-                        <div>
-                          <div className="font-semibold">PayPal</div>
-                          <div className="text-sm text-gray-500">
-                            Fast and secure online payments
+                        {/* PayPal Button */}
+                        <button
+                          onClick={() => handleSelectMode("PayPal")}
+                          className="w-full p-4 rounded-xl border-2 border-transparent hover:border-blue-200 bg-blue-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
+                        >
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center mr-4">
+                              <FontAwesomeIcon icon={faPaypal} />
+                            </div>
+                            <div>
+                              <div className="font-semibold">PayPal</div>
+                              <div className="text-sm text-gray-500">
+                                Fast and secure online payments
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                      <FontAwesomeIcon
-                        icon={faChevronRight}
-                        className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </button>
+                          <FontAwesomeIcon
+                            icon={faChevronRight}
+                            className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </button>
 
-                    {/* Stripe Button */}
-                    <button
-                      onClick={() => handleSelectMode("Stripe")}
-                      className="w-full p-4 rounded-xl border-2 border-transparent hover:border-purple-200 bg-purple-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
-                    >
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center mr-4">
-                          <FontAwesomeIcon icon={faStripe} />
-                        </div>
-                        <div>
-                          <div className="font-semibold">Stripe</div>
-                          <div className="text-sm text-gray-500">
-                            Credit/Debit cards accepted
+                        {/* Stripe Button */}
+                        <button
+                          onClick={() => handleSelectMode("Stripe")}
+                          className="w-full p-4 rounded-xl border-2 border-transparent hover:border-purple-200 bg-purple-50 text-gray-800 font-medium transition-all duration-200 flex items-center justify-between group hover:shadow-md"
+                        >
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 rounded-full bg-purple-600 text-white flex items-center justify-center mr-4">
+                              <FontAwesomeIcon icon={faStripe} />
+                            </div>
+                            <div>
+                              <div className="font-semibold">Stripe</div>
+                              <div className="text-sm text-gray-500">
+                                Credit/Debit cards accepted
+                              </div>
+                            </div>
                           </div>
-                        </div>
+                          <FontAwesomeIcon
+                            icon={faChevronRight}
+                            className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          />
+                        </button>
                       </div>
-                      <FontAwesomeIcon
-                        icon={faChevronRight}
-                        className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      />
-                    </button>
-                  </div>
 
-                  <div className="pt-6 mt-6 border-t border-gray-100">
-                    {/* <div className="flex items-center justify-center mb-6">
+                      <div className="pt-6 mt-6 border-t border-gray-100">
+                        {/* <div className="flex items-center justify-center mb-6">
                       <div className="flex space-x-2">
                         <FontAwesomeIcon
                           icon={faCcVisa}
@@ -741,75 +796,50 @@ export default function PaymentsPage() {
                       </div>
                     </div> */}
 
-                    <button
-                      onClick={handleCancel}
-                      className="w-full py-3 px-4 rounded-xl border border-red-500 text-gray-800 hover:bg-red-500 hover:text-white font-medium transition-colors duration-200 flex items-center justify-center"
+                        <button
+                          onClick={handleCancel}
+                          className="w-full py-3 px-4 rounded-xl border border-red-500 text-gray-800 hover:bg-red-500 hover:text-white font-medium transition-colors duration-200 flex items-center justify-center"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
+
+            {/* Payment Confirmation Modal */}
+            <AnimatePresence>
+              {isConfirmModalOpen && selectedTransaction && selectedMode && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+                    onClick={handleCancel}
+                  ></motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                    className="bg-white rounded-2xl shadow-2xl p-0 w-[450px] max-w-[90%] z-50 overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      className={`py-8 px-6 text-white ${
+                        selectedMode === "UPI"
+                          ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                          : selectedMode === "PayPal"
+                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
+                          : "bg-gradient-to-r from-purple-600 to-indigo-600"
+                      }`}
                     >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
-        {/* Payment Confirmation Modal */}
-        <AnimatePresence>
-          {isConfirmModalOpen && selectedTransaction && selectedMode && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-                onClick={handleCancel}
-              ></motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="bg-white rounded-2xl shadow-2xl p-0 w-[450px] max-w-[90%] z-50 overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div
-                  className={`py-8 px-6 text-white ${
-                    selectedMode === "UPI"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600"
-                      : selectedMode === "PayPal"
-                      ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                      : "bg-gradient-to-r from-purple-600 to-indigo-600"
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
-                      <FontAwesomeIcon
-                        icon={
-                          selectedMode === "UPI"
-                            ? faGooglePay
-                            : selectedMode === "PayPal"
-                            ? faPaypal
-                            : faStripe
-                        }
-                        className="text-white text-3xl"
-                      />
-                    </div>
-                    <h2 className="text-2xl font-bold mb-1">Confirm Payment</h2>
-                    <div className="text-white/80 text-sm">
-                      Transaction ID:{" "}
-                      {selectedTransaction.transactionId.substring(0, 8)}...
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                    <div className="grid grid-cols-2 gap-y-3">
-                      <div className="text-gray-500">Payment Method:</div>
-                      <div className="text-right font-medium">
-                        <div className="flex items-center justify-end">
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
                           <FontAwesomeIcon
                             icon={
                               selectedMode === "UPI"
@@ -818,139 +848,170 @@ export default function PaymentsPage() {
                                 ? faPaypal
                                 : faStripe
                             }
-                            className="mr-2 text-gray-700"
+                            className="text-white text-3xl"
                           />
-                          <span className="text-gray-900">{selectedMode}</span>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-1">
+                          Confirm Payment
+                        </h2>
+                        <div className="text-white/80 text-sm">
+                          Transaction ID:{" "}
+                          {selectedTransaction.transactionId.substring(0, 8)}...
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                        <div className="grid grid-cols-2 gap-y-3">
+                          <div className="text-gray-500">Payment Method:</div>
+                          <div className="text-right font-medium">
+                            <div className="flex items-center justify-end">
+                              <FontAwesomeIcon
+                                icon={
+                                  selectedMode === "UPI"
+                                    ? faGooglePay
+                                    : selectedMode === "PayPal"
+                                    ? faPaypal
+                                    : faStripe
+                                }
+                                className="mr-2 text-gray-700"
+                              />
+                              <span className="text-gray-900">
+                                {selectedMode}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-gray-500">Amount:</div>
+                          <div className="text-right font-bold text-green-600">
+                            {formatCurrency(
+                              selectedTransaction.currency,
+                              selectedTransaction.amount
+                            )}
+                          </div>
+
+                          <div className="text-gray-500">Recipient:</div>
+                          <div className="text-right text-gray-800">
+                            {selectedTransaction.owedFrom}
+                          </div>
+
+                          <div className="text-gray-500">Date:</div>
+                          <div className="text-right text-gray-800">
+                            {new Date().toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
 
-                      <div className="text-gray-500">Amount:</div>
-                      <div className="text-right font-bold text-green-600">
-                        {formatCurrency(
-                          selectedTransaction.currency,
-                          selectedTransaction.amount
+                      <div className="mb-6">
+                        <label className="block text-gray-700 font-medium mb-3">
+                          Enter your 4-digit secure PIN:
+                        </label>
+                        <div className="flex justify-center space-x-3 mb-2">
+                          {[...Array(4)].map((_, i) => (
+                            <input
+                              key={i}
+                              type="password"
+                              maxLength={1}
+                              value={pin[i] || ""}
+                              onChange={(e) => {
+                                const newPin = pin.split("");
+                                newPin[i] = e.target.value;
+                                setPin(newPin.join(""));
+
+                                if (e.target.value && i < 3) {
+                                  const nextInput = document.getElementById(
+                                    `pin-${i + 1}`
+                                  );
+                                  if (nextInput) nextInput.focus();
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Backspace" && !pin[i] && i > 0) {
+                                  const prevInput = document.getElementById(
+                                    `pin-${i - 1}`
+                                  );
+                                  if (prevInput) prevInput.focus();
+                                }
+                              }}
+                              id={`pin-${i}`}
+                              className="w-14 h-14 border-2 border-gray-300 rounded-xl text-center text-xl font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
+                            />
+                          ))}
+                        </div>
+
+                        {error && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-red-500 text-center text-sm mt-2 bg-red-50 p-2 rounded-lg"
+                          >
+                            <FontAwesomeIcon
+                              icon={faExclamationTriangle}
+                              className="mr-1"
+                            />
+                            {error}
+                          </motion.div>
                         )}
-                      </div>
 
-                      <div className="text-gray-500">Recipient:</div>
-                      <div className="text-right text-gray-800">
-                        {selectedTransaction.owedFrom}
-                      </div>
-
-                      <div className="text-gray-500">Date:</div>
-                      <div className="text-right text-gray-800">
-                        {new Date().toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <label className="block text-gray-700 font-medium mb-3">
-                      Enter your 4-digit secure PIN:
-                    </label>
-                    <div className="flex justify-center space-x-3 mb-2">
-                      {[...Array(4)].map((_, i) => (
-                        <input
-                          key={i}
-                          type="password"
-                          maxLength={1}
-                          value={pin[i] || ""}
-                          onChange={(e) => {
-                            const newPin = pin.split("");
-                            newPin[i] = e.target.value;
-                            setPin(newPin.join(""));
-
-                            if (e.target.value && i < 3) {
-                              const nextInput = document.getElementById(
-                                `pin-${i + 1}`
-                              );
-                              if (nextInput) nextInput.focus();
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Backspace" && !pin[i] && i > 0) {
-                              const prevInput = document.getElementById(
-                                `pin-${i - 1}`
-                              );
-                              if (prevInput) prevInput.focus();
-                            }
-                          }}
-                          id={`pin-${i}`}
-                          className="w-14 h-14 border-2 border-gray-300 rounded-xl text-center text-xl font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
-                        />
-                      ))}
-                    </div>
-
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-red-500 text-center text-sm mt-2 bg-red-50 p-2 rounded-lg"
-                      >
-                        <FontAwesomeIcon
-                          icon={faExclamationTriangle}
-                          className="mr-1"
-                        />
-                        {error}
-                      </motion.div>
-                    )}
-
-                    <div className="flex items-center justify-center mt-2">
-                      <FontAwesomeIcon
-                        icon={faLock}
-                        className="text-gray-400 mr-2 text-xs"
-                      />
-                      <span className="text-gray-400 text-xs">
-                        Your PIN is never stored or shared
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      onClick={handleCancel}
-                      className="flex-1 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors duration-200"
-                      disabled={processingPayment}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      onClick={handleSettle}
-                      disabled={!pin || pin.length < 4 || processingPayment}
-                      className={`flex-1 py-3 px-4 rounded-xl text-white font-medium transition-colors duration-200 flex items-center justify-center ${
-                        !pin || pin.length < 4 || processingPayment
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : selectedMode === "UPI"
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                          : selectedMode === "PayPal"
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                          : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
-                      }`}
-                    >
-                      {processingPayment ? (
-                        <>
+                        <div className="flex items-center justify-center mt-2">
                           <FontAwesomeIcon
-                            icon={faSpinner}
-                            className="animate-spin mr-2"
+                            icon={faLock}
+                            className="text-gray-400 mr-2 text-xs"
                           />
-                          Processing...
-                        </>
-                      ) : !pin || pin.length < 4 ? (
-                        "Enter PIN"
-                      ) : (
-                        <>
-                          <FontAwesomeIcon icon={faLock} className="mr-2" />
-                          Confirm Payment
-                        </>
-                      )}
-                    </button>
-                  </div>
+                          <span className="text-gray-400 text-xs">
+                            Your PIN is never stored or shared
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleCancel}
+                          className="flex-1 py-3 px-4 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 font-medium transition-colors duration-200"
+                          disabled={processingPayment}
+                        >
+                          Cancel
+                        </button>
+
+                        <button
+                          onClick={handleSettle}
+                          disabled={!pin || pin.length < 4 || processingPayment}
+                          className={`flex-1 py-3 px-4 rounded-xl text-white font-medium transition-colors duration-200 flex items-center justify-center ${
+                            !pin || pin.length < 4 || processingPayment
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : selectedMode === "UPI"
+                              ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                              : selectedMode === "PayPal"
+                              ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+                              : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                          }`}
+                        >
+                          {processingPayment ? (
+                            <>
+                              <FontAwesomeIcon
+                                icon={faSpinner}
+                                className="animate-spin mr-2"
+                              />
+                              Processing...
+                            </>
+                          ) : !pin || pin.length < 4 ? (
+                            "Enter PIN"
+                          ) : (
+                            <>
+                              <FontAwesomeIcon icon={faLock} className="mr-2" />
+                              Confirm Payment
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+              )}
+            </AnimatePresence>
+          </>
+        )}
       </div>
     </div>
   );
