@@ -91,8 +91,8 @@ export default function Groups() {
         data.event === "group_updated" ||
         data.event === "group_deleted"
       ) {
-        // Refresh groups
-        refreshGroups();
+        // Instead of immediately refreshing, set a flag
+        setShouldRefreshGroups(true);
       }
     };
 
@@ -103,7 +103,7 @@ export default function Groups() {
     return () => {
       removeEventListener("group_update", handleGroupUpdate);
     };
-  }, [addEventListener, removeEventListener, refreshGroups]);
+  }, [addEventListener, removeEventListener]);
 
   const [newGroup, setNewGroup] = useState({
     name: "",
@@ -193,23 +193,32 @@ export default function Groups() {
 
       try {
         setIsUpdating(true);
-        const response = await createNewGroup(newGroup, token);
 
+        // Wait properly for creation to complete
+        await createNewGroup(newGroup, token);
+
+        // Explicitly wait before closing modal
         await new Promise((resolve) => setTimeout(resolve, 500));
 
+        // Close modal first before anything else happens
         setIsModalOpen(false);
-        // No need to manually refresh groups here as the WebSocket event will trigger it
-        setToast({ message: "Group created successfully!", type: "success" });
 
-        // Reset fields
+        // Reset form fields
         setNewGroup({
           name: "",
           description: "",
           type: "Friends",
           members: [],
         });
+
+        // Show success message
+        setToast({ message: "Group created successfully!", type: "success" });
       } catch (error: any) {
-        setToast({ message: error.message, type: "error" });
+        console.error("Error creating group:", error);
+        setToast({
+          message: error.message || "Failed to create group",
+          type: "error",
+        });
       } finally {
         setIsUpdating(false);
       }
@@ -870,11 +879,12 @@ export default function Groups() {
                   className="font-medium"
                 />
                 <Button
-                  text="Create Group"
+                  text={isUpdating ? "Creating..." : "Create Group"}
                   onClick={handleAddGroup}
                   variant="success"
                   size="md"
                   className="font-medium"
+                  disabled={isUpdating}
                 />
               </div>
             </div>

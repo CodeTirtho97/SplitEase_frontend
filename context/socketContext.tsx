@@ -132,9 +132,10 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     const socketInstance = io(socketUrl, {
       auth: { token },
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10, // Increase retry attempts
       reconnectionDelay: 1000,
-      transports: ["websocket"],
+      transports: ["websocket", "polling"], // Add polling as fallback
+      timeout: 10000, // Increase timeout
     });
 
     setSocket(socketInstance);
@@ -157,9 +158,30 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       setIsConnected(false);
     });
 
+    socketInstance.on("reconnect_attempt", (attemptNumber) => {
+      console.log(`Socket reconnection attempt #${attemptNumber}`);
+    });
+
+    socketInstance.on("reconnect", () => {
+      console.log("Socket reconnected successfully");
+      setIsConnected(true);
+      toast.success("Real-time connection restored", {
+        position: "bottom-right",
+        autoClose: 2000,
+      });
+    });
+
     socketInstance.on("disconnect", (reason) => {
       console.log("Socket disconnected:", reason);
       setIsConnected(false);
+
+      // Only show toast for unexpected disconnections
+      if (reason !== "io client disconnect") {
+        toast.warn("Real-time connection lost. Reconnecting...", {
+          position: "bottom-right",
+          autoClose: 3000,
+        });
+      }
     });
 
     // Setup event handlers for different event types
@@ -200,7 +222,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       setSocket(null);
       setIsConnected(false);
     };
-  }, [token, user, setupEvent]);
+  }, [token, user]);
 
   // Join a group room
   const joinGroupRoom = useCallback(
