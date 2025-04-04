@@ -71,132 +71,145 @@ export default function Dashboard() {
   // ✅ Authentication and Initial Data Fetch with Enhanced Debugging and Correct Timing
   useEffect(() => {
     const fetchData = async () => {
-      // First, check if we have auth context
-      if (!token || !user) {
-        // Check if we have cookies from Google auth
-        const cookieToken = Cookies.get("token");
-        const cookieUserString = Cookies.get("user");
+      try {
+        // First, ensure we have auth context
+        if (!token || !user) {
+          // Check if we have cookies from Google auth
+          const cookieToken = Cookies.get("token");
+          const cookieUserString = Cookies.get("user");
 
-        if (cookieToken && cookieUserString && setToken && setUser) {
-          try {
-            // Parse user data and set up auth context
-            const cookieUser = JSON.parse(cookieUserString);
-            setToken(cookieToken);
-            setUser(cookieUser);
-
-            // Continue to fetch dashboard data
-            // The useEffect will run again with the new auth context
-            return;
-          } catch (e) {
-            console.error("Error parsing cookie user data:", e);
+          if (cookieToken && cookieUserString && setToken && setUser) {
+            try {
+              // Parse user data and set up auth context
+              const cookieUser = JSON.parse(cookieUserString);
+              setToken(cookieToken);
+              setUser(cookieUser);
+              console.log("Auth context restored from cookies", {
+                user: cookieUser.fullName,
+                userId: cookieUser._id,
+              });
+              // Return here - the useEffect will run again with the new auth context
+              return;
+            } catch (e) {
+              console.error("Error parsing cookie user data:", e);
+              router.push("/login");
+              return;
+            }
+          } else {
+            // No auth data found, redirect to login
             router.push("/login");
             return;
           }
-        } else {
-          // No auth data found, redirect to login
-          //console.log("No user or token found, redirecting to login...");
-          router.push("/login");
-          return;
         }
-      }
 
-      setDashboardLoading(true);
+        setDashboardLoading(true);
+        console.log("Fetching dashboard data for user:", user._id);
 
-      try {
-        // Fetch dashboard stats
-        //console.log("Fetching stats from:", `${API_URL}/stats`);
-        const statsResponse = await axios.get(`${API_URL}/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        //console.log("Stats response data:", statsResponse.data);
-        const {
-          totalExpenses: expenses = 0,
-          pendingPayments = 0,
-          settledPayments = 0,
-          totalGroups = 0,
-          totalMembers = 0,
-          groupExpenses = 0,
-        } = statsResponse.data || {};
-
-        // Set state with non-zero values directly, preserving data
-        setTotalExpenses(expenses || null);
-        setPendingPayments(pendingPayments || null);
-        setSettledPayments(settledPayments || null);
-        setTotalGroups(totalGroups || null);
-        setTotalMembers(totalMembers || null);
-        setGroupExpenses(groupExpenses || null);
-
-        // Evaluate hasData immediately with API response data (before state updates)
-        const initialHasData =
-          expenses > 0 ||
-          pendingPayments > 0 ||
-          settledPayments > 0 ||
-          totalGroups > 0 ||
-          totalMembers > 0 ||
-          groupExpenses > 0;
-
-        // Fetch recent transactions
-        // console.log(
-        //   "Fetching transactions from:",
-        //   `${API_URL}/transactions/recent`
-        // );
         try {
-          const transactionsResponse = await axios.get(
-            `${API_URL}/transactions/recent`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          //console.log("Transactions response data:", transactionsResponse.data);
-          const transactions = transactionsResponse.data.transactions || [];
-          setRecentTransactions(transactions);
-
-          // Update hasData with transactions data
-          const finalHasData =
-            initialHasData ||
-            (transactions.length > 0 &&
-              transactions.some((txn: any) => txn.amount > 0));
-          setHasData(finalHasData);
-          //console.log("Final hasData set to:", finalHasData);
-        } catch (transactionsError: any) {
-          console.error("Transactions API error:", {
-            status: transactionsError.response?.status,
-            data: transactionsError.response?.data,
-            message: transactionsError.message,
+          // Fetch dashboard stats - explicitly pass user._id, not userId
+          const statsResponse = await axios.get(`${API_URL}/stats`, {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { userId: user._id }, // Add userId as query parameter for extra clarity
           });
-          if (transactionsError.response?.status === 500) {
-            setRecentTransactions([]); // Assume no transactions for new users
-            setHasData(initialHasData); // Use stats-based hasData if transactions fail
-          } else {
-            throw transactionsError; // Re-throw other errors
+
+          console.log("Stats response received for user:", user._id);
+
+          const {
+            totalExpenses: expenses = 0,
+            pendingPayments = 0,
+            settledPayments = 0,
+            totalGroups = 0,
+            totalMembers = 0,
+            groupExpenses = 0,
+          } = statsResponse.data || {};
+
+          // Set state with non-zero values directly, preserving data
+          setTotalExpenses(expenses || null);
+          setPendingPayments(pendingPayments || null);
+          setSettledPayments(settledPayments || null);
+          setTotalGroups(totalGroups || null);
+          setTotalMembers(totalMembers || null);
+          setGroupExpenses(groupExpenses || null);
+
+          // Evaluate hasData immediately with API response data (before state updates)
+          const initialHasData =
+            expenses > 0 ||
+            pendingPayments > 0 ||
+            settledPayments > 0 ||
+            totalGroups > 0 ||
+            totalMembers > 0 ||
+            groupExpenses > 0;
+
+          // Fetch recent transactions - explicitly pass user._id
+          try {
+            const transactionsResponse = await axios.get(
+              `${API_URL}/transactions/recent`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { userId: user._id }, // Add userId as query parameter for extra clarity
+              }
+            );
+
+            console.log("Transactions response received for user:", user._id);
+
+            const transactions = transactionsResponse.data.transactions || [];
+            setRecentTransactions(transactions);
+
+            // Update hasData with transactions data
+            const finalHasData =
+              initialHasData ||
+              (transactions.length > 0 &&
+                transactions.some((txn: any) => txn.amount > 0));
+
+            setHasData(finalHasData);
+            console.log(
+              "Dashboard data loaded successfully for user:",
+              user.fullName
+            );
+          } catch (transactionsError: any) {
+            console.error("Transactions API error:", {
+              status: transactionsError.response?.status,
+              data: transactionsError.response?.data,
+              message: transactionsError.message,
+            });
+            if (transactionsError.response?.status === 500) {
+              setRecentTransactions([]); // Assume no transactions for new users
+              setHasData(initialHasData); // Use stats-based hasData if transactions fail
+            } else {
+              throw transactionsError; // Re-throw other errors
+            }
           }
+        } catch (statsError: any) {
+          console.error("Stats API error:", {
+            status: statsError.response?.status,
+            data: statsError.response?.data,
+            message: statsError.message,
+          });
+          if (statsError.response?.status === 500) {
+            // Handle 500 error gracefully—assume no data for new users
+            setTotalExpenses(null);
+            setPendingPayments(null);
+            setSettledPayments(null);
+            setTotalGroups(null);
+            setTotalMembers(null);
+            setGroupExpenses(null);
+            setRecentTransactions([]);
+            setHasData(false);
+          } else {
+            throw statsError; // Re-throw other errors
+          }
+        } finally {
+          setDashboardLoading(false);
         }
-      } catch (statsError: any) {
-        console.error("Stats API error:", {
-          status: statsError.response?.status,
-          data: statsError.response?.data,
-          message: statsError.message,
-        });
-        if (statsError.response?.status === 500) {
-          // Handle 500 error gracefully—assume no data for new users
-          setTotalExpenses(null);
-          setPendingPayments(null);
-          setSettledPayments(null);
-          setTotalGroups(null);
-          setTotalMembers(null);
-          setGroupExpenses(null);
-          setRecentTransactions([]);
-          setHasData(false);
-        } else {
-          throw statsError; // Re-throw other errors
-        }
-      } finally {
+      } catch (error) {
+        console.error("Dashboard data loading failed:", error);
+        setDashboardError("Failed to load dashboard data");
         setDashboardLoading(false);
       }
     };
 
     fetchData();
-  }, [router, token, user, setToken, setUser]); // Add token and user as dependencies to re-run if they change
+  }, [router, token, user, setToken, setUser, API_URL]); // Add token and user as dependencies to re-run if they change
 
   if (authLoading || dashboardLoading) {
     return <EnhancedLoadingScreen />;
