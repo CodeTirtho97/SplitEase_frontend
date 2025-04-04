@@ -131,16 +131,14 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     // Log the URL we're connecting to for debugging
     console.log("Attempting to connect socket to:", socketUrl);
 
-    const socketInstance = io(socketUrl, {
-      auth: { token }, // Send token for authentication
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      timeout: 10000,
-      // Do NOT specify a namespace or path unless your server uses custom ones
-      // The default path is '/socket.io' which matches your server setup
-      transports: ["websocket", "polling"], // Important to include polling as fallback
-    });
+    const socketInstance = io(
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+      {
+        auth: { token },
+        transports: ["websocket", "polling"],
+        // Do not add any path, namespace, or extra options
+      }
+    );
 
     setSocket(socketInstance);
 
