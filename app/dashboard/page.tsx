@@ -22,6 +22,7 @@ import {
 import axios from "axios"; // Assuming you’re using axios for API calls
 import Cookies from "js-cookie"; // Import Cookies for token persistence
 import { useAuth } from "@/context/authContext"; // Import useAuth
+import { useSocket } from "@/context/socketContext";
 import EnhancedLoadingScreen from "@/components/EnhancedLoadingScreen";
 
 export default function Dashboard() {
@@ -36,6 +37,7 @@ export default function Dashboard() {
   } = useAuth() || {}; // Use useAuth for authentication state
   const [dashboardLoading, setDashboardLoading] = useState(true); // Separate loading state for dashboard data
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const { addEventListener, removeEventListener } = useSocket() || {};
 
   // State for dashboard data (use null for uninitialized, undefined for missing data)
   const [totalExpenses, setTotalExpenses] = useState<number | null>(null);
@@ -210,6 +212,220 @@ export default function Dashboard() {
 
     fetchData();
   }, [router, token, user, setToken, setUser, API_URL]); // Add token and user as dependencies to re-run if they change
+
+  useEffect(() => {
+    // Skip if socket functionality is not available
+    if (!addEventListener || !removeEventListener) return;
+
+    console.log("Setting up dashboard socket event listeners");
+
+    // Fetch functions for data updates
+    const fetchStats = async () => {
+      try {
+        const statsResponse = await axios.get(`${API_URL}/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { userId: user._id },
+        });
+
+        const {
+          totalExpenses: expenses = 0,
+          pendingPayments = 0,
+          settledPayments = 0,
+          totalGroups = 0,
+          totalMembers = 0,
+          groupExpenses = 0,
+        } = statsResponse.data || {};
+
+        // Update state with fresh data
+        setTotalExpenses(expenses || null);
+        setPendingPayments(pendingPayments || null);
+        setSettledPayments(settledPayments || null);
+        setTotalGroups(totalGroups || null);
+        setTotalMembers(totalMembers || null);
+        setGroupExpenses(groupExpenses || null);
+
+        return {
+          expenses,
+          pendingPayments,
+          settledPayments,
+          totalGroups,
+          totalMembers,
+          groupExpenses,
+        };
+      } catch (error) {
+        console.error("Error fetching updated stats:", error);
+        return null;
+      }
+    };
+
+    const fetchTransactions = async () => {
+      try {
+        const transactionsResponse = await axios.get(
+          `${API_URL}/transactions/recent`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { userId: user._id },
+          }
+        );
+
+        const transactions = transactionsResponse.data.transactions || [];
+        setRecentTransactions(transactions);
+        return transactions;
+      } catch (error) {
+        console.error("Error fetching updated transactions:", error);
+        return [];
+      }
+    };
+
+    // Update hasData with latest information
+    const updateHasData = (stats: any, transactions: any[]) => {
+      if (!stats) return;
+
+      const statsHasData =
+        stats.expenses > 0 ||
+        stats.pendingPayments > 0 ||
+        stats.settledPayments > 0 ||
+        stats.totalGroups > 0 ||
+        stats.totalMembers > 0 ||
+        stats.groupExpenses > 0;
+
+      const transactionsHasData =
+        transactions.length > 0 && transactions.some((txn) => txn.amount > 0);
+
+      setHasData(statsHasData || transactionsHasData);
+    };
+
+    // Handler for expense updates
+    const handleExpenseUpdate = async (data: any) => {
+      console.log("Dashboard received expense update:", data);
+
+      // Show loading indicator
+      setDashboardLoading(true);
+
+      try {
+        // Fetch both stats and transactions in parallel
+        const [stats, transactions] = await Promise.all([
+          fetchStats(),
+          fetchTransactions(),
+        ]);
+
+        // Update hasData based on fresh information
+        updateHasData(stats, transactions);
+      } catch (error) {
+        console.error(
+          "Error refreshing dashboard after expense update:",
+          error
+        );
+      } finally {
+        setDashboardLoading(false);
+      }
+    };
+
+    // Handler for transaction updates
+    const handleTransactionUpdate = async (data: any) => {
+      console.log("Dashboard received transaction update:", data);
+
+      // Show loading indicator
+      setDashboardLoading(true);
+
+      try {
+        // Fetch both stats and transactions in parallel
+        const [stats, transactions] = await Promise.all([
+          fetchStats(),
+          fetchTransactions(),
+        ]);
+
+        // Update hasData based on fresh information
+        updateHasData(stats, transactions);
+      } catch (error) {
+        console.error(
+          "Error refreshing dashboard after transaction update:",
+          error
+        );
+      } finally {
+        setDashboardLoading(false);
+      }
+    };
+
+    // Handler for group updates
+    const handleGroupUpdate = async (data: any) => {
+      console.log("Dashboard received group update:", data);
+
+      // For group updates, we only need to refresh the stats
+      // since group changes affect member counts and potentially expense totals
+      setDashboardLoading(true);
+
+      try {
+        const stats = await fetchStats();
+        const transactions = recentTransactions; // Use existing transactions
+
+        // Update hasData
+        updateHasData(stats, transactions);
+      } catch (error) {
+        console.error("Error refreshing dashboard after group update:", error);
+      } finally {
+        setDashboardLoading(false);
+      }
+    };
+
+    // Register all event listeners
+    addEventListener("expense_update", handleExpenseUpdate);
+    addEventListener("transaction_update", handleTransactionUpdate);
+    addEventListener("group_update", handleGroupUpdate);
+
+    // Also listen for the generic data_update event
+    addEventListener("data_update", async (data: any) => {
+      console.log("Dashboard received generic data update:", data);
+
+      // Determine which data to refresh based on update type
+      if (data.type === "expense" || data.type === "transaction") {
+        setDashboardLoading(true);
+
+        try {
+          const [stats, transactions] = await Promise.all([
+            fetchStats(),
+            fetchTransactions(),
+          ]);
+
+          updateHasData(stats, transactions);
+        } catch (error) {
+          console.error("Error refreshing dashboard after data update:", error);
+        } finally {
+          setDashboardLoading(false);
+        }
+      } else if (data.type === "group") {
+        setDashboardLoading(true);
+
+        try {
+          const stats = await fetchStats();
+          updateHasData(stats, recentTransactions);
+        } catch (error) {
+          console.error(
+            "Error refreshing dashboard after group update:",
+            error
+          );
+        } finally {
+          setDashboardLoading(false);
+        }
+      }
+    });
+
+    // Cleanup on unmount
+    return () => {
+      console.log("Cleaning up dashboard socket event listeners");
+      removeEventListener("expense_update", handleExpenseUpdate);
+      removeEventListener("transaction_update", handleTransactionUpdate);
+      removeEventListener("group_update", handleGroupUpdate);
+      removeEventListener("data_update", () => {});
+    };
+  }, [
+    addEventListener,
+    removeEventListener,
+    token,
+    user,
+    API_URL,
+    recentTransactions,
+  ]);
 
   if (authLoading || dashboardLoading) {
     return <EnhancedLoadingScreen />;
