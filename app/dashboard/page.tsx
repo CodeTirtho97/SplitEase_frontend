@@ -104,17 +104,24 @@ export default function Dashboard() {
           }
         }
 
+        // Always show loading state when fetching data
         setDashboardLoading(true);
-        console.log("Fetching dashboard data for user:", user._id);
+        console.log("Fetching fresh dashboard data for user:", user._id);
 
         try {
-          // Fetch dashboard stats - explicitly pass user._id, not userId
+          // Add a timestamp to prevent caching
+          const timestamp = new Date().getTime();
+
+          // Fetch dashboard stats with cache-busting
           const statsResponse = await axios.get(`${API_URL}/stats`, {
             headers: { Authorization: `Bearer ${token}` },
-            params: { userId: user._id }, // Add userId as query parameter for extra clarity
+            params: {
+              userId: user._id,
+              _t: timestamp, // Cache busting parameter
+            },
           });
 
-          console.log("Stats response received for user:", user._id);
+          console.log("Fresh stats data received:", statsResponse.data);
 
           const {
             totalExpenses: expenses = 0,
@@ -125,7 +132,7 @@ export default function Dashboard() {
             groupExpenses = 0,
           } = statsResponse.data || {};
 
-          // Set state with non-zero values directly, preserving data
+          // Update state with the latest data
           setTotalExpenses(expenses || null);
           setPendingPayments(pendingPayments || null);
           setSettledPayments(settledPayments || null);
@@ -133,62 +140,45 @@ export default function Dashboard() {
           setTotalMembers(totalMembers || null);
           setGroupExpenses(groupExpenses || null);
 
-          // Evaluate hasData immediately with API response data (before state updates)
-          const initialHasData =
+          // Fetch transactions with same cache-busting
+          const transactionsResponse = await axios.get(
+            `${API_URL}/transactions/recent`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              params: {
+                userId: user._id,
+                _t: timestamp, // Cache busting parameter
+              },
+            }
+          );
+
+          console.log(
+            "Fresh transactions data received:",
+            transactionsResponse.data
+          );
+
+          const transactions = transactionsResponse.data.transactions || [];
+          setRecentTransactions(transactions);
+
+          // Update hasData with fresh data
+          const finalHasData =
             expenses > 0 ||
             pendingPayments > 0 ||
             settledPayments > 0 ||
             totalGroups > 0 ||
             totalMembers > 0 ||
-            groupExpenses > 0;
+            groupExpenses > 0 ||
+            (transactions.length > 0 &&
+              transactions.some((txn: any) => txn.amount > 0));
 
-          // Fetch recent transactions - explicitly pass user._id
-          try {
-            const transactionsResponse = await axios.get(
-              `${API_URL}/transactions/recent`,
-              {
-                headers: { Authorization: `Bearer ${token}` },
-                params: { userId: user._id }, // Add userId as query parameter for extra clarity
-              }
-            );
-
-            console.log("Transactions response received for user:", user._id);
-
-            const transactions = transactionsResponse.data.transactions || [];
-            setRecentTransactions(transactions);
-
-            // Update hasData with transactions data
-            const finalHasData =
-              initialHasData ||
-              (transactions.length > 0 &&
-                transactions.some((txn: any) => txn.amount > 0));
-
-            setHasData(finalHasData);
-            console.log(
-              "Dashboard data loaded successfully for user:",
-              user.fullName
-            );
-          } catch (transactionsError: any) {
-            console.error("Transactions API error:", {
-              status: transactionsError.response?.status,
-              data: transactionsError.response?.data,
-              message: transactionsError.message,
-            });
-            if (transactionsError.response?.status === 500) {
-              setRecentTransactions([]); // Assume no transactions for new users
-              setHasData(initialHasData); // Use stats-based hasData if transactions fail
-            } else {
-              throw transactionsError; // Re-throw other errors
-            }
-          }
-        } catch (statsError: any) {
-          console.error("Stats API error:", {
-            status: statsError.response?.status,
-            data: statsError.response?.data,
-            message: statsError.message,
-          });
-          if (statsError.response?.status === 500) {
-            // Handle 500 error gracefully—assume no data for new users
+          setHasData(finalHasData);
+          console.log(
+            "Dashboard data refreshed successfully with latest values"
+          );
+        } catch (dataError: any) {
+          console.error("Error fetching dashboard data:", dataError);
+          if (dataError.response?.status === 500) {
+            // Handle 500 error gracefully—assume no data
             setTotalExpenses(null);
             setPendingPayments(null);
             setSettledPayments(null);
@@ -198,18 +188,18 @@ export default function Dashboard() {
             setRecentTransactions([]);
             setHasData(false);
           } else {
-            throw statsError; // Re-throw other errors
+            throw dataError; // Re-throw other errors
           }
-        } finally {
-          setDashboardLoading(false);
         }
       } catch (error) {
         console.error("Dashboard data loading failed:", error);
         setDashboardError("Failed to load dashboard data");
+      } finally {
         setDashboardLoading(false);
       }
     };
 
+    // This will run on every page load/refresh
     fetchData();
   }, [router, token, user, setToken, setUser, API_URL]); // Add token and user as dependencies to re-run if they change
 
@@ -219,14 +209,25 @@ export default function Dashboard() {
 
     console.log("Setting up dashboard socket event listeners");
 
-    // Fetch functions for data updates
-    const fetchStats = async () => {
+    // Handler for events that should trigger a data refresh
+    const handleDataUpdate = async (data: any) => {
+      // Log which event triggered the update
+      console.log("Dashboard received update event:", data);
+
       try {
+        // Skip loading indicator for socket updates to avoid UI flicker
+        const timestamp = new Date().getTime();
+
+        // Fetch fresh stats data
         const statsResponse = await axios.get(`${API_URL}/stats`, {
           headers: { Authorization: `Bearer ${token}` },
-          params: { userId: user._id },
+          params: {
+            userId: user._id,
+            _t: timestamp,
+          },
         });
 
+        // Update state with latest data
         const {
           totalExpenses: expenses = 0,
           pendingPayments = 0,
@@ -236,7 +237,6 @@ export default function Dashboard() {
           groupExpenses = 0,
         } = statsResponse.data || {};
 
-        // Update state with fresh data
         setTotalExpenses(expenses || null);
         setPendingPayments(pendingPayments || null);
         setSettledPayments(settledPayments || null);
@@ -244,188 +244,41 @@ export default function Dashboard() {
         setTotalMembers(totalMembers || null);
         setGroupExpenses(groupExpenses || null);
 
-        return {
-          expenses,
-          pendingPayments,
-          settledPayments,
-          totalGroups,
-          totalMembers,
-          groupExpenses,
-        };
-      } catch (error) {
-        console.error("Error fetching updated stats:", error);
-        return null;
-      }
-    };
-
-    const fetchTransactions = async () => {
-      try {
+        // Refresh transactions too
         const transactionsResponse = await axios.get(
           `${API_URL}/transactions/recent`,
           {
             headers: { Authorization: `Bearer ${token}` },
-            params: { userId: user._id },
+            params: {
+              userId: user._id,
+              _t: timestamp,
+            },
           }
         );
 
-        const transactions = transactionsResponse.data.transactions || [];
-        setRecentTransactions(transactions);
-        return transactions;
+        setRecentTransactions(transactionsResponse.data.transactions || []);
+
+        console.log("Dashboard data auto-updated via socket event");
       } catch (error) {
-        console.error("Error fetching updated transactions:", error);
-        return [];
+        console.error("Error auto-refreshing dashboard data:", error);
       }
     };
 
-    // Update hasData with latest information
-    const updateHasData = (stats: any, transactions: any[]) => {
-      if (!stats) return;
-
-      const statsHasData =
-        stats.expenses > 0 ||
-        stats.pendingPayments > 0 ||
-        stats.settledPayments > 0 ||
-        stats.totalGroups > 0 ||
-        stats.totalMembers > 0 ||
-        stats.groupExpenses > 0;
-
-      const transactionsHasData =
-        transactions.length > 0 && transactions.some((txn) => txn.amount > 0);
-
-      setHasData(statsHasData || transactionsHasData);
-    };
-
-    // Handler for expense updates
-    const handleExpenseUpdate = async (data: any) => {
-      console.log("Dashboard received expense update:", data);
-
-      // Show loading indicator
-      setDashboardLoading(true);
-
-      try {
-        // Fetch both stats and transactions in parallel
-        const [stats, transactions] = await Promise.all([
-          fetchStats(),
-          fetchTransactions(),
-        ]);
-
-        // Update hasData based on fresh information
-        updateHasData(stats, transactions);
-      } catch (error) {
-        console.error(
-          "Error refreshing dashboard after expense update:",
-          error
-        );
-      } finally {
-        setDashboardLoading(false);
-      }
-    };
-
-    // Handler for transaction updates
-    const handleTransactionUpdate = async (data: any) => {
-      console.log("Dashboard received transaction update:", data);
-
-      // Show loading indicator
-      setDashboardLoading(true);
-
-      try {
-        // Fetch both stats and transactions in parallel
-        const [stats, transactions] = await Promise.all([
-          fetchStats(),
-          fetchTransactions(),
-        ]);
-
-        // Update hasData based on fresh information
-        updateHasData(stats, transactions);
-      } catch (error) {
-        console.error(
-          "Error refreshing dashboard after transaction update:",
-          error
-        );
-      } finally {
-        setDashboardLoading(false);
-      }
-    };
-
-    // Handler for group updates
-    const handleGroupUpdate = async (data: any) => {
-      console.log("Dashboard received group update:", data);
-
-      // For group updates, we only need to refresh the stats
-      // since group changes affect member counts and potentially expense totals
-      setDashboardLoading(true);
-
-      try {
-        const stats = await fetchStats();
-        const transactions = recentTransactions; // Use existing transactions
-
-        // Update hasData
-        updateHasData(stats, transactions);
-      } catch (error) {
-        console.error("Error refreshing dashboard after group update:", error);
-      } finally {
-        setDashboardLoading(false);
-      }
-    };
-
-    // Register all event listeners
-    addEventListener("expense_update", handleExpenseUpdate);
-    addEventListener("transaction_update", handleTransactionUpdate);
-    addEventListener("group_update", handleGroupUpdate);
-
-    // Also listen for the generic data_update event
-    addEventListener("data_update", async (data: any) => {
-      console.log("Dashboard received generic data update:", data);
-
-      // Determine which data to refresh based on update type
-      if (data.type === "expense" || data.type === "transaction") {
-        setDashboardLoading(true);
-
-        try {
-          const [stats, transactions] = await Promise.all([
-            fetchStats(),
-            fetchTransactions(),
-          ]);
-
-          updateHasData(stats, transactions);
-        } catch (error) {
-          console.error("Error refreshing dashboard after data update:", error);
-        } finally {
-          setDashboardLoading(false);
-        }
-      } else if (data.type === "group") {
-        setDashboardLoading(true);
-
-        try {
-          const stats = await fetchStats();
-          updateHasData(stats, recentTransactions);
-        } catch (error) {
-          console.error(
-            "Error refreshing dashboard after group update:",
-            error
-          );
-        } finally {
-          setDashboardLoading(false);
-        }
-      }
-    });
+    // Register for all event types that could affect dashboard data
+    addEventListener("expense_update", handleDataUpdate);
+    addEventListener("transaction_update", handleDataUpdate);
+    addEventListener("group_update", handleDataUpdate);
+    addEventListener("data_update", handleDataUpdate);
 
     // Cleanup on unmount
     return () => {
       console.log("Cleaning up dashboard socket event listeners");
-      removeEventListener("expense_update", handleExpenseUpdate);
-      removeEventListener("transaction_update", handleTransactionUpdate);
-      removeEventListener("group_update", handleGroupUpdate);
-      removeEventListener("data_update", () => {});
+      removeEventListener("expense_update", handleDataUpdate);
+      removeEventListener("transaction_update", handleDataUpdate);
+      removeEventListener("group_update", handleDataUpdate);
+      removeEventListener("data_update", handleDataUpdate);
     };
-  }, [
-    addEventListener,
-    removeEventListener,
-    token,
-    user,
-    API_URL,
-    recentTransactions,
-  ]);
+  }, [addEventListener, removeEventListener, token, user, API_URL]);
 
   if (authLoading || dashboardLoading) {
     return <EnhancedLoadingScreen />;
