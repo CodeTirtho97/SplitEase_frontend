@@ -296,72 +296,90 @@ export default function Navbar() {
       {/* Mobile Menu - Only show when hamburger is shown */}
       {showMobileMenu && (
         <div
-          className={`mobile-menu fixed inset-0 bg-white/95 backdrop-blur-lg z-10 flex flex-col pt-24 px-6 transform transition-transform duration-300 ease-in-out ${
+          className={`mobile-menu fixed inset-0 bg-white z-40 flex flex-col transform transition-transform duration-300 ease-in-out ${
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           } lg:hidden`}
         >
-          <div className="flex flex-col space-y-6 items-center">
-            {isLoggedIn ? (
-              <>
-                {/* User Profile Section */}
-                <div className="flex items-center space-x-3 p-4 bg-gray-100 rounded-lg w-full max-w-md">
-                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
-                      {user?.name?.[0]?.toUpperCase() ||
-                        user?.fullName?.[0]?.toUpperCase() ||
-                        "U"}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {user?.name || user?.fullName || "User"}
-                    </p>
-                    <p className="text-sm text-gray-600">{user?.email}</p>
-                  </div>
-                </div>
+          {/* Mobile Menu Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white shadow-sm mt-16">
+            <div className="flex items-center gap-3">
+              <Image src="/logo.png" alt="SplitEase" width={32} height={32} />
+              <span className="text-lg font-bold text-gray-900">SplitEase</span>
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
+          </div>
 
-                {/* Dashboard Navigation for Mobile/Tablet */}
-                <div className="w-full max-w-md space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">
-                    Navigation
-                  </h3>
-                  {dashboardNavItems.map((item) => (
+          {/* Mobile Menu Content */}
+          <div className="flex-1 overflow-y-auto bg-white">
+            <div className="p-6">
+              {isLoggedIn ? (
+                <>
+                  {/* User Profile Section */}
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {user?.name?.[0]?.toUpperCase() ||
+                          user?.fullName?.[0]?.toUpperCase() ||
+                          "U"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {user?.name || user?.fullName || "User"}
+                      </p>
+                      <p className="text-sm text-gray-600">{user?.email}</p>
+                    </div>
+                  </div>
+
+                  {/* Dashboard Navigation for Mobile/Tablet */}
+                  <div className="space-y-2 mb-6">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                      Navigation
+                    </h3>
+                    {dashboardNavItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 p-3 rounded-lg font-medium transition-colors ${
+                          item.active
+                            ? "text-indigo-600 bg-indigo-50"
+                            : "text-gray-700 hover:text-indigo-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        <FontAwesomeIcon
+                          icon={item.icon}
+                          className={`text-lg ${
+                            item.active ? "text-indigo-600" : "text-gray-500"
+                          }`}
+                        />
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Additional Links */}
+                  <div className="space-y-2 pt-4 border-t border-gray-200 mb-6">
                     <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`w-full flex items-center space-x-4 py-4 px-6 text-lg font-medium rounded-lg transition-colors ${
-                        item.active
-                          ? "text-indigo-700 bg-indigo-100 shadow-sm"
-                          : "text-gray-700 hover:text-indigo-600 hover:bg-gray-100"
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block p-3 rounded-lg font-medium transition-colors ${
+                        pathname === "/profile"
+                          ? "text-gray-800 bg-gray-100"
+                          : "text-gray-700 hover:text-gray-800 hover:bg-gray-50"
                       }`}
                     >
-                      <FontAwesomeIcon
-                        icon={item.icon}
-                        className={`text-xl ${
-                          item.active ? "text-indigo-600" : "text-gray-500"
-                        }`}
-                      />
-                      <span>{item.label}</span>
+                      Profile Settings
                     </Link>
-                  ))}
-                </div>
+                  </div>
 
-                {/* Additional Links */}
-                <div className="w-full max-w-md space-y-3 border-t border-gray-200 pt-6">
-                  <Link
-                    href="/profile"
-                    className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
-                      pathname === "/profile"
-                        ? "text-gray-800 bg-gray-200 shadow-sm"
-                        : "text-gray-700 hover:text-gray-800 hover:bg-gray-100"
-                    }`}
-                  >
-                    Profile Settings
-                  </Link>
-                </div>
-
-                {/* Sign Out Button */}
-                <div className="w-full max-w-md mt-8">
+                  {/* Sign Out Button */}
                   <Button
                     text={isLoggingOut ? "Signing Out..." : "Sign Out"}
                     onClick={handleLogout}
@@ -370,73 +388,75 @@ export default function Navbar() {
                     disabled={isLoggingOut}
                     className="w-full"
                   />
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Non-logged-in users mobile menu */}
-                <div className="w-full max-w-md">
-                  {/* App Info Section */}
-                  <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-white font-bold text-2xl">S</span>
+                </>
+              ) : (
+                <>
+                  {/* Non-logged-in users mobile menu */}
+                  <div className="text-center">
+                    {/* App Info Section */}
+                    <div className="mb-8">
+                      <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-white font-bold text-xl">S</span>
+                      </div>
+                      <h2 className="text-xl font-bold text-gray-900 mb-2">
+                        Welcome to SplitEase
+                      </h2>
+                      <p className="text-gray-600 text-sm">
+                        Split bills and track expenses with friends
+                      </p>
                     </div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">
-                      Welcome to SplitEase
-                    </h2>
-                    <p className="text-gray-600 text-sm">
-                      Split bills and track expenses with friends
-                    </p>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="space-y-4">
-                    <Link
-                      href="/login"
-                      className={`w-full py-4 text-center text-lg font-medium rounded-xl transition-all duration-300 border-2 ${
-                        pathname === "/login"
-                          ? "border-purple-500 bg-purple-50 text-purple-700"
-                          : "border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-600"
-                      }`}
-                    >
-                      Login to Your Account
-                    </Link>
+                    {/* Action Buttons */}
+                    <div className="space-y-3 mb-8">
+                      <Link
+                        href="/login"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`block w-full py-3 px-4 text-center font-medium rounded-lg border-2 transition-all duration-300 ${
+                          pathname === "/login"
+                            ? "border-purple-500 bg-purple-50 text-purple-700"
+                            : "border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-600"
+                        }`}
+                      >
+                        Login to Your Account
+                      </Link>
 
-                    <Link
-                      href="/signup"
-                      className={`w-full py-4 text-center text-lg font-medium rounded-xl transition-all duration-300 ${
-                        pathname === "/signup"
-                          ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white ring-2 ring-indigo-500 ring-offset-2"
-                          : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg transform hover:scale-[1.02]"
-                      }`}
-                    >
-                      Create New Account
-                    </Link>
-                  </div>
+                      <Link
+                        href="/signup"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`block w-full py-3 px-4 text-center font-medium rounded-lg transition-all duration-300 ${
+                          pathname === "/signup"
+                            ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white"
+                            : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                        }`}
+                      >
+                        Create New Account
+                      </Link>
+                    </div>
 
-                  {/* Features Preview */}
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <p className="text-sm text-gray-500 text-center mb-4">
-                      What you can do with SplitEase:
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
-                        Split bills with friends easily
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                        Track group expenses in real-time
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <div className="w-2 h-2 bg-pink-500 rounded-full mr-3"></div>
-                        Settle payments securely
+                    {/* Features Preview */}
+                    <div className="pt-6 border-t border-gray-200">
+                      <p className="text-sm text-gray-500 mb-4">
+                        What you can do:
+                      </p>
+                      <div className="space-y-3 text-left">
+                        <div className="flex items-center text-sm text-gray-600">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3 flex-shrink-0"></div>
+                          <span>Split bills with friends easily</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full mr-3 flex-shrink-0"></div>
+                          <span>Track group expenses in real-time</span>
+                        </div>
+                        <div className="flex items-center text-sm text-gray-600">
+                          <div className="w-2 h-2 bg-pink-500 rounded-full mr-3 flex-shrink-0"></div>
+                          <span>Settle payments securely</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
