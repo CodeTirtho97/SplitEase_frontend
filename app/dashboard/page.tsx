@@ -624,17 +624,17 @@ export default function Dashboard() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 mt-20">
+      <main className="flex-1 lg:ml-64 p-4 sm:p-6 md:p-8 mt-20">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
               Dashboard
             </h1>
             <p className="text-gray-500 mt-1">All your stats in one place!</p>
           </div>
           <div className="mt-4 md:mt-0">
-            <h1 className="text-4xl font-semibold text-gray-700">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-gray-700">
               Welcome, <span className="text-indigo-600">{firstName}</span>
               <span className="ml-2 inline-block">👋</span>
             </h1>
@@ -642,17 +642,17 @@ export default function Dashboard() {
         </div>
 
         {/* First Row: Expense & Payment Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6">
           {/* Total Expenses Card */}
           <div
             className="rounded-lg overflow-hidden border border-red-400"
             style={{ boxShadow: "0 2px 10px rgba(228, 45, 45, 0.07)" }}
           >
-            <div className="p-5 flex items-center">
+            <div className="p-4 sm:p-5 flex items-center">
               <div className="rounded-full bg-red-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-red-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-red-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -681,7 +681,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   ₹{(totalExpenses ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
@@ -700,7 +700,7 @@ export default function Dashboard() {
               <div className="rounded-full bg-yellow-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-yellow-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -728,7 +728,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   ₹{(pendingPayments ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">Unpaid balance</p>
@@ -745,7 +745,7 @@ export default function Dashboard() {
               <div className="rounded-full bg-green-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-green-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-green-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -773,7 +773,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   ₹{(settledPayments ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
@@ -785,7 +785,7 @@ export default function Dashboard() {
         </div>
 
         {/* Second Row: Group Related Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
           {/* Total Groups */}
           <div
             className="rounded-lg overflow-hidden border border-blue-400"
@@ -795,7 +795,7 @@ export default function Dashboard() {
               <div className="rounded-full bg-blue-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-blue-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-blue-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -819,7 +819,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   {totalGroups ?? 0}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
@@ -838,7 +838,7 @@ export default function Dashboard() {
               <div className="rounded-full bg-indigo-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-indigo-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -862,7 +862,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   {totalMembers ?? 0}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
@@ -881,7 +881,7 @@ export default function Dashboard() {
               <div className="rounded-full bg-purple-100 p-3 mr-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-purple-500"
+                  className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -910,7 +910,7 @@ export default function Dashboard() {
                     />
                   </svg> */}
                 </p>
-                <h3 className="text-3xl font-bold text-gray-800">
+                <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
                   ₹{(groupExpenses ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
@@ -932,81 +932,87 @@ export default function Dashboard() {
             </button> */}
           </div>
 
-          <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                  <th className="px-6 py-3">Sender</th>
-                  <th className="px-6 py-3">Receiver</th>
-                  <th className="px-6 py-3 text-right">Amount</th>
-                  <th className="px-6 py-3">Mode</th>
-                  <th className="px-6 py-3 text-center">Status</th>
-                  <th className="px-6 py-3 text-center">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {recentTransactions.length > 0 ? (
-                  recentTransactions.map((txn, index) => (
-                    <tr
-                      key={index}
-                      className={`hover:bg-gray-50 ${
-                        txn.status === "Settled" ? "bg-green-50" : ""
-                      }`}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
-                        {txn.sender?.fullName || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {txn.receiver?.fullName || "Unknown"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
-                        ₹{txn.amount.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {txn.paymentMode === "UPI" ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            UPI
-                          </span>
-                        ) : txn.paymentMode === "PayPal" ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                            PayPal
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {txn.paymentMode}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                        {txn.status === "Settled" ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <span className="h-2 w-2 mr-1 rounded-full bg-green-500"></span>
-                            Settled
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <span className="h-2 w-2 mr-1 rounded-full bg-yellow-500"></span>
-                            Pending
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
-                        {new Date(txn.createdAt).toLocaleDateString()}
+          <div className="bg-white rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3">Sender</th>
+                    <th className="px-6 py-3">Receiver</th>
+                    <th className="px-6 py-3 text-right">Amount</th>
+                    <th className="px-3 sm:px-6 py-3 hidden sm:table-cell">
+                      Mode
+                    </th>
+                    <th className="px-6 py-3 text-center">Status</th>
+                    <th className="px-3 sm:px-6 py-3 text-center hidden md:table-cell">
+                      Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {recentTransactions.length > 0 ? (
+                    recentTransactions.map((txn, index) => (
+                      <tr
+                        key={index}
+                        className={`hover:bg-gray-50 ${
+                          txn.status === "Settled" ? "bg-green-50" : ""
+                        }`}
+                      >
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">
+                          {txn.sender?.fullName || "Unknown"}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {txn.receiver?.fullName || "Unknown"}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
+                          ₹{txn.amount.toLocaleString()}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm">
+                          {txn.paymentMode === "UPI" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              UPI
+                            </span>
+                          ) : txn.paymentMode === "PayPal" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              PayPal
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              {txn.paymentMode}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-center">
+                          {txn.status === "Settled" ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <span className="h-2 w-2 mr-1 rounded-full bg-green-500"></span>
+                              Settled
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <span className="h-2 w-2 mr-1 rounded-full bg-yellow-500"></span>
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500">
+                          {new Date(txn.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic"
+                      >
+                        No recent transactions found.
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 italic"
-                    >
-                      No recent transactions found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </main>
