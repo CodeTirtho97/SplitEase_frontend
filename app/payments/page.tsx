@@ -344,7 +344,7 @@ export default function PaymentsPage() {
     <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
       <Sidebar activePage="payments" />
 
-      <div className="fixed top-5 right-5 z-50">
+      <div className="fixed top-5 right-5 z-50 hidden lg:block">
         <NotificationPanel />
       </div>
       <ConnectionStatus />
