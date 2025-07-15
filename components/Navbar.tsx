@@ -132,16 +132,7 @@ export default function Navbar() {
     },
   ];
 
-  // Check if we're on a dashboard-related page
-  const isDashboardPage = [
-    "/dashboard",
-    "/groups",
-    "/expenses",
-    "/payments",
-    "/profile",
-  ].includes(pathname);
-
-  // Don't show hamburger menu on auth pages if not logged in
+  // Only show hamburger menu if logged in OR on pages where it makes sense
   const showMobileMenu =
     isLoggedIn ||
     (!isLoggedIn &&
@@ -383,36 +374,67 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                {/* Home page mobile menu - show navigation or simple close */}
-                {pathname === "/" ? (
-                  <div className="w-full max-w-md space-y-4 text-center">
-                    <p className="text-gray-600 mb-6">Ready to get started?</p>
+                {/* Non-logged-in users mobile menu */}
+                <div className="w-full max-w-md">
+                  {/* App Info Section */}
+                  <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-white font-bold text-2xl">S</span>
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">
+                      Welcome to SplitEase
+                    </h2>
+                    <p className="text-gray-600 text-sm">
+                      Split bills and track expenses with friends
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-4">
                     <Link
                       href="/login"
-                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors border border-gray-300 text-gray-700 hover:text-purple-600 hover:bg-gray-100"
+                      className={`w-full py-4 text-center text-lg font-medium rounded-xl transition-all duration-300 border-2 ${
+                        pathname === "/login"
+                          ? "border-purple-500 bg-purple-50 text-purple-700"
+                          : "border-gray-200 text-gray-700 hover:border-purple-300 hover:bg-purple-50 hover:text-purple-600"
+                      }`}
                     >
-                      Login
+                      Login to Your Account
                     </Link>
+
                     <Link
                       href="/signup"
-                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                      className={`w-full py-4 text-center text-lg font-medium rounded-xl transition-all duration-300 ${
+                        pathname === "/signup"
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-700 text-white ring-2 ring-indigo-500 ring-offset-2"
+                          : "bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 hover:shadow-lg transform hover:scale-[1.02]"
+                      }`}
                     >
-                      Sign Up
+                      Create New Account
                     </Link>
                   </div>
-                ) : (
-                  <div className="w-full max-w-md text-center">
-                    <p className="text-gray-600 mb-6">
-                      Use the navigation above or
+
+                  {/* Features Preview */}
+                  <div className="mt-8 pt-6 border-t border-gray-200">
+                    <p className="text-sm text-gray-500 text-center mb-4">
+                      What you can do with SplitEase:
                     </p>
-                    <Link
-                      href="/"
-                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors bg-indigo-500 text-white hover:bg-indigo-600"
-                    >
-                      Go to Home
-                    </Link>
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></div>
+                        Split bills with friends easily
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
+                        Track group expenses in real-time
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <div className="w-2 h-2 bg-pink-500 rounded-full mr-3"></div>
+                        Settle payments securely
+                      </div>
+                    </div>
                   </div>
-                )}
+                </div>
               </>
             )}
           </div>
