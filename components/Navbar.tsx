@@ -132,6 +132,22 @@ export default function Navbar() {
     },
   ];
 
+  // Check if we're on a dashboard-related page
+  const isDashboardPage = [
+    "/dashboard",
+    "/groups",
+    "/expenses",
+    "/payments",
+    "/profile",
+  ].includes(pathname);
+
+  // Don't show hamburger menu on auth pages if not logged in
+  const showMobileMenu =
+    isLoggedIn ||
+    (!isLoggedIn &&
+      !pathname.includes("/login") &&
+      !pathname.includes("/signup"));
+
   if (authLoading) {
     return (
       <div className="h-16 w-full backdrop-blur-md bg-white/80 shadow-md fixed top-0 left-0 z-50 flex items-center justify-center">
@@ -155,9 +171,7 @@ export default function Navbar() {
             />
             <Link
               href="/"
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                isLoggedIn ? "pointer-events-none opacity-50" : "text-gray-900"
-              }`}
+              className="text-2xl sm:text-3xl font-extrabold tracking-tight text-gray-900"
             >
               SplitEase<span className="text-indigo-600">.</span>
             </Link>
@@ -259,139 +273,151 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="menu-button lg:hidden z-20 p-2 focus:outline-none"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-          >
-            <div className="w-6 h-5 flex flex-col justify-between relative">
-              <span
-                className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
-                  mobileMenuOpen ? "rotate-45 translate-y-2" : ""
-                }`}
-              ></span>
-              <span
-                className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
-                  mobileMenuOpen ? "opacity-0" : "opacity-100"
-                }`}
-              ></span>
-              <span
-                className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
-                  mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
-                }`}
-              ></span>
-            </div>
-          </button>
+          {/* Mobile Menu Button - Only show when appropriate */}
+          {showMobileMenu && (
+            <button
+              className="menu-button lg:hidden z-20 p-2 focus:outline-none"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            >
+              <div className="w-6 h-5 flex flex-col justify-between relative">
+                <span
+                  className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                    mobileMenuOpen ? "rotate-45 translate-y-2" : ""
+                  }`}
+                ></span>
+                <span
+                  className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                    mobileMenuOpen ? "opacity-0" : "opacity-100"
+                  }`}
+                ></span>
+                <span
+                  className={`w-full h-0.5 bg-gray-800 transform transition-all duration-300 ${
+                    mobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
+                  }`}
+                ></span>
+              </div>
+            </button>
+          )}
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      <div
-        className={`mobile-menu fixed inset-0 bg-white/95 backdrop-blur-lg z-10 flex flex-col pt-24 px-6 transform transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen ? "translate-x-0" : "translate-x-full"
-        } lg:hidden`}
-      >
-        <div className="flex flex-col space-y-6 items-center">
-          {isLoggedIn ? (
-            <>
-              {/* User Profile Section */}
-              <div className="flex items-center space-x-3 p-4 bg-gray-100 rounded-lg w-full max-w-md">
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {user?.name?.[0]?.toUpperCase() || "U"}
-                  </span>
+      {/* Mobile Menu - Only show when hamburger is shown */}
+      {showMobileMenu && (
+        <div
+          className={`mobile-menu fixed inset-0 bg-white/95 backdrop-blur-lg z-10 flex flex-col pt-24 px-6 transform transition-transform duration-300 ease-in-out ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          } lg:hidden`}
+        >
+          <div className="flex flex-col space-y-6 items-center">
+            {isLoggedIn ? (
+              <>
+                {/* User Profile Section */}
+                <div className="flex items-center space-x-3 p-4 bg-gray-100 rounded-lg w-full max-w-md">
+                  <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">
+                      {user?.name?.[0]?.toUpperCase() ||
+                        user?.fullName?.[0]?.toUpperCase() ||
+                        "U"}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {user?.name || user?.fullName || "User"}
+                    </p>
+                    <p className="text-sm text-gray-600">{user?.email}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {user?.name || "User"}
-                  </p>
-                  <p className="text-sm text-gray-600">{user?.email}</p>
-                </div>
-              </div>
 
-              {/* Dashboard Navigation for Mobile/Tablet */}
-              <div className="w-full max-w-md space-y-3">
-                <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">
-                  Navigation
-                </h3>
-                {dashboardNavItems.map((item) => (
+                {/* Dashboard Navigation for Mobile/Tablet */}
+                <div className="w-full max-w-md space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-800 text-center mb-4">
+                    Navigation
+                  </h3>
+                  {dashboardNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`w-full flex items-center space-x-4 py-4 px-6 text-lg font-medium rounded-lg transition-colors ${
+                        item.active
+                          ? "text-indigo-700 bg-indigo-100 shadow-sm"
+                          : "text-gray-700 hover:text-indigo-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        className={`text-xl ${
+                          item.active ? "text-indigo-600" : "text-gray-500"
+                        }`}
+                      />
+                      <span>{item.label}</span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Additional Links */}
+                <div className="w-full max-w-md space-y-3 border-t border-gray-200 pt-6">
                   <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`w-full flex items-center space-x-4 py-4 px-6 text-lg font-medium rounded-lg transition-colors ${
-                      item.active
-                        ? "text-indigo-700 bg-indigo-100 shadow-sm"
-                        : "text-gray-700 hover:text-indigo-600 hover:bg-gray-100"
+                    href="/profile"
+                    className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
+                      pathname === "/profile"
+                        ? "text-gray-800 bg-gray-200 shadow-sm"
+                        : "text-gray-700 hover:text-gray-800 hover:bg-gray-100"
                     }`}
                   >
-                    <FontAwesomeIcon
-                      icon={item.icon}
-                      className={`text-xl ${
-                        item.active ? "text-indigo-600" : "text-gray-500"
-                      }`}
-                    />
-                    <span>{item.label}</span>
+                    Profile Settings
                   </Link>
-                ))}
-              </div>
+                </div>
 
-              {/* Additional Links */}
-              <div className="w-full max-w-md space-y-3 border-t border-gray-200 pt-6">
-                <Link
-                  href="/profile"
-                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors ${
-                    pathname === "/profile"
-                      ? "text-gray-800 bg-gray-200 shadow-sm"
-                      : "text-gray-700 hover:text-gray-800 hover:bg-gray-100"
-                  }`}
-                >
-                  Profile Settings
-                </Link>
-              </div>
-
-              {/* Sign Out Button */}
-              <div className="w-full max-w-md mt-8">
-                <Button
-                  text={isLoggingOut ? "Signing Out..." : "Sign Out"}
-                  onClick={handleLogout}
-                  variant="danger"
-                  size="lg"
-                  disabled={isLoggingOut}
-                  className="w-full"
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Login/Signup for Mobile when not logged in */}
-              <div className="w-full max-w-md space-y-4">
-                <Link
-                  href="/login"
-                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors border border-gray-300 ${
-                    pathname === "/login"
-                      ? "text-purple-700 bg-purple-100 border-purple-300"
-                      : "text-gray-700 hover:text-purple-600 hover:bg-gray-100"
-                  }`}
-                >
-                  Login
-                </Link>
-
-                <Link
-                  href="/signup"
-                  className={`w-full py-4 text-center text-lg font-medium rounded-lg transition-colors bg-gradient-to-r from-indigo-500 to-purple-600 text-white ${
-                    pathname === "/signup"
-                      ? "ring-2 ring-indigo-500 shadow-md"
-                      : "hover:from-indigo-600 hover:to-purple-700"
-                  }`}
-                >
-                  Sign Up
-                </Link>
-              </div>
-            </>
-          )}
+                {/* Sign Out Button */}
+                <div className="w-full max-w-md mt-8">
+                  <Button
+                    text={isLoggingOut ? "Signing Out..." : "Sign Out"}
+                    onClick={handleLogout}
+                    variant="danger"
+                    size="lg"
+                    disabled={isLoggingOut}
+                    className="w-full"
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Home page mobile menu - show navigation or simple close */}
+                {pathname === "/" ? (
+                  <div className="w-full max-w-md space-y-4 text-center">
+                    <p className="text-gray-600 mb-6">Ready to get started?</p>
+                    <Link
+                      href="/login"
+                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors border border-gray-300 text-gray-700 hover:text-purple-600 hover:bg-gray-100"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="w-full max-w-md text-center">
+                    <p className="text-gray-600 mb-6">
+                      Use the navigation above or
+                    </p>
+                    <Link
+                      href="/"
+                      className="w-full py-4 text-center text-lg font-medium rounded-lg transition-colors bg-indigo-500 text-white hover:bg-indigo-600"
+                    >
+                      Go to Home
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Toast Notification */}
       {showToast && (
