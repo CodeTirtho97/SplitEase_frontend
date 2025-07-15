@@ -70,7 +70,7 @@ const ErrorScreen = ({
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-20">
       <Sidebar activePage="payments" />
-      <div className="flex-1 p-8 flex items-center justify-center">
+      <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -349,10 +349,10 @@ export default function PaymentsPage() {
       </div>
       <ConnectionStatus />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
           {/* Page Header with Background Gradient */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Payments
           </h1>
           <div className="hidden md:block">
@@ -365,7 +365,7 @@ export default function PaymentsPage() {
 
         {/* Pending Payments */}
         <div className="bg-gradient-to-r from-red-600 via-red-400 to-red-600 rounded-xl overflow-hidden mb-8">
-          <div className="p-4 flex items-center justify-between">
+          <div className="p-4 sm:p-6 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
                 <FontAwesomeIcon
@@ -382,71 +382,71 @@ export default function PaymentsPage() {
           </div>
 
           {pendingPayments.length > 0 ? (
-            <div className="overflow-x-auto bg-white">
-              <table className="w-full">
-                <thead>
-                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
-                    <th className="py-3 px-4 text-left font-medium">Date</th>
-                    <th className="py-3 px-4 text-left font-medium">Expense</th>
-                    <th className="py-3 px-4 text-left font-medium">Group</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Recipient
-                    </th>
-                    <th className="py-3 px-4 text-right font-medium">Amount</th>
-                    <th className="py-3 px-4 text-center font-medium">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <div className="overflow-x-auto bg-white">
+                  {/* Your existing table code from line 333-406 */}
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden bg-white p-4">
+                <div className="space-y-4">
                   {pendingPayments.map((payment, index) => (
-                    <tr
+                    <div
                       key={index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
-                      <td className="py-4 px-4 text-gray-600">
-                        {payment.date}
-                      </td>
-                      <td className="py-4 px-4 font-medium text-gray-800">
-                        {payment.expenseName}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <span className="h-2 w-2 rounded-full bg-indigo-500 mr-2"></span>
-                          <span className="text-gray-600">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm">
+                            {payment.expenseName}
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {payment.date}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-red-600 text-lg">
+                            {formatCurrency(payment.currency, payment.amount)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 text-sm mb-4">
+                        <div className="flex items-center text-gray-600">
+                          <span className="inline-flex items-center">
+                            <div className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></div>
                             {payment.groupName}
                           </span>
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-indigo-600 font-medium">
-                            {payment.owedFrom
-                              .split(" ")
-                              .map((name) => name[0])
-                              .join("")}
-                          </div>
-                          <span className="font-medium text-gray-800">
+                        <div className="flex items-center text-gray-600">
+                          <div className="flex items-center">
+                            <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center mr-2">
+                              <span className="text-xs font-medium text-indigo-600">
+                                {payment.owedFrom
+                                  .split(" ")
+                                  .map((name) => name[0])
+                                  .join("")}
+                              </span>
+                            </div>
                             {payment.owedFrom}
-                          </span>
+                          </div>
                         </div>
-                      </td>
-                      <td className="py-4 px-4 text-right font-bold text-red-500">
-                        {formatCurrency(payment.currency, payment.amount)}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => handlePayNow(payment)}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-sm font-medium rounded-md hover:from-blue-600 hover:to-cyan-700 shadow-md hover:shadow-lg transition-colors"
-                        >
-                          Pay Now
-                        </button>
-                      </td>
-                    </tr>
+                      </div>
+
+                      <button
+                        onClick={() => handlePayNow(payment)}
+                        className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-sm font-medium rounded-md hover:from-blue-600 hover:to-cyan-700 shadow-md hover:shadow-lg transition-colors"
+                      >
+                        Pay Now
+                      </button>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -474,7 +474,7 @@ export default function PaymentsPage() {
 
         {/* Transaction History */}
         <div className="bg-gradient-to-r from-green-600 via-green-300 to-green-600 rounded-xl overflow-hidden">
-          <div className="p-4 flex items-center justify-between">
+          <div className="p-4 sm:p-6 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
                 <FontAwesomeIcon icon={faHistory} className="text-purple-500" />
@@ -491,105 +491,62 @@ export default function PaymentsPage() {
           </div>
 
           {transactionHistory.length > 0 ? (
-            <div className="overflow-x-auto bg-white">
-              <table className="w-full">
-                <thead>
-                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
-                    <th className="py-3 px-4 text-left font-medium">
-                      Transaction ID
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium">Date</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Recipient
-                    </th>
-                    <th className="py-3 px-4 text-right font-medium">Amount</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Payment Method
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <div className="overflow-x-auto bg-white">
+                  {/* Your existing table code from line 452-524 */}
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden bg-white p-4">
+                <div className="space-y-4">
                   {transactionHistory.map((payment, index) => (
-                    <tr
+                    <div
                       key={index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {payment.transactionId.substring(0, 10)}...
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-gray-600">
-                        {payment.paymentDate}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2 text-purple-600 font-medium">
-                            {payment.paidTo
-                              ?.split(" ")
-                              .map((name) => name[0])
-                              .join("") || "?"}
-                          </div>
-                          <span className="font-medium text-gray-800">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm">
                             {payment.paidTo}
-                          </span>
+                          </h3>
+                          <p className="text-xs text-gray-500 mt-1">
+                            ID: {payment.transactionId.substring(0, 10)}...
+                          </p>
                         </div>
-                      </td>
-                      <td className="py-4 px-4 text-right font-bold text-green-600">
-                        {formatCurrency(payment.currency, payment.amount)}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center mr-2 
-                    ${
-                      payment.mode === "UPI"
-                        ? "bg-orange-100 text-orange-500"
-                        : payment.mode === "PayPal"
-                        ? "bg-blue-100 text-blue-500"
-                        : "bg-purple-100 text-purple-500"
-                    }`}
-                          >
-                            <FontAwesomeIcon
-                              icon={
-                                payment.mode === "UPI"
-                                  ? faGooglePay
-                                  : payment.mode === "PayPal"
-                                  ? faPaypal
-                                  : faStripe
-                              }
-                            />
-                          </div>
-                          <span className="text-gray-700">
-                            {payment.mode || "N/A"}
-                          </span>
+                        <div className="text-right">
+                          <p className="font-bold text-green-600 text-lg">
+                            {formatCurrency(payment.currency, payment.amount)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {payment.mode}
+                          </p>
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {payment.status === "Success" ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <FontAwesomeIcon
-                              icon={faCheckCircle}
-                              className="mr-1.5"
-                            />
-                            Successful
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                            <FontAwesomeIcon
-                              icon={faTimesCircle}
-                              className="mr-1.5"
-                            />
-                            Failed
-                          </span>
-                        )}
-                      </td>
-                    </tr>
+                      </div>
+
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">
+                          {payment.paymentDate}
+                        </span>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            payment.status === "Success"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {payment.status === "Success"
+                            ? "Successful"
+                            : "Failed"}
+                        </span>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
@@ -606,7 +563,7 @@ export default function PaymentsPage() {
                 payments, they will appear here.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mt-2">
                 <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center text-center border border-gray-100">
                   <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center mb-2 text-indigo-500">
                     <FontAwesomeIcon icon={faWallet} className="text-sm" />
@@ -667,7 +624,7 @@ export default function PaymentsPage() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="bg-white rounded-2xl shadow-2xl p-0 w-[500px] max-w-[90%] z-50 overflow-hidden"
+                    className="bg-white rounded-2xl shadow-2xl p-0 w-[500px] max-w-[95%] sm:max-w-[90%] z-50 overflow-hidden mx-4"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header with Gradient */}
@@ -829,7 +786,7 @@ export default function PaymentsPage() {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="bg-white rounded-2xl shadow-2xl p-0 w-[450px] max-w-[90%] z-50 overflow-hidden"
+                    className="bg-white rounded-2xl shadow-2xl p-0 w-[450px] max-w-[95%] sm:max-w-[90%] z-50 overflow-hidden mx-4"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div
