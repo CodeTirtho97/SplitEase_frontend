@@ -524,7 +524,7 @@ export default function Expenses() {
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
       <Sidebar activePage="expenses" />
-      <div className="fixed top-5 right-5 z-50 hidden lg:block">
+      <div className="fixed top-5 right-5 z-50">
         <NotificationPanel />
       </div>
       <ConnectionStatus />

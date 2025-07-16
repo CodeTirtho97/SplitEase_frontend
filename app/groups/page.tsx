@@ -350,7 +350,7 @@ export default function Groups() {
     >
       <Sidebar activePage="groups" />
 
-      <div className="fixed top-5 right-5 z-50 hidden lg:block">
+      <div className="fixed top-5 right-5 z-50">
         <NotificationPanel />
       </div>
       <ConnectionStatus />

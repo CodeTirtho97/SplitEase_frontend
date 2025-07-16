@@ -1,4 +1,3 @@
-"use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,7 +6,7 @@ import {
   faMoneyBill,
   faUsers,
   faCreditCard,
-  faTachometerAlt,
+  faTachometerAlt, // Dashboard icon
 } from "@fortawesome/free-solid-svg-icons";
 
 interface SidebarProps {
@@ -18,9 +17,22 @@ const Sidebar = ({ activePage }: SidebarProps) => {
   const router = useRouter();
 
   return (
-    // Only show on desktop (lg screens and above), completely hidden on mobile/tablet
-    <aside className="hidden lg:flex flex-col w-64 bg-gradient-to-b from-indigo-700 via-indigo-600 to-purple-700 text-white shadow-xl fixed left-0 top-20 bottom-0 z-30">
-      <div className="w-64 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700 text-white flex-col shadow-xl overflow-hidden border-r border-white/10">
+    <aside
+      className="flex flex-col w-64 bg-gradient-to-b from-indigo-700 via-indigo-600 to-purple-700 text-white shadow-xl top-8 rounded-r-xl"
+      style={{
+        marginTop: "0.25rem",
+        marginBottom: "0.75rem",
+      }}
+    >
+      <div className="w-64 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700 text-white fixed top-24 mt-8 mb-8 left-0 flex-col shadow-xl rounded-r-xl overflow-hidden border-r border-white/10">
+        {/* App Logo & Name
+        <div className="flex items-center gap-3 py-4 px-6 bg-white/10 border-b border-white/10">
+          <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
+            <span className="text-indigo-700 font-bold text-xl">S</span>
+          </div>
+          <span className="font-semibold text-xl tracking-wide">SplitEase</span>
+        </div> */}
+
         {/* Dashboard Link */}
         <Link
           href="/dashboard"
@@ -106,7 +118,7 @@ const Sidebar = ({ activePage }: SidebarProps) => {
                   }`}
                 >
                   <FontAwesomeIcon
-                    icon={faMoneyBill}
+                    icon={faCreditCard}
                     className={
                       activePage === "expenses" ? "text-white" : "text-white/90"
                     }
@@ -139,7 +151,7 @@ const Sidebar = ({ activePage }: SidebarProps) => {
                   }`}
                 >
                   <FontAwesomeIcon
-                    icon={faCreditCard}
+                    icon={faMoneyBill}
                     className={
                       activePage === "payments" ? "text-white" : "text-white/90"
                     }
@@ -156,6 +168,21 @@ const Sidebar = ({ activePage }: SidebarProps) => {
             </li>
           </ul>
         </nav>
+
+        {/* User Profile Link (Optional)
+        <div className="mt-auto">
+          <Link
+            href="/profile"
+            className={`flex items-center gap-4 px-6 py-4 border-t border-white/10 transition-all duration-300 ${
+              activePage === "profile" ? "bg-white/20" : "hover:bg-white/10"
+            }`}
+          >
+            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+              <span className="text-white font-medium">U</span>
+            </div>
+            <span className="text-white/90">Profile</span>
+          </Link>
+        </div> */}
       </div>
     </aside>
   );
