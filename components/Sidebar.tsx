@@ -1,12 +1,10 @@
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faArrowLeft,
   faMoneyBill,
   faUsers,
   faCreditCard,
-  faTachometerAlt, // Dashboard icon
+  faTachometerAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
 interface SidebarProps {
@@ -14,8 +12,6 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ activePage }: SidebarProps) => {
-  const router = useRouter();
-
   return (
     <aside
       className="flex flex-col w-64 bg-gradient-to-b from-indigo-700 via-indigo-600 to-purple-700 text-white shadow-xl top-8 rounded-r-xl"

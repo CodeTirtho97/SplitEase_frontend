@@ -2,8 +2,6 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faShieldAlt,
@@ -434,7 +432,7 @@ const LegalPage = () => {
                         <div>
                           <p className="font-medium">Account Security</p>
                           <p className="text-gray-600 text-sm mt-1">
-                            You're responsible for maintaining the
+                            You&apos;re responsible for maintaining the
                             confidentiality of your password and account
                             information, and for all activities that occur under
                             your account.
@@ -581,7 +579,7 @@ const LegalPage = () => {
                     Contact Us
                   </h2>
                   <p className="text-gray-600 mt-2">
-                    We're here to help you with any questions or concerns
+                    We&apos;re here to help you with any questions or concerns
                   </p>
                 </div>
 

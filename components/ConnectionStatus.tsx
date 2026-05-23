@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSocket } from "@/context/socketContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -12,26 +12,29 @@ import { motion, AnimatePresence } from "framer-motion";
 const ConnectionStatus: React.FC = () => {
   const { isConnected } = useSocket();
   const [showStatus, setShowStatus] = useState(false);
-  const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [reconnected, setReconnected] = useState(false);
+  const wasDisconnected = useRef(false);
+  const hideTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // Show indicator on connection status change
   useEffect(() => {
-    setShowStatus(true);
+    if (hideTimeout.current) clearTimeout(hideTimeout.current);
 
-    // Clear any existing timeout
-    if (hideTimeout) {
-      clearTimeout(hideTimeout);
+    if (!isConnected) {
+      wasDisconnected.current = true;
+      setReconnected(false);
+      setShowStatus(true);
+    } else if (wasDisconnected.current) {
+      // Only show "reconnected" banner if we were previously disconnected
+      setReconnected(true);
+      setShowStatus(true);
+      hideTimeout.current = setTimeout(() => {
+        setShowStatus(false);
+        setReconnected(false);
+      }, 3000);
     }
 
-    // Hide after 5 seconds
-    const timeout = setTimeout(() => {
-      setShowStatus(false);
-    }, 5000);
-
-    setHideTimeout(timeout);
-
     return () => {
-      if (hideTimeout) clearTimeout(hideTimeout);
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
     };
   }, [isConnected]);
 
@@ -46,19 +49,17 @@ const ConnectionStatus: React.FC = () => {
         >
           <div
             className={`px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 ${
-              isConnected
-                ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
-                : "bg-gradient-to-r from-orange-500 to-red-500 text-white"
+              reconnected
+                ? "bg-green-500 text-white"
+                : "bg-red-500 text-white"
             }`}
           >
             <FontAwesomeIcon
-              icon={isConnected ? faWifi : faExclamationTriangle}
-              className={isConnected ? "text-green-200" : "text-orange-200"}
+              icon={reconnected ? faWifi : faExclamationTriangle}
+              className="text-white/80"
             />
             <span className="text-sm font-medium">
-              {isConnected
-                ? "Real-time connection active"
-                : "Reconnecting to server..."}
+              {reconnected ? "Reconnected" : "Connection lost — reconnecting..."}
             </span>
           </div>
         </motion.div>

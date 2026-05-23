@@ -5,7 +5,7 @@ import Link from "next/link";
 import Testimonials from "@/components/Testimonials";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useMediaQuery } from "react-responsive";
 import DeviceMockups from "@/components/DeviceMockups";
 import { useAuth } from "@/context/authContext";
@@ -678,7 +678,7 @@ export default function Home() {
             >
               <Link href="/signup">
                 <span className="flex items-center">
-                  Get Started — It's Free!
+                  Get Started — It&apos;s Free!
                   <svg
                     className="w-5 h-5 ml-2"
                     fill="none"

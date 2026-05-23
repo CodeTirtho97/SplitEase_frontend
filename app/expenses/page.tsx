@@ -6,9 +6,9 @@ import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faCheckCircle,
   faExclamationCircle,
 } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 import "chart.js/auto";
 import expenseApi from "@/utils/api/expense";
 import DashboardCards from "@/components/ExpenseCard";
@@ -16,7 +16,6 @@ import { useGroups } from "@/context/groupContext";
 import ExpenseModal from "@/components/ExpenseModal";
 import RecentExpensesTable from "@/components/RecentExpensesTable";
 import ExpenseCharts from "@/components/ExpenseCharts";
-import ExpenseLoadingScreen from "@/components/ExpenseLoadingScreen";
 import { useTransactionContext } from "@/context/transactionContext";
 import { useAuth } from "@/context/authContext";
 import { useSocket } from "@/context/socketContext";
@@ -75,10 +74,6 @@ export default function Expenses() {
   const router = useRouter();
   const { user, token } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
   const { addEventListener, removeEventListener } = useSocket();
   const { groups: contextGroups, refreshGroups } = useGroups();
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -90,9 +85,9 @@ export default function Expenses() {
   const [summary, setSummary] = useState<
     { [key in Currency]?: Summary } | null
   >(null);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency>("INR");
-  const { refreshExpenses } = useTransactionContext();
+  const { refreshExpenses: _refreshExpenses } = useTransactionContext();
   const [animate, setAnimate] = useState(false);
 
   // NEW: State to track overall loading status
@@ -190,7 +185,7 @@ export default function Expenses() {
         !errorMessage.includes("not found") &&
         errorStatus !== 404
       ) {
-        setToast({ message: "Failed to load recent expenses", type: "error" });
+        toast.error("Failed to load recent expenses");
       }
     } finally {
       setIsFetching(false);
@@ -250,7 +245,7 @@ export default function Expenses() {
         !errorMessage.includes("No expenses") &&
         errorStatus !== 404
       ) {
-        setToast({ message: "Failed to load chart data", type: "error" });
+        toast.error("Failed to load chart data");
       }
     } finally {
       setLoadingCharts(false);
@@ -342,7 +337,7 @@ export default function Expenses() {
             !error.message.includes("No data") &&
             !error.message.includes("not found")
           ) {
-            setToast({ message: "Failed to load initial data", type: "error" });
+            toast.error("Failed to load initial data");
           }
         }
       };
@@ -364,15 +359,6 @@ export default function Expenses() {
     }
   }, [isModalOpen, refreshGroups]);
 
-  // Clear toast after 5 seconds
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => {
-        setToast(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   const groupMapping = useMemo(() => {
     return transformedGroups.reduce((acc, group) => {
@@ -423,7 +409,7 @@ export default function Expenses() {
       const response = await expenseApi.createExpense(payload);
 
       if (response.status === 201) {
-        setToast({ message: "Expense added successfully!", type: "success" });
+        toast.success("Expense added successfully!");
 
         // Fallback - in case sockets are not working, refresh data manually after a delay
         setTimeout(() => {
@@ -434,10 +420,7 @@ export default function Expenses() {
       }
     } catch (error: any) {
       console.error("Error saving expense:", error.response?.data || error);
-      setToast({
-        message: error.response?.data?.message || "Error adding expense",
-        type: "error",
-      });
+      toast.error(error.response?.data?.message || "Error adding expense");
       // Reopen the modal if there was an error
       setIsModalOpen(true);
     }
@@ -450,48 +433,6 @@ export default function Expenses() {
         : [...prevRows, expenseId]
     );
   };
-
-  // Empty state component for no expenses with animation
-  const EmptyExpensesState = () => (
-    <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-lg transition-all duration-500 ease-in-out transform">
-      <div
-        className={`text-center mb-8 transition-all duration-700 ease-in-out transform ${
-          animate ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-        }`}
-      >
-        <div className="mb-4 relative mx-auto w-24 h-24 flex items-center justify-center">
-          <FontAwesomeIcon
-            icon={faExclamationCircle}
-            className="text-6xl text-purple-400 absolute z-10"
-          />
-          <div
-            className={`absolute inset-0 bg-purple-100 rounded-full scale-0 ${
-              animate ? "animate-ping-slow" : ""
-            }`}
-          ></div>
-        </div>
-        <h2 className="text-2xl font-bold text-gray-700 mb-2">
-          No Expenses Yet!
-        </h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          Start tracking your shared expenses by adding your first expense with
-          friends or roommates.
-        </p>
-      </div>
-      <Button
-        text="Add Your First Expense"
-        onClick={() => setIsModalOpen(true)}
-        className={`bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-all duration-700 ease-in-out transform ${
-          animate
-            ? "translate-y-0 opacity-100 scale-100"
-            : "translate-y-10 opacity-0 scale-95"
-        }`}
-      >
-        <FontAwesomeIcon icon={faPlus} />
-        <span>Add Your First Expense</span>
-      </Button>
-    </div>
-  );
 
   // Empty state component for summary data
   const EmptySummaryState = () => (
@@ -515,35 +456,49 @@ export default function Expenses() {
     </div>
   );
 
-  // If still loading, show the loading screen
   if (isLoading) {
-    return <ExpenseLoadingScreen logoSrc="/logo.png" />;
+    return (
+      <div className="flex min-h-screen bg-gray-50 pt-20">
+        <Sidebar activePage="expenses" />
+        <div className="flex-1 p-4 sm:p-6 md:p-8 animate-pulse">
+          <div className="flex items-center justify-between mb-6">
+            <div className="h-9 w-36 bg-gray-200 rounded-lg" />
+            <div className="h-10 w-32 bg-gray-200 rounded-lg" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="h-4 w-28 bg-gray-200 rounded mb-3" />
+                <div className="h-8 w-36 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+          <div className="h-10 w-44 bg-gray-200 rounded-lg mb-6" />
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="h-12 bg-gray-100 border-b border-gray-200" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-gray-100">
+                <div className="h-4 w-24 bg-gray-100 rounded" />
+                <div className="h-4 flex-1 bg-gray-100 rounded" />
+                <div className="h-4 w-20 bg-gray-100 rounded" />
+                <div className="h-4 w-16 bg-gray-100 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Main content renders only when loading is complete
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-purple-100 to-indigo-200 pt-20">
+    <div className="flex min-h-screen bg-gray-50 pt-20">
       <Sidebar activePage="expenses" />
       <div className="fixed top-5 right-5 z-50">
         <NotificationPanel />
       </div>
       <ConnectionStatus />
       <div className="flex-1 p-4 sm:p-6 md:p-8">
-        {toast && (
-          <div
-            className={`fixed top-24 right-6 px-6 py-3 rounded-md shadow-lg flex items-center gap-3 text-white text-sm z-50 ${
-              toast.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            <FontAwesomeIcon
-              icon={
-                toast.type === "success" ? faCheckCircle : faExclamationCircle
-              }
-              className="text-lg"
-            />
-            <span>{toast.message}</span>
-          </div>
-        )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
             Expenses

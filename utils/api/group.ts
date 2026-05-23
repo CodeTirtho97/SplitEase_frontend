@@ -212,6 +212,23 @@ export const calculateOwes = async (groupId: string, token?: string) => {
   }
 };
 
+// ✅ Fetch Debt Simplification Summary for a Group
+export const getGroupDebtSummary = async (groupId: string, token?: string) => {
+  try {
+    if (!token) {
+      token = Cookies.get("token");
+      if (!token) throw new Error("User not authenticated!");
+    }
+    const response = await axios.get(`${API_URL}/groups/${groupId}/debt-summary`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching debt summary:", error.message);
+    return null;
+  }
+};
+
 // ✅ Fetch User's Friends (From Group API)
 export const fetchUserFriends = async (token?: string) => {
   try {

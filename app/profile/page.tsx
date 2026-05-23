@@ -3,11 +3,10 @@
 import { useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Button from "@/components/Button";
+import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCheckCircle,
-  faExclamationCircle,
   faTimes,
   faCreditCard,
   faEdit,
@@ -21,7 +20,6 @@ import {
   faStripe,
 } from "@fortawesome/free-brands-svg-icons";
 import { ProfileContext } from "@/context/profileContext";
-import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
 import { useAuth } from "@/context/authContext"; // Import useAuth explicitly
 
 // Define PaymentMethod interface inline
@@ -57,10 +55,163 @@ interface User {
 
 export default function Profile() {
   const router = useRouter();
-  const { token } = useAuth(); // Directly access the token from AuthContext
+  const { token } = useAuth();
 
-  // ✅ Ensure ProfileContext is valid before accessing user data
   const profileContext = useContext(ProfileContext);
+
+  // All hooks must be declared before any early return
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [updatedName, setUpdatedName] = useState("");
+  const [updatedGender, setUpdatedGender] = useState<"male" | "female" | "other">("other");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [friendName, setFriendName] = useState("");
+  const [suggestedFriends, setSuggestedFriends] = useState<User[]>([]);
+  const [friendSearchLoading, setFriendSearchLoading] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [paymentType, setPaymentType] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
+  const [profileFetchError, setProfileFetchError] = useState(false);
+  const [updatingOperation, setUpdatingOperation] = useState<string | null>(null);
+  const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [confirmDeleteFriendId, setConfirmDeleteFriendId] = useState<string | null>(null);
+  const [confirmDeletePaymentId, setConfirmDeletePaymentId] = useState<string | null>(null);
+
+  const handleFriendSearch = useCallback(
+    async (name: string) => {
+      setFriendName(name);
+
+      if (name.length < 2) {
+        setSuggestedFriends([]);
+        setFriendSearchLoading(false);
+        return;
+      }
+
+      setFriendSearchLoading(true);
+
+      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
+
+      debounceTimeout.current = setTimeout(async () => {
+        try {
+          const friends = await profileContext?.searchFriend(name);
+
+          if (Array.isArray(friends)) {
+            setSuggestedFriends(friends);
+            if (friends.length === 0) {
+              toast.error("No friends found");
+            }
+          } else {
+            setSuggestedFriends([]);
+            toast.error("Error searching friends");
+          }
+        } catch (error: unknown) {
+          const e = error as { message?: string };
+          setSuggestedFriends([]);
+          toast.error(e.message || "Failed to search friends!");
+        } finally {
+          setFriendSearchLoading(false);
+        }
+      }, 500);
+    },
+    [profileContext]
+  );
+
+  useEffect(() => {
+    if (!isAddPaymentModalOpen) {
+      setPaymentType("");
+      setPaymentDetails("");
+    }
+    if (!isAddContactModalOpen) {
+      setFriendName("");
+      setSuggestedFriends([]);
+    }
+    if (!isPasswordModalOpen) {
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [isAddPaymentModalOpen, isAddContactModalOpen, isPasswordModalOpen]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadUserProfile = async () => {
+      if (!token) {
+        console.log("No token available, waiting...");
+        return;
+      }
+
+      setLoading(true);
+      setProfileFetchAttempted(true);
+
+      try {
+        await profileContext?.fetchUserProfile();
+        if (mounted) {
+          setProfileFetchError(false);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        if (mounted) {
+          setProfileFetchError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    if (token && !profileFetchAttempted) {
+      loadUserProfile();
+    } else if (profileContext?.user) {
+      setLoading(false);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [token, profileFetchAttempted, profileContext]);
+
+  useEffect(() => {
+    const user = profileContext?.user;
+    if (!user) return;
+
+    const newName = user.fullName || "";
+    const newGender = (user.gender?.toLowerCase() as "male" | "female" | "other") || "other";
+    const newProfileImage =
+      user.profilePic ||
+      (user.gender?.toLowerCase() === "male"
+        ? "/avatar_male.png"
+        : user.gender?.toLowerCase() === "female"
+        ? "/avatar_female.png"
+        : "/avatar_trans.png");
+
+    setUpdatedName(newName);
+    setUpdatedGender(newGender);
+    setProfileImage(newProfileImage);
+  }, [profileContext]);
+
+  const hasRedirected = useRef(false);
+
+  useEffect(() => {
+    const user = profileContext?.user;
+    if (loading || hasRedirected.current) return;
+
+    if (!user && profileFetchAttempted && !loading && !hasRedirected.current) {
+      const timer = setTimeout(() => {
+        hasRedirected.current = true;
+        toast.error("Session expired. Please log in again.");
+        router.push("/login");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [profileContext, loading, profileFetchAttempted, router]);
+
   if (!profileContext) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -75,7 +226,6 @@ export default function Profile() {
     fetchUserProfile,
     updateUserProfile,
     uploadProfilePic,
-    searchFriend,
     addFriend,
     addPayment,
     updatePassword,
@@ -89,7 +239,6 @@ export default function Profile() {
       gender?: string;
     }) => Promise<User>;
     uploadProfilePic: (imageFile: File) => Promise<string>;
-    searchFriend: (friendName: string) => Promise<User[]>;
     addFriend: (friendId: string) => Promise<void>;
     addPayment: (paymentData: {
       methodType: string;
@@ -104,139 +253,7 @@ export default function Profile() {
     deletePayment: (paymentId: string) => Promise<void>;
   };
 
-  const [loading, setLoading] = useState(true); // Global loading for initial profile fetch
-  const [isEditing, setIsEditing] = useState(false);
-  const [updatedName, setUpdatedName] = useState("");
-  const [updatedGender, setUpdatedGender] = useState<
-    "male" | "female" | "other"
-  >("other");
-  const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  // ✅ Friend Search (Local state for modal loading)
-  const [friendName, setFriendName] = useState("");
-  const [suggestedFriends, setSuggestedFriends] = useState<User[]>([]);
-  const [friendSearchLoading, setFriendSearchLoading] = useState(false); // Local loading for friend search
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
-
-  // ✅ Payment
-  const [paymentType, setPaymentType] = useState("");
-  const [paymentDetails, setPaymentDetails] = useState("");
-
-  // ✅ Password
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // ✅ Toast Notifications
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
-
-  const [showFriendToast, setShowFriendToast] = useState(false);
-  const [showPaymentToast, setShowPaymentToast] = useState(false);
-  const [showPasswordToast, setShowPasswordToast] = useState(false);
-
-  // Fix: Use state to track profile fetch attempts
-  const [profileFetchAttempted, setProfileFetchAttempted] = useState(false);
-  const [profileFetchError, setProfileFetchError] = useState(false);
-
-  const [updatingOperation, setUpdatingOperation] = useState<string | null>(
-    null
-  );
-
-  // Fixed useEffect for profile loading
-  useEffect(() => {
-    let mounted = true;
-
-    const loadUserProfile = async () => {
-      if (!token) {
-        console.log("No token available, waiting...");
-        return;
-      }
-
-      setLoading(true);
-      setProfileFetchAttempted(true);
-
-      try {
-        await fetchUserProfile();
-        if (mounted) {
-          console.log("Profile data loaded successfully");
-          setProfileFetchError(false);
-          setLoading(false); // Make sure this line is always executed when data is received
-        }
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        if (mounted) {
-          setProfileFetchError(true);
-          setLoading(false); // Also update loading state on error
-        }
-      }
-    };
-
-    // Only attempt to load profile if we have a token and haven't tried yet
-    if (token && !profileFetchAttempted) {
-      loadUserProfile();
-    } else if (user) {
-      // If we already have user data, make sure loading is false
-      setLoading(false);
-      console.log("Loading state set to false");
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [token, profileFetchAttempted, fetchUserProfile, user]);
-
-  // Sync state with user changes from context, but only if user exists
-  useEffect(() => {
-    if (!user) return;
-
-    const newName = user.fullName || "";
-    const newGender =
-      (user.gender?.toLowerCase() as "male" | "female" | "other") || "other";
-    const newProfileImage =
-      user.profilePic ||
-      (user.gender?.toLowerCase() === "male"
-        ? "/avatar_male.png"
-        : user.gender?.toLowerCase() === "female"
-        ? "/avatar_female.png"
-        : "/avatar_trans.png");
-
-    // Update only if values have changed (avoids redundant renders)
-    setUpdatedName(newName);
-    setUpdatedGender(newGender);
-    setProfileImage(newProfileImage);
-  }, [user]);
-
-  const hasRedirected = useRef(false);
-
-  // Redirect if no user and we've attempted to fetch
-  useEffect(() => {
-    if (loading || hasRedirected.current) return;
-
-    // If we've tried to fetch profile and there's no user, redirect to login
-    if (!user && profileFetchAttempted && !loading && !hasRedirected.current) {
-      const timer = setTimeout(() => {
-        hasRedirected.current = true;
-        setToast({
-          message: "Session expired. Please log in again.",
-          type: "error",
-        });
-        router.push("/login");
-      }, 2000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [user, loading, profileFetchAttempted, router]);
-
-  // Auto-hide toast after delay
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   // ✅ Handle Profile Image Upload
   const handleImageUpload = async (
@@ -249,36 +266,25 @@ export default function Profile() {
 
       // ✅ Validate File Format
       if (!allowedFormats.includes(file.type)) {
-        setToast({
-          message: "Invalid format! Only JPG, JPEG, PNG are allowed.",
-          type: "error",
-        });
+        toast.error("Invalid format! Only JPG, JPEG, PNG are allowed.");
         return;
       }
 
-      // ✅ Validate File Size
       if (file.size > maxSize) {
-        setToast({
-          message: "File too large! Max size: 100KB.",
-          type: "error",
-        });
+        toast.error("File too large! Max size: 100KB.");
         return;
       }
 
-      // ✅ Show real-time preview before saving
       const imageURL = URL.createObjectURL(file);
-      setProfileImage(imageURL); // ✅ Show image preview before backend upload
+      setProfileImage(imageURL);
 
       try {
-        const updatedImage = await uploadProfilePic(file); // ✅ Upload to backend
-        await fetchUserProfile(); // ✅ Refresh user data
-        setToast({
-          message: "Profile picture updated successfully!",
-          type: "success",
-        });
+        const _updatedImage = await uploadProfilePic(file);
+        await fetchUserProfile();
+        toast.success("Profile picture updated successfully!");
       } catch (error) {
         console.error("Error uploading profile picture:", error);
-        setToast({ message: "Failed to upload image", type: "error" });
+        toast.error("Failed to upload image.");
         setProfileImage(
           user?.gender?.toLowerCase() === "male"
             ? "/avatar_male.png"
@@ -307,71 +313,18 @@ export default function Profile() {
         gender: formattedGender,
       });
 
-      await fetchUserProfile(); // ✅ Force fetch the latest user profile from backend to ensure UI updates
-      console.log("Profile updated, new user data:", updatedUser);
+      await fetchUserProfile();
       setUpdatedGender(
-        (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
-          "other"
-      ); // Sync updatedGender with the latest user data
+        (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") || "other"
+      );
       setIsEditing(false);
-      setToast({ message: "Profile updated successfully!", type: "success" });
+      toast.success("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      setToast({ message: "Failed to update profile!", type: "error" });
+      toast.error("Failed to update profile!");
     }
   };
 
-  // ✅ Optimized Friend Search with Debouncing (Local loading state)
-  const handleFriendSearch = useCallback(
-    async (name: string) => {
-      setFriendName(name);
-
-      if (name.length < 2) {
-        setSuggestedFriends([]);
-        setToast(null);
-        setFriendSearchLoading(false);
-        return;
-      }
-
-      setFriendSearchLoading(true);
-
-      if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-
-      debounceTimeout.current = setTimeout(async () => {
-        try {
-          // Ensure proper error handling and correct parameter passing
-          const friends = await searchFriend(name);
-          console.log("Friend search response:", friends);
-
-          // Check if friends is an array
-          if (Array.isArray(friends)) {
-            setSuggestedFriends(friends);
-
-            if (friends.length === 0) {
-              setToast({ message: "No friends found", type: "error" });
-            } else {
-              setToast(null);
-            }
-          } else {
-            // Handle case where API doesn't return expected array
-            console.error("Friends search returned unexpected data:", friends);
-            setSuggestedFriends([]);
-            setToast({ message: "Error searching friends", type: "error" });
-          }
-        } catch (error: any) {
-          console.error("Friend search error:", error);
-          setSuggestedFriends([]);
-          setToast({
-            message: error.message || "Failed to search friends!",
-            type: "error",
-          });
-        } finally {
-          setFriendSearchLoading(false);
-        }
-      }, 500);
-    },
-    [searchFriend]
-  );
 
   const handleAddFriend = async (friendId: string) => {
     try {
@@ -381,36 +334,20 @@ export default function Profile() {
 
       await fetchUserProfile(); // ✅ Ensure UI updates with new friends
 
-      setIsAddContactModalOpen(false); // ✅ Close the modal first
-
-      setTimeout(() => {
-        setShowFriendToast(true); // ✅ Show toast AFTER modal is fully closed
-      }, 300); // ✅ Small delay to allow re-render
+      setIsAddContactModalOpen(false);
+      toast.success("Friend added successfully!");
     } catch (error) {
       console.error("Error adding friend:", error);
-      setToast({ message: "Failed to add friend!", type: "error" });
+      toast.error("Failed to add friend!");
     } finally {
       setUpdatingOperation(null);
     }
   };
 
-  // ✅ Show toast after modal closes completely
-  useEffect(() => {
-    if (showFriendToast) {
-      setToast({ message: "Friend added successfully!", type: "success" });
-
-      const timer = setTimeout(() => {
-        setToast(null);
-        setShowFriendToast(false); // ✅ Reset showToast state
-      }, 5000); // ✅ Keep toast visible for 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [showFriendToast]);
-
   // ✅ Add Payment API Call
   const handleAddPayment = async () => {
     if (!paymentType || !paymentDetails) {
-      setToast({ message: "All fields are required!", type: "error" });
+      toast.error("All fields are required!");
       return;
     }
 
@@ -419,15 +356,12 @@ export default function Profile() {
       const updatedUser = await addPayment({
         methodType: paymentType,
         accountDetails: paymentDetails,
-      }); // ✅ Call Context Function
+      });
 
-      // Ensure user is defined before updating state
       if (updatedUser) {
-        console.log("Payment added, new user data:", updatedUser);
         setUpdatedName(updatedUser.fullName || "");
         setUpdatedGender(
-          (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") ||
-            "other"
+          (updatedUser.gender?.toLowerCase() as "male" | "female" | "other") || "other"
         );
         setProfileImage(
           updatedUser.profilePic ||
@@ -439,42 +373,17 @@ export default function Profile() {
         );
       }
 
-      await fetchUserProfile(); // ✅ Fetch updated user data to ensure UI sync and prevent hydration issues
-      setToast({ message: "Payment method added!", type: "success" });
-
+      await fetchUserProfile();
       setIsAddPaymentModalOpen(false);
-
-      setTimeout(() => {
-        setShowPaymentToast(true); // ✅ Show toast AFTER modal is fully closed
-      }, 300); // ✅ Small delay to allow re-render
-    } catch (error: any) {
-      console.error(
-        "Payment addition error:",
-        error.response?.data || error.message
-      );
-      setToast({
-        message:
-          error.message ||
-          "Unable to add payment! Try with a different payment ID!",
-        type: "error",
-      });
+      toast.success("Payment method added!");
+    } catch (error: unknown) {
+      const e = error as { message?: string };
+      console.error("Payment addition error:", error);
+      toast.error(e.message || "Unable to add payment! Try with a different payment ID!");
     } finally {
       setUpdatingOperation(null);
     }
   };
-
-  // ✅ Show toast after modal closes completely
-  useEffect(() => {
-    if (showPaymentToast) {
-      setToast({ message: "Payment added successfully!", type: "success" });
-
-      const timer = setTimeout(() => {
-        setToast(null);
-        setShowPaymentToast(false); // ✅ Reset showToast state
-      }, 5000); // ✅ Keep toast visible for 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [showPaymentToast]);
 
   const handleCloseContactModal = () => {
     setIsAddContactModalOpen(false);
@@ -487,20 +396,17 @@ export default function Profile() {
   // ✅ Handle Password Change
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      setToast({ message: "All password fields are required!", type: "error" });
+      toast.error("All password fields are required!");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setToast({ message: "Passwords do not match!", type: "error" });
+      toast.error("Passwords do not match!");
       return;
     }
 
     if (newPassword.length < 8) {
-      setToast({
-        message: "Password must be at least 8 characters long!",
-        type: "error",
-      });
+      toast.error("Password must be at least 8 characters long!");
       return;
     }
 
@@ -513,51 +419,28 @@ export default function Profile() {
       });
 
       setIsPasswordModalOpen(false);
-
-      setTimeout(() => {
-        setShowPasswordToast(true); // ✅ Show toast AFTER modal is fully closed
-      }, 300); // ✅ Ensures re-render completes before showing toast
-
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (error: any) {
+      toast.success("Password changed successfully!");
+    } catch (error: unknown) {
+      const e = error as { message?: string };
       console.error("Error changing password:", error);
-      setToast({
-        message: error.message || "Failed to change password!",
-        type: "error",
-      });
+      toast.error(e.message || "Failed to change password!");
     } finally {
       setUpdatingOperation(null);
     }
   };
 
-  useEffect(() => {
-    if (showPasswordToast) {
-      setToast({ message: "Password changed successfully!", type: "success" });
-
-      const timer = setTimeout(() => {
-        setToast(null);
-        setShowPasswordToast(false); // ✅ Reset showToast state
-      }, 5000); // ✅ Keep toast visible for 5 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [showPasswordToast]);
-
-  const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
-  const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
-
   const handleDeleteFriend = async (friendId: string) => {
     setUpdatingOperation("Removing contact...");
     try {
       await deleteFriend(friendId);
-      setToast({ message: "Friend removed successfully!", type: "success" });
-
-      await fetchUserProfile(); // ✅ Refresh UI
+      await fetchUserProfile();
+      toast.success("Friend removed successfully!");
     } catch (error) {
       console.error("Error deleting friend:", error);
-      setToast({ message: "Failed to remove friend!", type: "error" });
+      toast.error("Failed to remove friend!");
     } finally {
       setUpdatingOperation(null);
     }
@@ -570,14 +453,11 @@ export default function Profile() {
 
       // Simply reload the profile data after deletion
       await fetchUserProfile();
-
-      setToast({ message: "Payment method removed!", type: "success" });
-    } catch (error: any) {
+      toast.success("Payment method removed!");
+    } catch (error: unknown) {
+      const e = error as { message?: string };
       console.error("Error deleting payment:", error);
-      setToast({
-        message: error.message || "Failed to remove payment method!",
-        type: "error",
-      });
+      toast.error(e.message || "Failed to remove payment method!");
     } finally {
       setUpdatingOperation(null);
     }
@@ -604,39 +484,15 @@ export default function Profile() {
 
     try {
       await fetchUserProfile();
-      setToast({ message: "Profile loaded successfully!", type: "success" });
+      toast.success("Profile loaded successfully!");
     } catch (error) {
       console.error("Error retrying profile fetch:", error);
       setProfileFetchError(true);
-      setToast({
-        message: "Failed to load profile. Please try again.",
-        type: "error",
-      });
+      toast.error("Failed to load profile. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    // Clear payment form data when modal is closed
-    if (!isAddPaymentModalOpen) {
-      setPaymentType("");
-      setPaymentDetails("");
-    }
-
-    // Clear friend search data when modal is closed
-    if (!isAddContactModalOpen) {
-      setFriendName("");
-      setSuggestedFriends([]);
-    }
-
-    // Clear password change data when modal is closed
-    if (!isPasswordModalOpen) {
-      setOldPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    }
-  }, [isAddPaymentModalOpen, isAddContactModalOpen, isPasswordModalOpen]);
 
   const UpdateLoadingOverlay = ({ message = "Updating..." }) => (
     <div className="fixed inset-0 z-50 bg-indigo-900/30 backdrop-blur-sm flex flex-col items-center justify-center">
@@ -669,20 +525,33 @@ export default function Profile() {
   );
 
   const isGoogleUser = !!user?.googleId;
-  console.log("Google ID check:", {
-    googleIdValue: user?.googleId,
-    googleIdType: typeof user?.googleId,
-    hasGoogleIdProperty: user && "googleId" in user,
-    isGoogleUserResult: !!user?.googleId,
-  });
 
   if (loading) {
     return (
-      <UnifiedLoadingScreen
-        message="Loading Your Profile"
-        section="profile"
-        showTips={false}
-      />
+      <div className="min-h-screen flex flex-col items-center bg-gray-50 pt-20">
+        <div className="w-full max-w-6xl px-6 md:px-8 py-6 md:py-8 mt-0 md:mt-8 animate-pulse">
+          <div className="bg-indigo-100 rounded-2xl p-8 mb-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="w-28 h-28 rounded-full bg-indigo-200 flex-shrink-0" />
+            <div className="flex-1 space-y-3 w-full">
+              <div className="h-7 w-48 bg-indigo-200 rounded" />
+              <div className="h-4 w-64 bg-indigo-200 rounded" />
+              <div className="h-4 w-32 bg-indigo-200 rounded" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="h-5 w-36 bg-gray-200 rounded mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="h-12 bg-gray-100 rounded-lg" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -941,14 +810,32 @@ export default function Profile() {
                             {friendEmail}
                           </p>
                         </div>
-                        <button
-                          onClick={() => handleDeleteFriend(friendId as string)}
-                          className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-2"
-                          title="Remove Contact"
-                          disabled={!!updatingOperation}
-                        >
-                          <FontAwesomeIcon icon={faTimes} />
-                        </button>
+                        {confirmDeleteFriendId === friendId ? (
+                          <div className="flex items-center gap-1.5 ml-2">
+                            <button
+                              onClick={() => setConfirmDeleteFriendId(null)}
+                              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => { setConfirmDeleteFriendId(null); handleDeleteFriend(friendId as string); }}
+                              className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                              disabled={!!updatingOperation}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteFriendId(friendId as string)}
+                            className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-2"
+                            title="Remove Contact"
+                            disabled={!!updatingOperation}
+                          >
+                            <FontAwesomeIcon icon={faTimes} />
+                          </button>
+                        )}
                       </div>
                     );
                   })
@@ -1013,14 +900,32 @@ export default function Profile() {
                             {method.accountDetails}
                           </p>
                         </div>
-                        <button
-                          onClick={() => handleDeletePayment(method._id || "")}
-                          className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-2"
-                          title="Remove Payment Method"
-                          disabled={!!updatingOperation}
-                        >
-                          <FontAwesomeIcon icon={faTimes} />
-                        </button>
+                        {confirmDeletePaymentId === method._id ? (
+                          <div className="flex items-center gap-1.5 ml-2">
+                            <button
+                              onClick={() => setConfirmDeletePaymentId(null)}
+                              className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-300"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => { setConfirmDeletePaymentId(null); handleDeletePayment(method._id || ""); }}
+                              className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                              disabled={!!updatingOperation}
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeletePaymentId(method._id || "")}
+                            className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-2"
+                            title="Remove Payment Method"
+                            disabled={!!updatingOperation}
+                          >
+                            <FontAwesomeIcon icon={faTimes} />
+                          </button>
+                        )}
                       </div>
                     )
                   )
@@ -1272,23 +1177,6 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Toast Notification */}
-        {toast && (
-          <div
-            className={`fixed top-24 right-6 px-5 py-3 rounded-lg shadow-xl flex items-center gap-3 text-white text-sm transition-all duration-500 transform z-50 ${
-              toast.type === "success" ? "bg-green-500" : "bg-red-500"
-            }`}
-          >
-            <FontAwesomeIcon
-              icon={
-                toast.type === "success" ? faCheckCircle : faExclamationCircle
-              }
-              className="text-lg"
-            />
-            <span className="font-medium">{toast.message}</span>
           </div>
         )}
 

@@ -124,9 +124,9 @@ const ExpenseCharts: React.FC<ExpenseChartsProps> = ({
       const months = Object.keys(chartData.monthlyTrend);
 
       // Create scaled monthly trends
-      let scaledMonthlyTrend: { [key: string]: number } = {};
-      let scaledMonthlyTrendPending: { [key: string]: number } = {};
-      let scaledMonthlyTrendSettled: { [key: string]: number } = {};
+      const scaledMonthlyTrend: { [key: string]: number } = {};
+      const scaledMonthlyTrendPending: { [key: string]: number } = {};
+      const scaledMonthlyTrendSettled: { [key: string]: number } = {};
 
       // If we have only one month, allocate all values to it
       if (months.length === 1) {

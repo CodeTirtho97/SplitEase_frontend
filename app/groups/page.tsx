@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import Sidebar from "@/components/Sidebar";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
@@ -8,28 +9,35 @@ import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
-  faCheckCircle,
-  faExclamationCircle,
-  faUser,
-  faRupeeSign,
   faTrash,
   faEye,
   faPenAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { useGroups } from "@/context/groupContext";
-import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
 import {
   createNewGroup,
   updateGroup,
   removeGroup,
   fetchGroupTransactions,
   calculateOwes,
+  getGroupDebtSummary,
 } from "@/utils/api/group";
-import Cookies from "js-cookie";
 import { useAuth } from "@/context/authContext";
 import { useSocket } from "@/context/socketContext";
 import NotificationPanel from "@/components/NotificationPanel";
 import ConnectionStatus from "@/components/ConnectionStatus";
+
+interface DebtSummary {
+  originalTransactionCount: number;
+  optimizedTransactionCount: number;
+  reductionPercentage: number;
+  optimizedSettlements: Array<{
+    from: { fullName: string };
+    to: { fullName: string };
+    amount: number;
+  }>;
+  settlementSummary: string[];
+}
 
 export default function Groups() {
   const router = useRouter();
@@ -51,6 +59,8 @@ export default function Groups() {
     leaveGroupRoom,
   } = useSocket();
   const [owesList, setOwesList] = useState<any[]>([]);
+  const [debtSummary, setDebtSummary] = useState<DebtSummary | null>(null);
+  const [debtSummaryLoading, setDebtSummaryLoading] = useState(false);
 
   // Enhanced state management
   const [isUpdating, setIsUpdating] = useState(false);
@@ -115,9 +125,6 @@ export default function Groups() {
   const [groupDescription, setGroupDescription] = useState("");
   const [completedStatus, setCompletedStatus] = useState(false);
   const [newMembers, setNewMembers] = useState<string[]>([]);
-  const [toast, setToast] = useState<{ message: string; type: string } | null>(
-    null
-  );
 
   // Sync selected group data (Client-side only)
   useEffect(() => {
@@ -169,25 +176,12 @@ export default function Groups() {
     Friends: "/friends_group.png",
   };
 
-  const handleGroupTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setNewGroup((prevGroup) => ({
-      ...prevGroup,
-      type: e.target.value, // Update only type, avatar is dynamically handled
-    }));
-  };
-
-  useEffect(() => {
-    if (toast && typeof window !== "undefined") {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
 
   // ✅ Create New Group (Client-side only)
   const handleAddGroup = async () => {
     if (typeof window !== "undefined" && token) {
       if (!newGroup.name.trim() || newGroup.members.length === 0) {
-        setToast({ message: "Group name & members required!", type: "error" });
+        toast.error("Group name & members required!");
         return;
       }
 
@@ -212,13 +206,10 @@ export default function Groups() {
         });
 
         // Show success message
-        setToast({ message: "Group created successfully!", type: "success" });
+        toast.success("Group created successfully!");
       } catch (error: any) {
         console.error("Error creating group:", error);
-        setToast({
-          message: error.message || "Failed to create group",
-          type: "error",
-        });
+        toast.error(error.message || "Failed to create group");
       } finally {
         setIsUpdating(false);
       }
@@ -239,11 +230,7 @@ export default function Groups() {
   const handleSaveGroup = async () => {
     if (typeof window !== "undefined" && token) {
       if (newMembers.length < 1) {
-        setToast({
-          message:
-            "A group must have at least 2 members (including the creator)!",
-          type: "error",
-        });
+        toast.error("A group must have at least 2 members (including the creator)!");
         return;
       }
 
@@ -257,10 +244,10 @@ export default function Groups() {
         await updateGroup(selectedGroup._id, updatedData, token); // Use token from AuthContext
         setIsEditModalOpen(false);
         setShouldRefreshGroups(true);
-        setToast({ message: "Group updated successfully!", type: "success" });
+        toast.success("Group updated successfully!");
       } catch (error) {
         console.error("Error updating group:", error);
-        setToast({ message: "Failed to update group!", type: "error" });
+        toast.error("Failed to update group!");
       }
     }
   };
@@ -279,9 +266,9 @@ export default function Groups() {
         await removeGroup(selectedGroup._id, token); // Use token from AuthContext
         setIsDeleteModalOpen(false);
         setShouldRefreshGroups(true);
-        setToast({ message: "Group deleted successfully!", type: "success" });
+        toast.success("Group deleted successfully!");
       } catch (error: any) {
-        setToast({ message: error.message, type: "error" });
+        toast.error(error.message || "Failed to delete group");
       }
     }
   };
@@ -291,7 +278,7 @@ export default function Groups() {
     if (typeof window !== "undefined" && token) {
       if (!group || !group._id) {
         console.error("Invalid group selected:", group);
-        setToast({ message: "Invalid group selected!", type: "error" });
+        toast.error("Invalid group selected!");
         return;
       }
 
@@ -307,11 +294,18 @@ export default function Groups() {
 
         const owes = await calculateOwes(group._id, token);
         setOwesList(owes || []);
+
+        setDebtSummary(null);
+        setDebtSummaryLoading(true);
+        const summary = await getGroupDebtSummary(group._id, token);
+        setDebtSummary(summary);
       } catch (error: any) {
         console.error("Error fetching transactions:", error.message || error);
-        setToast({ message: "Failed to fetch transactions!", type: "error" });
+        toast.error("Failed to fetch transactions!");
         setGroupTransactions({ completed: [], pending: [] });
         setOwesList([]);
+      } finally {
+        setDebtSummaryLoading(false);
       }
     }
   };
@@ -335,17 +329,42 @@ export default function Groups() {
 
   if (authLoading) {
     return (
-      <UnifiedLoadingScreen
-        message="Loading Your Groups"
-        section="groups"
-        showTips={true}
-      />
+      <div className="flex min-h-screen bg-gray-50 pt-20">
+        <Sidebar activePage="groups" />
+        <div className="flex-1 p-8 animate-pulse">
+          <div className="flex items-center justify-between mb-10">
+            <div className="h-9 w-32 bg-gray-200 rounded-lg" />
+            <div className="h-10 w-32 bg-gray-200 rounded-lg" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200">
+                <div className="h-4 w-28 bg-gray-200 rounded mb-3" />
+                <div className="h-10 w-16 bg-gray-200 rounded mx-auto" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="h-1.5 bg-gray-200" />
+                <div className="p-6">
+                  <div className="h-5 w-32 bg-gray-200 rounded mb-6" />
+                  {[1, 2, 3].map((j) => (
+                    <div key={j} className="h-16 bg-gray-100 rounded-2xl mb-4" />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
     <div
-      className="flex min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 pt-20"
+      className="flex min-h-screen bg-gray-50 pt-20"
       suppressHydrationWarning
     >
       <Sidebar activePage="groups" />
@@ -356,28 +375,6 @@ export default function Groups() {
       <ConnectionStatus />
 
       <div className="flex-1 p-8">
-        {/* Toast Notification with Modern Design */}
-        {toast && typeof window !== "undefined" && (
-          <div
-            className={`fixed top-24 right-6 px-6 py-4 rounded-xl shadow-lg flex items-center gap-4 text-white text-sm transition-all duration-500 transform origin-top-right ${
-              toast.type === "success"
-                ? "bg-gradient-to-r from-green-500 to-green-600"
-                : toast.type === "info"
-                ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                : "bg-gradient-to-r from-red-500 to-red-600"
-            }`}
-            style={{ zIndex: 10000 }}
-          >
-            <FontAwesomeIcon
-              icon={
-                toast.type === "success" ? faCheckCircle : faExclamationCircle
-              }
-              className="text-xl"
-            />
-            <span className="font-medium">{toast.message}</span>
-          </div>
-        )}
-
         {/* Modern Page Header */}
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
@@ -402,21 +399,21 @@ export default function Groups() {
               value: groups.length,
               bgClass: "bg-purple-100",
               textClass: "text-purple-700",
-              numberClass: "bg-gradient-to-r from-purple-500 to-purple-600",
+              numberClass: "text-purple-600",
             },
             {
               label: "Active Groups",
               value: groups.filter((group) => !group.completed).length,
               bgClass: "bg-green-100",
               textClass: "text-green-800",
-              numberClass: "bg-gradient-to-r from-green-500 to-green-600",
+              numberClass: "text-green-600",
             },
             {
               label: "Completed Groups",
               value: groups.filter((group) => group.completed).length,
               bgClass: "bg-blue-100",
               textClass: "text-blue-800",
-              numberClass: "bg-gradient-to-r from-blue-500 to-blue-600",
+              numberClass: "text-blue-600",
             },
           ].map((card, index) => (
             <div
@@ -427,7 +424,7 @@ export default function Groups() {
                 {card.label}
               </h2>
               <p
-                className={`text-4xl font-bold text-transparent bg-clip-text ${card.numberClass}`}
+                className={`text-4xl font-bold ${card.numberClass}`}
               >
                 {card.value}
               </p>
@@ -458,6 +455,12 @@ export default function Groups() {
                   <p className="text-sm mt-2 text-green-600">
                     Start a new group adventure!
                   </p>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-4 px-5 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Create a Group
+                  </button>
                 </div>
               ) : (
                 groups
@@ -1038,11 +1041,7 @@ export default function Groups() {
                                     className="text-purple-500 hover:text-red-500 transition-colors"
                                     onClick={() => {
                                       if (newMembers.length <= 1) {
-                                        setToast({
-                                          message:
-                                            "❌ A group must have at least 2 members (including the creator)!",
-                                          type: "error",
-                                        });
+                                        toast.error("❌ A group must have at least 2 members (including the creator)!");
                                         return;
                                       }
                                       setNewMembers(
@@ -1313,7 +1312,7 @@ export default function Groups() {
 
               {/* Right Panel: Financial Details */}
               <div className="p-8 bg-gray-50 flex flex-col justify-between">
-                <div>
+                <div className="overflow-y-auto max-h-[600px] pr-1">
                   {/* Pending Transactions Section */}
                   <div className="mt-6">
                     <div className="flex justify-between items-center mb-4">
@@ -1425,6 +1424,77 @@ export default function Groups() {
                         <p className="text-gray-500 italic">
                           All payments settled!
                         </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Debt Simplification Section */}
+                  <div className="mt-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                        </svg>
+                        <h3 className="text-lg font-semibold text-gray-700">Debt Simplification</h3>
+                      </div>
+                    </div>
+
+                    {debtSummaryLoading ? (
+                      <div className="space-y-2">
+                        {[...Array(2)].map((_, i) => (
+                          <div key={i} className="h-12 bg-gray-100 rounded-lg animate-pulse" />
+                        ))}
+                      </div>
+                    ) : debtSummary && debtSummary.optimizedTransactionCount !== undefined ? (
+                      <div>
+                        {/* Metrics banner */}
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-indigo-700">{debtSummary.originalTransactionCount}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">pending txns</p>
+                            </div>
+                            <div className="flex items-center text-gray-400 px-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-green-600">{debtSummary.optimizedTransactionCount}</p>
+                              <p className="text-xs text-gray-500 mt-0.5">settlements</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-2xl font-bold text-purple-600">{debtSummary.reductionPercentage}%</p>
+                              <p className="text-xs text-gray-500 mt-0.5">fewer transactions</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Optimized settlements list */}
+                        {debtSummary.optimizedSettlements.length > 0 ? (
+                          <div className="space-y-2">
+                            {debtSummary.optimizedSettlements.map((s, i) => (
+                              <div key={i} className="bg-white border border-indigo-100 rounded-lg p-3 flex justify-between items-center shadow-sm">
+                                <div>
+                                  <p className="text-gray-800 font-medium text-sm">
+                                    <span className="text-indigo-600">{s.from.fullName}</span>
+                                    <span className="mx-2 text-gray-400">pays</span>
+                                    <span className="text-gray-700">{s.to.fullName}</span>
+                                  </p>
+                                </div>
+                                <span className="font-bold text-indigo-700">₹{s.amount.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                            <p className="text-gray-500 italic text-sm">All debts are settled!</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                        <p className="text-gray-500 italic text-sm">No debt data available</p>
                       </div>
                     )}
                   </div>

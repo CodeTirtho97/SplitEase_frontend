@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
-import expenseApi from "@/utils/api/expense";
+import React, { useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMoneyBillWave,
   faHourglassHalf,
   faCheckCircle,
-  faSync,
 } from "@fortawesome/free-solid-svg-icons";
 
 // Define a type for currencies
@@ -28,16 +26,13 @@ interface DashboardCardsProps {
 }
 
 export default function DashboardCards({
-  expenses,
+  expenses: _expenses,
   summary,
   fetchSummary,
-  error,
+  error: _error,
   selectedCurrency,
   setSelectedCurrency,
 }: DashboardCardsProps) {
-  const [loadingSummary, setLoadingSummary] = useState(false);
-  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
-
   const currencySymbols: Record<Currency, string> = {
     INR: "₹",
     USD: "$",
@@ -46,38 +41,11 @@ export default function DashboardCards({
     JPY: "¥",
   };
 
-  // Log summary data for debugging
   useEffect(() => {
-    console.log("Summary data in ExpenseCard:", summary);
-  }, [summary]);
-
-  // Fetch summary on mount
-  useEffect(() => {
-    const loadSummary = async () => {
-      setLoadingSummary(true);
-      try {
-        await fetchSummary();
-      } catch (err) {
-        console.error("Error fetching summary on mount:", err);
-      } finally {
-        setLoadingSummary(false);
-      }
-    };
-    loadSummary();
+    fetchSummary().catch((err) =>
+      console.error("Error fetching summary on mount:", err)
+    );
   }, [fetchSummary]);
-
-  // Update exchange rates function
-  const updateExchangeRates = async () => {
-    setIsUpdatingRates(true);
-    try {
-      await expenseApi.updateExchangeRates();
-      await fetchSummary();
-    } catch (error) {
-      console.error("Error updating exchange rates:", error);
-    } finally {
-      setIsUpdatingRates(false);
-    }
-  };
 
   // Ensure summary is not null with a type guard
   if (!summary) {
@@ -165,7 +133,7 @@ export default function DashboardCards({
               })}
             </p>
             <p className="text-sm text-gray-500 mt-2">
-              All transactions where you're involved
+              All transactions where you&apos;re involved
             </p>
           </div>
         </div>

@@ -11,7 +11,7 @@ export default function GoogleCallbackPage() {
   const { setUser, setToken } = useAuth() || {};
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [_success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function processCallback() {

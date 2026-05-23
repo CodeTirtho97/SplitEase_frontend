@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useContext, useEffect } from "react";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation"; // Use usePathname for navigation detection
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
-  faCheckCircle,
   faExclamationCircle,
   faUser,
   faLock,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 import { signup } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
 import dynamic from "next/dynamic";
@@ -42,10 +43,6 @@ const Signup = () => {
   const [errors, setErrors] = useState<{ field: string; message: string }[]>(
     []
   );
-  const [showToast, setShowToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
 
   // Validation Functions
   const validateName = (name: string) => /^[A-Za-z\s]+$/.test(name);
@@ -105,8 +102,7 @@ const Signup = () => {
 
     if (newErrors.length > 0) {
       setErrors(newErrors);
-      setShowToast({ message: newErrors[0].message, type: "error" });
-      setTimeout(() => setShowToast(null), 3000);
+      toast.error(newErrors[0].message);
       return;
     }
 
@@ -123,22 +119,11 @@ const Signup = () => {
         setToken(response.token);
         setUser(response.user);
       }
-      setShowToast({ message: "Signup successful!", type: "success" });
-
-      setTimeout(() => {
-        setShowToast({
-          message: "Redirecting to dashboard...",
-          type: "success",
-        });
-        setTimeout(() => router.push("/dashboard"), 2000);
-      }, 2000);
+      toast.success("Signup successful!");
+      setTimeout(() => router.push("/dashboard"), 2000);
     } catch (error: any) {
-      console.error("Signup Error:", error); // Debug log
-      setShowToast({
-        message: error.response?.data?.message || "Signup failed!",
-        type: "error",
-      });
-      setTimeout(() => setShowToast(null), 3000);
+      console.error("Signup Error:", error);
+      toast.error(error.response?.data?.message || "Signup failed!");
     }
   };
 
@@ -178,21 +163,11 @@ const Signup = () => {
           setToken(token);
           setUser(user);
         }
-        setShowToast({ message: "Signup successful!", type: "success" });
-        setTimeout(() => {
-          setShowToast({
-            message: "Redirecting to dashboard...",
-            type: "success",
-          });
-          setTimeout(() => router.push("/dashboard"), 2000);
-        }, 2000);
+        toast.success("Signup successful!");
+        setTimeout(() => router.push("/dashboard"), 2000);
       } catch (error: any) {
         console.error("Google Signup Error:", error);
-        setShowToast({
-          message: error.message || "Google Signup failed!",
-          type: "error",
-        });
-        setTimeout(() => setShowToast(null), 3000);
+        toast.error(error.message || "Google Signup failed!");
       }
     }
   };
@@ -200,9 +175,8 @@ const Signup = () => {
   // Handle Google Auth Error
   const handleGoogleError = () => {
     if (typeof window !== "undefined") {
-      console.error("Google Signup Failed"); // Log error internally
-      setShowToast({ message: "Google Signup failed!", type: "error" });
-      setTimeout(() => setShowToast(null), 3000);
+      console.error("Google Signup Failed");
+      toast.error("Google Signup failed!");
     }
   };
 
@@ -378,24 +352,6 @@ const Signup = () => {
         </svg>
       </div>
 
-      {/* Custom Toast Notification */}
-      {showToast && typeof window !== "undefined" && (
-        <div
-          className={`fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg transition-all duration-300 ${
-            showToast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
-          suppressHydrationWarning
-        >
-          <FontAwesomeIcon
-            icon={
-              showToast.type === "success" ? faCheckCircle : faExclamationCircle
-            }
-            className="mr-2"
-          />
-          {showToast.message}
-        </div>
-      )}
-
       {error && typeof window !== "undefined" && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
@@ -409,7 +365,7 @@ const Signup = () => {
       <div className="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-xl border border-gray-300 backdrop-blur-md relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-4">
-          <img src="/logo.png" alt="SplitEase" className="w-12 h-12" />
+          <Image src="/logo.png" alt="SplitEase" width={48} height={48} />
         </div>
 
         {/* Title */}

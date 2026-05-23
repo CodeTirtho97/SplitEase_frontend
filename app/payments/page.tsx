@@ -21,11 +21,8 @@ import {
   faGooglePay,
   faPaypal,
   faStripe,
-  faCcVisa,
-  faCcMastercard,
 } from "@fortawesome/free-brands-svg-icons";
-import transactionApi from "@/utils/api/transaction"; // Updated transaction API with cookies
-import UnifiedLoadingScreen from "@/components/UnifiedLoadingScreen";
+import transactionApi from "@/utils/api/transaction";
 import { useTransactionContext } from "@/context/transactionContext";
 import { useSocket } from "@/context/socketContext";
 import NotificationPanel from "@/components/NotificationPanel";
@@ -48,16 +45,49 @@ interface Transaction {
   paymentDate?: string; // For transaction history (updatedAt formatted)
 }
 
-// Full-page loader component
-const LoadingScreen = () => {
-  return (
-    <UnifiedLoadingScreen
-      message="Loading Your Payments"
-      section="payments"
-      showTips={true}
-    />
-  );
-};
+const PaymentsSkeleton = () => (
+  <div className="flex min-h-screen bg-gray-50 pt-20">
+    <Sidebar activePage="payments" />
+    <div className="flex-1 p-6 md:p-8 animate-pulse">
+      <div className="flex items-center justify-between mb-8">
+        <div className="h-9 w-40 bg-gray-200 rounded-lg" />
+        <div className="h-8 w-44 bg-gray-200 rounded-lg hidden md:block" />
+      </div>
+      {/* Pending section skeleton */}
+      <div className="rounded-xl overflow-hidden mb-8 border border-gray-200">
+        <div className="h-14 bg-gray-200" />
+        <div className="bg-white divide-y divide-gray-100">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-4">
+              <div className="h-4 w-20 bg-gray-100 rounded" />
+              <div className="h-4 w-32 bg-gray-100 rounded flex-1" />
+              <div className="h-4 w-24 bg-gray-100 rounded" />
+              <div className="h-4 w-24 bg-gray-100 rounded" />
+              <div className="h-4 w-16 bg-gray-100 rounded ml-auto" />
+              <div className="h-8 w-20 bg-gray-200 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* History section skeleton */}
+      <div className="rounded-xl overflow-hidden border border-gray-200">
+        <div className="h-14 bg-gray-200" />
+        <div className="bg-white divide-y divide-gray-100">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 px-4 py-4">
+              <div className="h-6 w-24 bg-gray-100 rounded-full" />
+              <div className="h-4 w-20 bg-gray-100 rounded" />
+              <div className="h-4 w-28 bg-gray-100 rounded flex-1" />
+              <div className="h-4 w-16 bg-gray-100 rounded ml-auto" />
+              <div className="h-4 w-20 bg-gray-100 rounded" />
+              <div className="h-6 w-20 bg-gray-100 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 // Error state component
 const ErrorScreen = ({
@@ -95,7 +125,7 @@ const ErrorScreen = ({
             <Button
               text="Try Again"
               onClick={onRetry}
-              className="relative z-10 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              className="relative z-10 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full shadow-md transition-colors"
             />
           </div>
         </motion.div>
@@ -125,10 +155,6 @@ export default function PaymentsPage() {
   const [processingPayment, setProcessingPayment] = useState(false);
   const { refreshExpenses } = useTransactionContext();
 
-  useEffect(() => {
-    console.log("Socket context:", { addEventListener, removeEventListener });
-  }, [addEventListener, removeEventListener]);
-
   // Use useCallback to memoize the fetchPayments function
   const fetchPayments = useCallback(async () => {
     setLoading(true);
@@ -140,22 +166,18 @@ export default function PaymentsPage() {
       ]);
       setPendingPayments(pendingResponse.data.transactions || []);
       setTransactionHistory(historyResponse.data.transactions || []);
-
-      console.log("API responses:", { pendingResponse, historyResponse });
-
-      // Fetch user's PIN
-      const dummyUserPin = "1234";
-      setUserPin(dummyUserPin);
-    } catch (err: any) {
+      setUserPin("1234");
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
       console.error("Error fetching payments:", err);
       setError(
-        err.response?.data?.message ||
+        e.response?.data?.message ||
           "Failed to load payment data. Please check your connection and try again."
       );
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency array since it doesn't depend on any props or state
+  }, []);
 
   const handlePayNow = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -187,32 +209,23 @@ export default function PaymentsPage() {
       // Add a small delay to simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const response = await transactionApi.settleTransaction(
-        selectedTransaction.transactionId,
-        {
-          status: "Success",
-          mode: selectedMode,
-        }
-      );
+      await transactionApi.settleTransaction(selectedTransaction.transactionId, {
+        status: "Success",
+        mode: selectedMode,
+      });
 
-      // No need to manually update state here as WebSocket events will trigger update
-      // The data will be refreshed when we receive the transaction_settled event
-      // Just close the modals and reset state
       setIsConfirmModalOpen(false);
       setSelectedTransaction(null);
       setSelectedMode(null);
       setPin("");
       setError(null);
-
-      // We still call refreshExpenses since it might not be automatically triggered
       refreshExpenses();
-
-      // Add an explicit fetch call to update the UI immediately
       fetchPayments();
-    } catch (err: any) {
-      console.error("Error settling transaction:", err.response?.data || err);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      console.error("Error settling transaction:", err);
       setError(
-        err.response?.data?.message ||
+        e.response?.data?.message ||
           "Payment processing failed. Please try again later."
       );
     } finally {
@@ -238,28 +251,20 @@ export default function PaymentsPage() {
   useEffect(() => {
     if (!addEventListener || !removeEventListener) return;
 
-    // Handler for transaction updates
-    const handleTransactionUpdate = (data: any) => {
-      console.log("Transaction update received:", data);
-
+    const handleTransactionUpdate = (data: { event: string }) => {
       if (
         data.event === "transaction_settled" ||
         data.event === "transaction_failed"
       ) {
-        // Refresh transactions
         fetchPayments();
       }
     };
 
-    // Handler for expense updates that might affect transactions
-    const handleExpenseUpdate = (data: any) => {
-      console.log("Expense update received:", data);
-
+    const handleExpenseUpdate = (data: { event: string }) => {
       if (
         data.event === "expense_created" ||
         data.event === "expense_deleted"
       ) {
-        // Refresh transactions
         fetchPayments();
       }
     };
@@ -291,9 +296,8 @@ export default function PaymentsPage() {
     return `${symbol}${amount.toLocaleString()}`;
   };
 
-  // Full page loading screen
   if (loading) {
-    return <LoadingScreen />;
+    return <PaymentsSkeleton />;
   }
 
   // Error state
@@ -301,47 +305,8 @@ export default function PaymentsPage() {
     return <ErrorScreen error={error} onRetry={fetchPayments} />;
   }
 
-  // Add real-time transaction updates
-  // useEffect(() => {
-  //   // Handler for transaction updates
-  //   const handleTransactionUpdate = (data: any) => {
-  //     console.log("Transaction update received:", data);
-
-  //     if (
-  //       data.event === "transaction_settled" ||
-  //       data.event === "transaction_failed"
-  //     ) {
-  //       // Refresh transactions
-  //       fetchPayments();
-  //     }
-  //   };
-
-  //   // Handler for expense updates that might affect transactions
-  //   const handleExpenseUpdate = (data: any) => {
-  //     console.log("Expense update received:", data);
-
-  //     if (
-  //       data.event === "expense_created" ||
-  //       data.event === "expense_deleted"
-  //     ) {
-  //       // Refresh transactions
-  //       fetchPayments();
-  //     }
-  //   };
-
-  //   // Register event listeners
-  //   addEventListener("transaction_update", handleTransactionUpdate);
-  //   addEventListener("expense_update", handleExpenseUpdate);
-
-  //   // Cleanup on unmount
-  //   return () => {
-  //     removeEventListener("transaction_update", handleTransactionUpdate);
-  //     removeEventListener("expense_update", handleExpenseUpdate);
-  //   };
-  // }, [addEventListener, removeEventListener, fetchPayments]);
-
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-indigo-100 to-pink-200 pt-20">
+    <div className="flex min-h-screen bg-gray-50 pt-20">
       <Sidebar activePage="payments" />
 
       <div className="fixed top-5 right-5 z-50">
@@ -349,14 +314,18 @@ export default function PaymentsPage() {
       </div>
       <ConnectionStatus />
 
-      <div className="flex-1 p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
-          {/* Page Header with Background Gradient */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex-1 p-6 md:p-8"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-indigo-700">
             Payments
           </h1>
           <div className="hidden md:block">
-            <div className="bg-purple-300 text-purple-700 px-4 py-2 rounded-lg flex items-center">
+            <div className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2 rounded-lg flex items-center">
               <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
               <span className="font-medium">Secured by TrustPay™</span>
             </div>
@@ -364,7 +333,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-gradient-to-r from-red-600 via-red-400 to-red-600 rounded-xl overflow-hidden mb-8">
+        <div className="bg-red-600 rounded-xl overflow-hidden mb-8">
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
@@ -382,71 +351,88 @@ export default function PaymentsPage() {
           </div>
 
           {pendingPayments.length > 0 ? (
-            <div className="overflow-x-auto bg-white">
-              <table className="w-full">
-                <thead>
-                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
-                    <th className="py-3 px-4 text-left font-medium">Date</th>
-                    <th className="py-3 px-4 text-left font-medium">Expense</th>
-                    <th className="py-3 px-4 text-left font-medium">Group</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Recipient
-                    </th>
-                    <th className="py-3 px-4 text-right font-medium">Amount</th>
-                    <th className="py-3 px-4 text-center font-medium">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingPayments.map((payment, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
-                    >
-                      <td className="py-4 px-4 text-gray-600">
-                        {payment.date}
-                      </td>
-                      <td className="py-4 px-4 font-medium text-gray-800">
-                        {payment.expenseName}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <span className="h-2 w-2 rounded-full bg-indigo-500 mr-2"></span>
-                          <span className="text-gray-600">
-                            {payment.groupName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-indigo-600 font-medium">
-                            {payment.owedFrom
-                              .split(" ")
-                              .map((name) => name[0])
-                              .join("")}
-                          </div>
-                          <span className="font-medium text-gray-800">
-                            {payment.owedFrom}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-right font-bold text-red-500">
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden bg-white divide-y divide-gray-100">
+                {pendingPayments.map((payment, index) => (
+                  <div key={index} className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-800">{payment.expenseName}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{payment.date}</p>
+                      </div>
+                      <span className="font-bold text-red-500 text-lg">
                         {formatCurrency(payment.currency, payment.amount)}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <button
-                          onClick={() => handlePayNow(payment)}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-sm font-medium rounded-md hover:from-blue-600 hover:to-cyan-700 shadow-md hover:shadow-lg transition-colors"
-                        >
-                          Pay Now
-                        </button>
-                      </td>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-500">{payment.groupName}</span>
+                      <span className="text-gray-300 mx-1">·</span>
+                      <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center text-xs text-indigo-600 font-bold flex-shrink-0">
+                        {payment.owedFrom.split(" ").map((n) => n[0]).join("")}
+                      </div>
+                      <span className="text-sm text-gray-700">{payment.owedFrom}</span>
+                    </div>
+                    <button
+                      onClick={() => handlePayNow(payment)}
+                      className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors"
+                    >
+                      Pay Now
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto bg-white">
+                <table className="w-full">
+                  <thead>
+                    <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
+                      <th className="py-3 px-4 text-left font-medium">Date</th>
+                      <th className="py-3 px-4 text-left font-medium">Expense</th>
+                      <th className="py-3 px-4 text-left font-medium">Group</th>
+                      <th className="py-3 px-4 text-left font-medium">Recipient</th>
+                      <th className="py-3 px-4 text-right font-medium">Amount</th>
+                      <th className="py-3 px-4 text-center font-medium">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {pendingPayments.map((payment, index) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="py-4 px-4 text-gray-600">{payment.date}</td>
+                        <td className="py-4 px-4 font-medium text-gray-800">{payment.expenseName}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center">
+                            <span className="h-2 w-2 rounded-full bg-indigo-500 mr-2" />
+                            <span className="text-gray-600">{payment.groupName}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-indigo-600 font-medium text-sm">
+                              {payment.owedFrom.split(" ").map((n) => n[0]).join("")}
+                            </div>
+                            <span className="font-medium text-gray-800">{payment.owedFrom}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-right font-bold text-red-500">
+                          {formatCurrency(payment.currency, payment.amount)}
+                        </td>
+                        <td className="py-4 px-4 text-center">
+                          <button
+                            onClick={() => handlePayNow(payment)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-sm transition-colors"
+                          >
+                            Pay Now
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
@@ -459,7 +445,7 @@ export default function PaymentsPage() {
                 All Payments Settled!
               </h3>
               <p className="text-gray-500 max-w-md mb-6">
-                You don't have any pending payments to settle. Check back later
+                You don&apos;t have any pending payments to settle. Check back later
                 or create a new expense to split with friends.
               </p>
               <Button
@@ -473,7 +459,7 @@ export default function PaymentsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-gradient-to-r from-green-600 via-green-300 to-green-600 rounded-xl overflow-hidden">
+        <div className="bg-green-600 rounded-xl overflow-hidden">
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
@@ -491,105 +477,101 @@ export default function PaymentsPage() {
           </div>
 
           {transactionHistory.length > 0 ? (
-            <div className="overflow-x-auto bg-white">
-              <table className="w-full">
-                <thead>
-                  <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
-                    <th className="py-3 px-4 text-left font-medium">
-                      Transaction ID
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium">Date</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Recipient
-                    </th>
-                    <th className="py-3 px-4 text-right font-medium">Amount</th>
-                    <th className="py-3 px-4 text-left font-medium">
-                      Payment Method
-                    </th>
-                    <th className="py-3 px-4 text-left font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactionHistory.map((payment, index) => (
-                    <tr
-                      key={index}
-                      className={index % 2 === 0 ? "bg-white" : "bg-blue-50"}
-                    >
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          {payment.transactionId.substring(0, 10)}...
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-gray-600">
-                        {payment.paymentDate}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2 text-purple-600 font-medium">
-                            {payment.paidTo
-                              ?.split(" ")
-                              .map((name) => name[0])
-                              .join("") || "?"}
-                          </div>
-                          <span className="font-medium text-gray-800">
-                            {payment.paidTo}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-right font-bold text-green-600">
+            <>
+              {/* Mobile cards */}
+              <div className="md:hidden bg-white divide-y divide-gray-100">
+                {transactionHistory.map((payment, index) => (
+                  <div key={index} className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-semibold text-gray-800">{payment.paidTo || "Unknown"}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{payment.paymentDate}</p>
+                      </div>
+                      <span className="font-bold text-green-600 text-lg">
                         {formatCurrency(payment.currency, payment.amount)}
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center">
-                          <div
-                            className={`w-8 h-8 rounded-lg flex items-center justify-center mr-2 
-                    ${
-                      payment.mode === "UPI"
-                        ? "bg-orange-100 text-orange-500"
-                        : payment.mode === "PayPal"
-                        ? "bg-blue-100 text-blue-500"
-                        : "bg-purple-100 text-purple-500"
-                    }`}
-                          >
-                            <FontAwesomeIcon
-                              icon={
-                                payment.mode === "UPI"
-                                  ? faGooglePay
-                                  : payment.mode === "PayPal"
-                                  ? faPaypal
-                                  : faStripe
-                              }
-                            />
-                          </div>
-                          <span className="text-gray-700">
-                            {payment.mode || "N/A"}
-                          </span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-7 h-7 rounded-md flex items-center justify-center text-sm ${payment.mode === "UPI" ? "bg-orange-100 text-orange-500" : payment.mode === "PayPal" ? "bg-blue-100 text-blue-500" : "bg-purple-100 text-purple-500"}`}>
+                          <FontAwesomeIcon icon={payment.mode === "UPI" ? faGooglePay : payment.mode === "PayPal" ? faPaypal : faStripe} />
                         </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {payment.status === "Success" ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <FontAwesomeIcon
-                              icon={faCheckCircle}
-                              className="mr-1.5"
-                            />
-                            Successful
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                            <FontAwesomeIcon
-                              icon={faTimesCircle}
-                              className="mr-1.5"
-                            />
-                            Failed
-                          </span>
-                        )}
-                      </td>
+                        <span className="text-sm text-gray-600">{payment.mode || "N/A"}</span>
+                      </div>
+                      {payment.status === "Success" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <FontAwesomeIcon icon={faCheckCircle} /> Successful
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          <FontAwesomeIcon icon={faTimesCircle} /> Failed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table */}
+              <div className="hidden md:block overflow-x-auto bg-white">
+                <table className="w-full">
+                  <thead>
+                    <tr className="uppercase text-xs bg-gray-50 text-gray-500 border-b border-gray-200">
+                      <th className="py-3 px-4 text-left font-medium">Transaction ID</th>
+                      <th className="py-3 px-4 text-left font-medium">Date</th>
+                      <th className="py-3 px-4 text-left font-medium">Recipient</th>
+                      <th className="py-3 px-4 text-right font-medium">Amount</th>
+                      <th className="py-3 px-4 text-left font-medium">Payment Method</th>
+                      <th className="py-3 px-4 text-left font-medium">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {transactionHistory.map((payment, index) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="py-4 px-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            {payment.transactionId.substring(0, 10)}...
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 text-gray-600">{payment.paymentDate}</td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center mr-2 text-purple-600 font-medium text-sm">
+                              {payment.paidTo?.split(" ").map((n) => n[0]).join("") || "?"}
+                            </div>
+                            <span className="font-medium text-gray-800">{payment.paidTo}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-right font-bold text-green-600">
+                          {formatCurrency(payment.currency, payment.amount)}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center">
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-2 ${payment.mode === "UPI" ? "bg-orange-100 text-orange-500" : payment.mode === "PayPal" ? "bg-blue-100 text-blue-500" : "bg-purple-100 text-purple-500"}`}>
+                              <FontAwesomeIcon icon={payment.mode === "UPI" ? faGooglePay : payment.mode === "PayPal" ? faPaypal : faStripe} />
+                            </div>
+                            <span className="text-gray-700">{payment.mode || "N/A"}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          {payment.status === "Success" ? (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                              <FontAwesomeIcon icon={faCheckCircle} className="mr-1.5" />
+                              Successful
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                              <FontAwesomeIcon icon={faTimesCircle} className="mr-1.5" />
+                              Failed
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+
           ) : (
             <div className="py-16 flex flex-col items-center justify-center text-center px-4 bg-white">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
@@ -602,7 +584,7 @@ export default function PaymentsPage() {
                 No Transaction History Yet
               </h3>
               <p className="text-gray-500 max-w-md mb-6">
-                You haven't completed any transactions yet. Once you settle
+                You haven&apos;t completed any transactions yet. Once you settle
                 payments, they will appear here.
               </p>
 
@@ -671,7 +653,7 @@ export default function PaymentsPage() {
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Header with Gradient */}
-                    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 text-white">
+                    <div className="bg-indigo-600 p-6 text-white">
                       <div className="flex items-center justify-between">
                         <h2 className="text-xl font-bold">
                           Choose Payment Method
@@ -835,10 +817,10 @@ export default function PaymentsPage() {
                     <div
                       className={`py-8 px-6 text-white ${
                         selectedMode === "UPI"
-                          ? "bg-gradient-to-r from-orange-500 to-orange-600"
+                          ? "bg-orange-500"
                           : selectedMode === "PayPal"
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600"
-                          : "bg-gradient-to-r from-purple-600 to-indigo-600"
+                          ? "bg-blue-600"
+                          : "bg-purple-600"
                       }`}
                     >
                       <div className="flex flex-col items-center">
@@ -984,10 +966,10 @@ export default function PaymentsPage() {
                             !pin || pin.length < 4 || processingPayment
                               ? "bg-gray-400 cursor-not-allowed"
                               : selectedMode === "UPI"
-                              ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                              ? "bg-orange-500 hover:bg-orange-600"
                               : selectedMode === "PayPal"
-                              ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
-                              : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                              ? "bg-blue-600 hover:bg-blue-700"
+                              : "bg-purple-600 hover:bg-purple-700"
                           }`}
                         >
                           {processingPayment ? (
@@ -1015,7 +997,7 @@ export default function PaymentsPage() {
             </AnimatePresence>
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

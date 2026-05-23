@@ -8,27 +8,18 @@ import Button from "@/components/Button";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
-  faCheckCircle,
   faExclamationCircle,
   faUser,
   faLock,
   faEnvelope,
 } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 import { login } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
 import dynamic from "next/dynamic";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
-// Dynamically import Google OAuth components
-const GoogleLoginComponent = dynamic(
-  () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-  { ssr: false }
-);
-const GoogleOAuthProvider = dynamic(
-  () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
-  { ssr: false }
-);
 
 export default function LoginPage() {
   const router = useRouter();
@@ -42,10 +33,6 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ field: string; message: string }[]>(
     []
   );
-  const [showToast, setShowToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
   //const [setLoading] = useState(false);
 
   // Forgot Password State
@@ -79,7 +66,6 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors([]);
-    setShowToast(null);
 
     const newErrors: { field: string; message: string }[] = [];
 
@@ -98,8 +84,7 @@ export default function LoginPage() {
 
     if (newErrors.length > 0) {
       setErrors(newErrors);
-      setShowToast({ message: newErrors[0].message, type: "error" });
-      // setTimeout(() => setShowToast(null), 3000);
+      toast.error(newErrors[0].message);
       return;
     }
 
@@ -124,16 +109,12 @@ export default function LoginPage() {
         Cookies.remove("rememberedEmail");
       }
 
-      setShowToast({ message: "Login successful!", type: "success" });
+      toast.success("Login successful!");
       await new Promise((resolve) => setTimeout(resolve, 1500));
       router.push("/dashboard");
     } catch (error: any) {
-      console.error("Login Error:", error); // Debug log
-      setShowToast({
-        message: error.response?.data?.message || "Login failed!",
-        type: "error",
-      });
-      setTimeout(() => setShowToast(null), 3000);
+      console.error("Login Error:", error);
+      toast.error(error.response?.data?.message || "Login failed!");
     } finally {
       setLoading(false);
     }
@@ -158,19 +139,12 @@ export default function LoginPage() {
           setUser(user);
         }
 
-        setShowToast({ message: "Login successful!", type: "success" });
-
-        // Important: Wait for state updates with a Promise
+        toast.success("Login successful!");
         await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Force the router navigation
         window.location.href = "/dashboard";
       } catch (error: any) {
         console.error("Google Login Error:", error);
-        setShowToast({
-          message: error.message || "Google Login failed!",
-          type: "error",
-        });
+        toast.error(error.message || "Google Login failed!");
       }
     }
   };
@@ -178,9 +152,8 @@ export default function LoginPage() {
   // Handle Google Auth Error
   const handleGoogleError = () => {
     if (typeof window !== "undefined") {
-      console.error("Google Login Failed"); // Log error internally
-      setShowToast({ message: "Google Login failed!", type: "error" });
-      setTimeout(() => setShowToast(null), 3000);
+      console.error("Google Login Failed");
+      toast.error("Google Login failed!");
     }
   };
 
@@ -188,11 +161,8 @@ export default function LoginPage() {
   const handleLogout = () => {
     if (logout) {
       logout();
-      setShowToast({ message: "Logged out successfully!", type: "success" });
-      setTimeout(() => {
-        setShowToast(null);
-        router.push("/login");
-      }, 2000);
+      toast.success("Logged out successfully!");
+      setTimeout(() => router.push("/login"), 2000);
     }
   };
 
@@ -413,24 +383,6 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* Custom Toast Notification */}
-      {showToast && typeof window !== "undefined" && (
-        <div
-          className={`fixed top-24 right-6 px-4 py-3 rounded-md text-white text-sm font-semibold shadow-lg transition-all duration-300 ${
-            showToast.type === "success" ? "bg-green-500" : "bg-red-500"
-          }`}
-          suppressHydrationWarning
-        >
-          <FontAwesomeIcon
-            icon={
-              showToast.type === "success" ? faCheckCircle : faExclamationCircle
-            }
-            className="mr-2"
-          />
-          {showToast.message}
-        </div>
-      )}
-
       {error && typeof window !== "undefined" && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
@@ -555,7 +507,7 @@ export default function LoginPage() {
         {/* Signup Link */}
         <div className="text-center mt-5">
           <p className="text-gray-600">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <span
               className="text-indigo-600 font-semibold cursor-pointer hover:underline"
               onClick={() => router.push("/signup")}

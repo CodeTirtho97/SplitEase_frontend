@@ -1,17 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Button from "@/components/Button";
 import { useAuth } from "@/context/authContext";
-import Cookies from "js-cookie";
 import { useSocket } from "@/context/socketContext"; // Import useSocket to disconnect on logout
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
-  const { user, token, logout, loading: authLoading } = useAuth() || {};
+  const { token, logout, loading: authLoading } = useAuth() || {};
   const { isConnected } = useSocket(); // Use socket context to show connection status
   const [showToast, setShowToast] = useState<{
     message: string;

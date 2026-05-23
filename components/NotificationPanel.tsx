@@ -85,7 +85,7 @@ const NotificationPanel: React.FC = () => {
         <FontAwesomeIcon icon={faBell} className="text-gray-600 text-xl" />
 
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+          <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -175,7 +175,7 @@ const NotificationPanel: React.FC = () => {
                     </div>
                     <p className="text-gray-500">No notifications yet</p>
                     <p className="text-xs text-gray-400 mt-1">
-                      You'll be notified about important updates
+                      You&apos;ll be notified about important updates
                     </p>
                   </div>
                 ) : (

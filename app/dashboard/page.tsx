@@ -8,22 +8,65 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMoneyBill,
   faUsers,
-  faUserFriends,
-  faWallet,
-  faCheckCircle,
-  faExclamationCircle,
-  faRocket,
-  faLightbulb,
-  faGlobe,
   faChartPie,
-  faChartLine,
-  faSmile,
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios"; // Assuming you’re using axios for API calls
 import Cookies from "js-cookie"; // Import Cookies for token persistence
 import { useAuth } from "@/context/authContext"; // Import useAuth
 import { useSocket } from "@/context/socketContext";
-import EnhancedLoadingScreen from "@/components/EnhancedLoadingScreen";
+// Skeleton cards that mirror the real dashboard layout
+const DashboardSkeleton = () => (
+  <div className="flex min-h-screen bg-white">
+    <Sidebar activePage="dashboard" />
+    <main className="flex-1 p-6 md:p-8 mt-20">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+          <div className="h-10 w-44 bg-gray-200 rounded-lg animate-pulse mb-2" />
+          <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        </div>
+        <div className="h-8 w-48 bg-gray-100 rounded-lg animate-pulse mt-4 md:mt-0" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-lg border border-gray-200 p-5 flex items-center">
+            <div className="rounded-full bg-gray-200 w-12 h-12 mr-4 animate-pulse flex-shrink-0" />
+            <div className="flex-1">
+              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-2" />
+              <div className="h-8 w-28 bg-gray-200 rounded animate-pulse mb-1" />
+              <div className="h-3 w-20 bg-gray-100 rounded animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-lg border border-gray-200 p-5 flex items-center">
+            <div className="rounded-full bg-gray-200 w-12 h-12 mr-4 animate-pulse flex-shrink-0" />
+            <div className="flex-1">
+              <div className="h-3 w-24 bg-gray-200 rounded animate-pulse mb-2" />
+              <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-1" />
+              <div className="h-3 w-28 bg-gray-100 rounded animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-3 flex gap-6">
+          {[96, 80, 64, 52, 60, 52].map((w, i) => (
+            <div key={i} className={`h-3 w-${w} bg-gray-200 rounded animate-pulse`} style={{width: w}} />
+          ))}
+        </div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="px-6 py-4 flex gap-6 border-t border-gray-100">
+            {[...Array(6)].map((_, j) => (
+              <div key={j} className="h-4 w-16 bg-gray-100 rounded animate-pulse" />
+            ))}
+          </div>
+        ))}
+      </div>
+    </main>
+  </div>
+);
 
 export default function Dashboard() {
   const router = useRouter();
@@ -281,7 +324,7 @@ export default function Dashboard() {
   }, [addEventListener, removeEventListener, token, user, API_URL]);
 
   if (authLoading || dashboardLoading) {
-    return <EnhancedLoadingScreen />;
+    return <DashboardSkeleton />;
   }
 
   if (authError || dashboardError) {
@@ -685,7 +728,9 @@ export default function Dashboard() {
                   ₹{(totalExpenses ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
-                  Your personal spending
+                  {totalGroups && totalGroups > 0
+                    ? `avg ₹${Math.round((totalExpenses ?? 0) / totalGroups).toLocaleString()} / group`
+                    : "Your personal spending"}
                 </p>
               </div>
             </div>
@@ -731,7 +776,11 @@ export default function Dashboard() {
                 <h3 className="text-3xl font-bold text-gray-800">
                   ₹{(pendingPayments ?? 0).toLocaleString()}
                 </h3>
-                <p className="text-gray-500 text-xs mt-1">Unpaid balance</p>
+                <p className="text-gray-500 text-xs mt-1">
+                  {(pendingPayments ?? 0) + (settledPayments ?? 0) > 0
+                    ? `${Math.round(((pendingPayments ?? 0) / ((pendingPayments ?? 0) + (settledPayments ?? 0))) * 100)}% still outstanding`
+                    : "Unpaid balance"}
+                </p>
               </div>
             </div>
           </div>
@@ -777,7 +826,9 @@ export default function Dashboard() {
                   ₹{(settledPayments ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
-                  Payments you've made
+                  {(pendingPayments ?? 0) + (settledPayments ?? 0) > 0
+                    ? `${Math.round(((settledPayments ?? 0) / ((pendingPayments ?? 0) + (settledPayments ?? 0))) * 100)}% settlement rate`
+                    : "Payments you've made"}
                 </p>
               </div>
             </div>
@@ -823,7 +874,9 @@ export default function Dashboard() {
                   {totalGroups ?? 0}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
-                  Your shared expense groups
+                  {totalMembers && totalMembers > 0
+                    ? `${totalMembers} people across all groups`
+                    : "Your shared expense groups"}
                 </p>
               </div>
             </div>
@@ -866,7 +919,9 @@ export default function Dashboard() {
                   {totalMembers ?? 0}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
-                  People in your groups
+                  {totalGroups && totalGroups > 0
+                    ? `avg ${((totalMembers ?? 0) / totalGroups).toFixed(1)} per group`
+                    : "People in your groups"}
                 </p>
               </div>
             </div>
@@ -914,7 +969,9 @@ export default function Dashboard() {
                   ₹{(groupExpenses ?? 0).toLocaleString()}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
-                  Total shared group expenses
+                  {totalMembers && totalMembers > 0
+                    ? `avg ₹${Math.round((groupExpenses ?? 0) / totalMembers).toLocaleString()} / member`
+                    : "Total shared group expenses"}
                 </p>
               </div>
             </div>
