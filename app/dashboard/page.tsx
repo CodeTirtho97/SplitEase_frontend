@@ -220,19 +220,21 @@ export default function Dashboard() {
           );
         } catch (dataError: any) {
           console.error("Error fetching dashboard data:", dataError);
-          if (dataError.response?.status === 500) {
-            // Handle 500 error gracefully—assume no data
-            setTotalExpenses(null);
-            setPendingPayments(null);
-            setSettledPayments(null);
-            setTotalGroups(null);
-            setTotalMembers(null);
-            setGroupExpenses(null);
-            setRecentTransactions([]);
-            setHasData(false);
-          } else {
-            throw dataError; // Re-throw other errors
+          const status = dataError.response?.status;
+          if (status === 401 || status === 403) {
+            // Auth failure — redirect to login
+            router.push("/login");
+            return;
           }
+          // For 404, 500, network errors, etc. treat as a new user with no data
+          setTotalExpenses(null);
+          setPendingPayments(null);
+          setSettledPayments(null);
+          setTotalGroups(null);
+          setTotalMembers(null);
+          setGroupExpenses(null);
+          setRecentTransactions([]);
+          setHasData(false);
         }
       } catch (error) {
         console.error("Dashboard data loading failed:", error);
