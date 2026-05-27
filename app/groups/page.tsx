@@ -353,9 +353,7 @@ export default function Groups() {
       <div className="flex-1 p-8">
         {/* Modern Page Header */}
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
-            Groups
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Groups</h1>
           <Button
             text="Add Group"
             onClick={() => setIsModalOpen(true)}
@@ -370,40 +368,16 @@ export default function Groups() {
         {/* Updated Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {[
-            {
-              label: "Total Groups",
-              value: groups.length,
-              bgClass: "bg-purple-100",
-              textClass: "text-purple-700",
-              numberClass: "text-purple-600",
-            },
-            {
-              label: "Active Groups",
-              value: groups.filter((group) => !group.completed).length,
-              bgClass: "bg-green-100",
-              textClass: "text-green-800",
-              numberClass: "text-green-600",
-            },
-            {
-              label: "Completed Groups",
-              value: groups.filter((group) => group.completed).length,
-              bgClass: "bg-blue-100",
-              textClass: "text-blue-800",
-              numberClass: "text-blue-600",
-            },
+            { label: "Total Groups", value: groups.length },
+            { label: "Active Groups", value: groups.filter((g) => !g.completed).length },
+            { label: "Completed Groups", value: groups.filter((g) => g.completed).length },
           ].map((card, index) => (
             <div
               key={index}
-              className={`${card.bgClass} rounded-2xl p-6 text-center shadow-md transform transition-all duration-300 hover:-translate-y-2`}
+              className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col items-center"
             >
-              <h2 className={`text-lg font-semibold ${card.textClass} mb-2`}>
-                {card.label}
-              </h2>
-              <p
-                className={`text-4xl font-bold ${card.numberClass}`}
-              >
-                {card.value}
-              </p>
+              <p className="text-4xl font-semibold text-gray-900 mb-1">{card.value}</p>
+              <p className="text-sm text-gray-500">{card.label}</p>
             </div>
           ))}
         </div>
@@ -411,8 +385,8 @@ export default function Groups() {
         {/* Updated Group Lists */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Active Groups with Energetic Design */}
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="h-1.5 w-full bg-gradient-to-r from-green-500 to-green-600"></div>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="h-0.5 w-full bg-emerald-500"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
@@ -444,7 +418,7 @@ export default function Groups() {
                   .map((group) => (
                     <div
                       key={group._id}
-                      className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-5 mb-4 flex items-center hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300"
+                      className="bg-white rounded-lg border border-gray-200 p-4 mb-3 flex items-center hover:border-gray-300 hover:shadow-sm transition-all duration-150"
                     >
                       <div className="mr-5">
                         <Image
@@ -464,7 +438,7 @@ export default function Groups() {
                           <h3 className="text-xl font-semibold text-gray-800 mr-3">
                             {group.name}
                           </h3>
-                          <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">
+                          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
                             {group.type} Group
                           </span>
                         </div>
@@ -515,8 +489,8 @@ export default function Groups() {
           </div>
 
           {/* Completed Groups with Subdued Design */}
-          <div className="bg-white/80 backdrop-blur-lg rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-            <div className="h-1.5 w-full bg-gradient-to-r from-gray-400 to-gray-500"></div>
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="h-0.5 w-full bg-gray-300"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
@@ -542,7 +516,7 @@ export default function Groups() {
                   .map((group) => (
                     <div
                       key={group._id}
-                      className="bg-white rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-gray-100 p-5 mb-4 flex items-center opacity-70 hover:opacity-100 transition-all duration-300"
+                      className="bg-white rounded-lg border border-gray-200 p-4 mb-3 flex items-center opacity-60 hover:opacity-100 transition-all duration-150"
                     >
                       <div className="mr-5 relative">
                         <Image
@@ -616,8 +590,8 @@ export default function Groups() {
             >
               <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-auto overflow-hidden">
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-center">
-                  <h2 className="text-2xl font-bold text-white">
+                <div className="px-6 py-5 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">
                     Delete Group
                   </h2>
                 </div>
@@ -689,16 +663,16 @@ export default function Groups() {
           >
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto overflow-hidden">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-500 p-6 text-center relative">
-                <h2 className="text-2xl font-bold text-white">
+              <div className="px-6 py-5 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">
                   Create a New Group
                 </h2>
                 <Image
                   src={avatarMap[newGroup.type]}
                   alt={`${newGroup.type} Group Avatar`}
-                  width={100}
-                  height={100}
-                  className="absolute top-4 right-4 bg-white/80 p-2 rounded-full shadow-md border border-purple-100"
+                  width={48}
+                  height={48}
+                  className="bg-gray-50 p-1 rounded-lg border border-gray-200"
                 />
               </div>
 
@@ -717,7 +691,7 @@ export default function Groups() {
                       onChange={(e) =>
                         setNewGroup({ ...newGroup, name: e.target.value })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                       required
                     />
                   </div>
@@ -735,7 +709,7 @@ export default function Groups() {
                           description: e.target.value,
                         })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                     />
                   </div>
 
@@ -748,7 +722,7 @@ export default function Groups() {
                       onChange={(e) =>
                         setNewGroup({ ...newGroup, type: e.target.value })
                       }
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                       required
                     >
                       <option value="Travel">Travel/Trip</option>
@@ -778,7 +752,7 @@ export default function Groups() {
                             members: [...prevGroup.members, e.target.value],
                           }));
                       }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                     >
                       <option value="">Select a friend...</option>
                       {friends.length > 0 ? (
@@ -815,12 +789,12 @@ export default function Groups() {
                               friend && (
                                 <div
                                   key={index}
-                                  className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                                 >
                                   <span>{friend.fullName}</span>
                                   <button
                                     type="button"
-                                    className="text-purple-500 hover:text-red-500 transition-colors"
+                                    className="text-gray-400 hover:text-red-500 transition-colors"
                                     onClick={() =>
                                       setNewGroup((prevGroup) => ({
                                         ...prevGroup,
@@ -873,8 +847,8 @@ export default function Groups() {
           <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto overflow-hidden">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-purple-600 to-indigo-500 p-6 text-center relative">
-                <h2 className="text-2xl font-bold text-white">Edit Group</h2>
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">Edit Group</h2>
               </div>
 
               {/* Modal Content */}
@@ -915,7 +889,7 @@ export default function Groups() {
                     <textarea
                       value={groupDescription}
                       onChange={(e) => setGroupDescription(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg h-24 resize-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                       placeholder="Add a detailed description"
                     />
                   </div>
@@ -926,7 +900,7 @@ export default function Groups() {
                       type="checkbox"
                       checked={completedStatus}
                       onChange={(e) => setCompletedStatus(e.target.checked)}
-                      className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                     />
                     <label className="text-sm text-gray-700 font-medium">
                       Mark as Completed
@@ -961,7 +935,7 @@ export default function Groups() {
                           setNewMembers([...newMembers, newMemberId]);
                         }
                       }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500/50 transition-all"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm"
                       disabled={
                         friends.length === 0 ||
                         friends.every(
@@ -1008,12 +982,12 @@ export default function Groups() {
                               friend && (
                                 <div
                                   key={index}
-                                  className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-2"
                                 >
                                   <span>{friend.fullName}</span>
                                   <button
                                     type="button"
-                                    className="text-purple-500 hover:text-red-500 transition-colors"
+                                    className="text-gray-400 hover:text-red-500 transition-colors"
                                     onClick={() => {
                                       if (newMembers.length <= 1) {
                                         toast.error("❌ A group must have at least 2 members (including the creator)!");
@@ -1046,7 +1020,7 @@ export default function Groups() {
                 <Button
                   text="Cancel"
                   onClick={() => setIsEditModalOpen(false)}
-                  variant="danger"
+                  variant="secondary"
                   size="md"
                 />
                 <Button
@@ -1067,7 +1041,7 @@ export default function Groups() {
           >
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-auto grid grid-cols-2 overflow-hidden">
               {/* Left Panel: Group Overview */}
-              <div className="p-8 bg-gradient-to-br from-purple-50 to-indigo-100">
+              <div className="p-8 bg-white border-r border-gray-100">
                 <div className="flex items-center space-x-5 mb-6">
                   <Image
                     src={
@@ -1084,7 +1058,7 @@ export default function Groups() {
                     <h2 className="text-2xl font-bold text-gray-800">
                       {selectedGroup.name}
                     </h2>
-                    <p className="text-purple-600 font-medium">
+                    <p className="text-gray-500 text-sm">
                       {selectedGroup.type} Group
                     </p>
                   </div>
@@ -1094,108 +1068,61 @@ export default function Groups() {
                 <div className="space-y-4">
                   {/* Group Description Section */}
                   <div>
-                    <div className="flex items-center mb-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2 text-indigo-500"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-5L9 3H4zm3 6a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <h3 className="text-sm font-semibold text-gray-600">
-                        Group Description
-                      </h3>
-                    </div>
-                    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 border border-indigo-200 rounded-lg p-4">
-                      <p className="text-gray-800 italic">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Description</p>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <p className="text-gray-700 text-sm">
                         {selectedGroup.description || (
-                          <span className="text-gray-500">
-                            No description provided
-                          </span>
+                          <span className="text-gray-400 italic">No description provided</span>
                         )}
                       </p>
                     </div>
                   </div>
 
                   {/* Group Owner Section */}
-                  <div className="mt-4">
-                    <div className="flex items-center mb-2">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 mr-2 text-green-500"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <h3 className="text-sm font-semibold text-gray-600">
-                        Group Owner
-                      </h3>
-                    </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-green-200 flex items-center justify-center mr-4">
-                        <span className="text-green-700 font-bold text-lg">
-                          {selectedGroup.createdBy?.fullName
-                            ?.charAt(0)
-                            .toUpperCase() || "?"}
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Owner</p>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <span className="text-gray-600 font-semibold text-sm">
+                          {selectedGroup.createdBy?.fullName?.charAt(0).toUpperCase() || "?"}
                         </span>
                       </div>
                       <div>
-                        <p className="text-gray-800 font-medium">
+                        <p className="text-gray-800 text-sm font-medium">
                           {selectedGroup.createdBy?.fullName || "Unknown"}
                         </p>
-                        <p className="text-xs text-gray-500">Group Creator</p>
+                        <p className="text-xs text-gray-400">Group Creator</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Members Section */}
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-semibold text-gray-600 flex items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2 text-purple-500"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.5 17c0-2.757 2.243-5 5-5v-2c-3.157 0-5.868 2.167-6.72 5.007C10.399 14.766 8.666 13 6.5 13a4.5 4.5 0 00-4.5 4.5v2h10v-2z" />
-                        </svg>
-                        Members
-                      </h3>
-                      <span className="bg-purple-100 text-purple-600 px-2 py-1 rounded-full text-xs font-medium">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Members</p>
+                      <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium">
                         {selectedGroup?.members?.length || 0}
                       </span>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg divide-y divide-gray-100">
                       {selectedGroup?.members?.map(
                         (member: any, index: number) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between py-2 border-b last:border-b-0 border-purple-200"
+                            className="flex items-center justify-between px-3 py-2"
                           >
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-purple-200 flex items-center justify-center mr-3">
-                                <span className="text-purple-700 font-medium text-sm">
-                                  {member.fullName?.charAt(0).toUpperCase() ||
-                                    "?"}
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center">
+                                <span className="text-gray-600 font-medium text-xs">
+                                  {member.fullName?.charAt(0).toUpperCase() || "?"}
                                 </span>
                               </div>
-                              <span className="text-gray-800 font-medium">
+                              <span className="text-gray-800 text-sm">
                                 {member.fullName || "Unknown"}
                               </span>
                             </div>
                             {member._id === selectedGroup.createdBy._id && (
-                              <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full">
+                              <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full">
                                 Owner
                               </span>
                             )}
@@ -1206,54 +1133,16 @@ export default function Groups() {
                   </div>
 
                   {/* Group Metadata */}
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3 text-center">
-                      <div className="flex justify-center items-center mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2 text-blue-500"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <h4 className="text-xs font-semibold text-blue-700">
-                          Start Date
-                        </h4>
-                      </div>
-                      <p className="text-blue-800 font-bold">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500 mb-1">Start Date</p>
+                      <p className="text-sm font-semibold text-gray-800">
                         {new Date(selectedGroup.createdAt).toLocaleDateString()}
                       </p>
                     </div>
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-3 text-center">
-                      <div className="flex justify-center items-center mb-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2 text-green-500"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <h4 className="text-xs font-semibold text-green-700">
-                          Group Status
-                        </h4>
-                      </div>
-                      <p
-                        className={`font-bold ${
-                          selectedGroup.completed
-                            ? "text-green-600"
-                            : "text-blue-600"
-                        }`}
-                      >
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                      <p className="text-xs text-gray-500 mb-1">Status</p>
+                      <p className={`text-sm font-semibold ${selectedGroup.completed ? "text-emerald-600" : "text-blue-600"}`}>
                         {selectedGroup.completed ? "Completed" : "Active"}
                       </p>
                     </div>
@@ -1261,27 +1150,13 @@ export default function Groups() {
                 </div>
 
                 {/* Close Button */}
-                <div className="mt-6 text-center">
+                <div className="mt-6">
                   <Button
                     text="Close"
                     onClick={closeViewModal}
-                    variant="danger"
+                    variant="secondary"
                     size="md"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2 text-white group-hover:animate-pulse"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    Close
-                  </Button>
+                  />
                 </div>
               </div>
 
@@ -1319,7 +1194,7 @@ export default function Groups() {
                           (txn: any, index: number) => (
                             <div
                               key={index}
-                              className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-lg p-3 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
+                              className="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center hover:border-gray-300 transition-all"
                             >
                               <div>
                                 <p className="text-gray-800 font-medium">
@@ -1376,7 +1251,7 @@ export default function Groups() {
                         {owesList.map((entry, index) => (
                           <div
                             key={index}
-                            className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3 flex justify-between items-center shadow-sm hover:shadow-md transition-all"
+                            className="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center hover:border-gray-300 transition-all"
                           >
                             <div>
                               <p className="text-gray-800 font-medium">
@@ -1423,10 +1298,10 @@ export default function Groups() {
                     ) : debtSummary && debtSummary.optimizedTransactionCount !== undefined ? (
                       <div>
                         {/* Metrics banner */}
-                        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-3">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3">
                           <div className="flex items-center justify-between">
                             <div className="text-center">
-                              <p className="text-2xl font-bold text-indigo-700">{debtSummary.originalTransactionCount}</p>
+                              <p className="text-2xl font-bold text-gray-900">{debtSummary.originalTransactionCount}</p>
                               <p className="text-xs text-gray-500 mt-0.5">pending txns</p>
                             </div>
                             <div className="flex items-center text-gray-400 px-2">
@@ -1439,7 +1314,7 @@ export default function Groups() {
                               <p className="text-xs text-gray-500 mt-0.5">settlements</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-2xl font-bold text-purple-600">{debtSummary.reductionPercentage}%</p>
+                              <p className="text-2xl font-bold text-gray-900">{debtSummary.reductionPercentage}%</p>
                               <p className="text-xs text-gray-500 mt-0.5">fewer transactions</p>
                             </div>
                           </div>
@@ -1449,15 +1324,15 @@ export default function Groups() {
                         {debtSummary.optimizedSettlements.length > 0 ? (
                           <div className="space-y-2">
                             {debtSummary.optimizedSettlements.map((s, i) => (
-                              <div key={i} className="bg-white border border-indigo-100 rounded-lg p-3 flex justify-between items-center shadow-sm">
+                              <div key={i} className="bg-white border border-gray-200 rounded-lg p-3 flex justify-between items-center">
                                 <div>
                                   <p className="text-gray-800 font-medium text-sm">
-                                    <span className="text-indigo-600">{s.from.fullName}</span>
+                                    <span className="text-blue-600">{s.from.fullName}</span>
                                     <span className="mx-2 text-gray-400">pays</span>
                                     <span className="text-gray-700">{s.to.fullName}</span>
                                   </p>
                                 </div>
-                                <span className="font-bold text-indigo-700">{formatCurrency(s.amount, selectedGroup?.currency)}</span>
+                                <span className="font-semibold text-gray-900">{formatCurrency(s.amount, selectedGroup?.currency)}</span>
                               </div>
                             ))}
                           </div>

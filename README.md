@@ -249,6 +249,42 @@ graph TD
 
 </details>
 
+## 🧪 Testing & CI
+
+### Running Tests
+
+```bash
+npm test                  # run all tests
+npm run test:watch        # watch mode
+npm run test:coverage     # with coverage report
+npm run type-check        # TypeScript check
+```
+
+Test files live under `__tests__/` and use [Jest](https://jestjs.io/) + [React Testing Library](https://testing-library.com/):
+
+| Suite | Coverage |
+|---|---|
+| `utils/formatCurrency` | all currencies, string/NaN input, unknown codes |
+| `utils/constants` | every exported array and object |
+| `components/ErrorBoundary` | render, error fallback, custom fallback, refresh button |
+
+### CI Pipeline (GitHub Actions)
+
+Every push and pull request to `master` runs four jobs in sequence:
+
+```
+Lint → Type Check → Tests (+ coverage artifact) → Build
+```
+
+Set the `NEXT_PUBLIC_API_URL` repository secret for the Build step.
+
+### Vercel Deployment
+
+No build command changes needed — Vercel auto-detects Next.js and runs `next build`.  
+Add `NEXT_PUBLIC_API_URL` under **Vercel → Settings → Environment Variables**.
+
+---
+
 ## 🤝 Contributing
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.

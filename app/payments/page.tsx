@@ -294,33 +294,31 @@ export default function PaymentsPage() {
         className="flex-1 p-6 md:p-8"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
-          <h1 className="text-3xl sm:text-4xl font-bold text-indigo-700">
-            Payments
-          </h1>
+          <h1 className="text-2xl font-semibold text-gray-900">Payments</h1>
           <div className="hidden md:block">
-            <div className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2 rounded-lg flex items-center">
-              <FontAwesomeIcon icon={faShieldAlt} className="mr-2" />
-              <span className="font-medium">Secured by TrustPay™</span>
+            <div className="bg-gray-50 text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm">
+              <FontAwesomeIcon icon={faShieldAlt} className="text-gray-400" />
+              <span>Secured by TrustPay™</span>
             </div>
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-red-600 rounded-xl overflow-hidden mb-8">
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
+        <div className="border border-gray-200 rounded-xl overflow-hidden mb-8">
+          <div className="bg-gray-50 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
                 <FontAwesomeIcon
                   icon={faMoneyBillWave}
-                  className="text-orange-500"
+                  className="text-gray-500 text-sm"
                 />
               </div>
-              <h2 className="text-xl font-bold text-white">Pending Payments</h2>
+              <h2 className="text-sm font-semibold text-gray-800">Pending Payments</h2>
             </div>
-            <div className="bg-white text-orange-500 text-sm font-medium px-4 py-1.5 rounded-full">
+            <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${pendingPayments.length > 0 ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
               {pendingPayments.length}{" "}
               {pendingPayments.length === 1 ? "payment" : "payments"} pending
-            </div>
+            </span>
           </div>
 
           {pendingPayments.length > 0 ? (
@@ -432,21 +430,20 @@ export default function PaymentsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-green-600 rounded-xl overflow-hidden">
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3">
-                <FontAwesomeIcon icon={faHistory} className="text-purple-500" />
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <div className="bg-gray-50 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
+                <FontAwesomeIcon icon={faHistory} className="text-gray-500 text-sm" />
               </div>
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-sm font-semibold text-gray-800">
                 Transaction History
               </h2>
             </div>
-            <div className="bg-white text-purple-600 text-sm font-medium px-4 py-1.5 rounded-full">
+            <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2.5 py-1 rounded-full">
               {transactionHistory.length}{" "}
-              {transactionHistory.length === 1 ? "transaction" : "transactions"}{" "}
-              completed
-            </div>
+              {transactionHistory.length === 1 ? "transaction" : "transactions"}
+            </span>
           </div>
 
           {transactionHistory.length > 0 ? (

@@ -34,19 +34,13 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   // Button variants
   const variants = {
-    primary:
-      "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg",
-    secondary:
-      "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm hover:shadow",
-    success:
-      "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg",
-    danger:
-      "bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white shadow-md hover:shadow-lg",
-    warning:
-      "bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white shadow-md hover:shadow-lg",
-    info: "bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white shadow-md hover:shadow-lg",
-    ghost:
-      "bg-transparent hover:bg-gray-100 text-indigo-600 hover:text-indigo-700",
+    primary: "bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm",
+    secondary: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm",
+    success: "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm",
+    warning: "bg-amber-500 hover:bg-amber-600 text-white shadow-sm",
+    info: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm",
+    ghost: "bg-transparent hover:bg-gray-100 text-gray-700 hover:text-gray-900",
   };
 
   // Button sizes
