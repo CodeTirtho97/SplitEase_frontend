@@ -12,6 +12,9 @@ import {
   faTrash,
   faEye,
   faPenAlt,
+  faUsers,
+  faCheckCircle,
+  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { useGroups } from "@/context/groupContext";
 import {
@@ -160,6 +163,21 @@ export default function Groups() {
     Work: "/work_group.png",
     Friends: "/friends_group.png",
   };
+
+  const typeBadgeMap: Record<string, string> = {
+    Travel: "bg-blue-50 text-blue-700 border-blue-200",
+    Household: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Event: "bg-purple-50 text-purple-700 border-purple-200",
+    Work: "bg-amber-50 text-amber-700 border-amber-200",
+    Friends: "bg-pink-50 text-pink-700 border-pink-200",
+  };
+
+  const memberColors = [
+    "bg-indigo-100 text-indigo-600",
+    "bg-emerald-100 text-emerald-600",
+    "bg-amber-100 text-amber-600",
+    "bg-rose-100 text-rose-600",
+  ];
 
 
   // ✅ Create New Group (Client-side only)
@@ -350,236 +368,246 @@ export default function Groups() {
       </div>
       <ConnectionStatus />
 
-      <div className="flex-1 min-w-0 p-8">
-        {/* Modern Page Header */}
-        <div className="flex items-center justify-between mb-10">
-          <h1 className="text-2xl font-semibold text-gray-900">Groups</h1>
-          <Button
-            text="Add Group"
+      <div className="flex-1 min-w-0 p-6 md:p-8">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Groups</h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {groups.length === 0
+                ? "No groups yet — create one to get started"
+                : `${groups.length} group${groups.length !== 1 ? "s" : ""} · ${groups.filter((g) => !g.completed).length} active`}
+            </p>
+          </div>
+          <button
             onClick={() => setIsModalOpen(true)}
-            variant="primary"
-            size="lg"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
           >
-            <FontAwesomeIcon icon={faPlus} className="text-xl" />
-            <span>Add Group</span>
-          </Button>
+            <FontAwesomeIcon icon={faPlus} className="text-xs" />
+            Add Group
+          </button>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
           {[
-            { label: "Total Groups", value: groups.length, accent: "bg-indigo-500", numColor: "text-indigo-600" },
-            { label: "Active Groups", value: groups.filter((g) => !g.completed).length, accent: "bg-emerald-500", numColor: "text-emerald-600" },
-            { label: "Completed Groups", value: groups.filter((g) => g.completed).length, accent: "bg-slate-400", numColor: "text-slate-600" },
-          ].map((card, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
-            >
-              <div className={`h-1 ${card.accent}`}></div>
-              <div className="p-5 flex flex-col items-center">
-                <p className={`text-4xl font-bold ${card.numColor} mb-1`}>{card.value}</p>
-                <p className="text-sm text-gray-500">{card.label}</p>
+            {
+              label: "Total Groups",
+              value: groups.length,
+              accent: "bg-indigo-500",
+              iconBg: "bg-indigo-50",
+              iconColor: "text-indigo-500",
+              numColor: "text-indigo-600",
+              sub: "All time",
+              icon: faUsers,
+            },
+            {
+              label: "Active Groups",
+              value: groups.filter((g) => !g.completed).length,
+              accent: "bg-emerald-500",
+              iconBg: "bg-emerald-50",
+              iconColor: "text-emerald-500",
+              numColor: "text-emerald-600",
+              sub: "In progress",
+              icon: faArrowRight,
+            },
+            {
+              label: "Completed",
+              value: groups.filter((g) => g.completed).length,
+              accent: "bg-slate-400",
+              iconBg: "bg-slate-50",
+              iconColor: "text-slate-500",
+              numColor: "text-slate-600",
+              sub: "Fully settled",
+              icon: faCheckCircle,
+            },
+          ].map((card, i) => (
+            <div key={i} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className={`h-1 ${card.accent}`} />
+              <div className="p-5 flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-xl ${card.iconBg} flex items-center justify-center flex-shrink-0`}>
+                  <FontAwesomeIcon icon={card.icon} className={`text-lg ${card.iconColor}`} />
+                </div>
+                <div>
+                  <p className={`text-3xl font-bold ${card.numColor} leading-none`}>{card.value}</p>
+                  <p className="text-sm font-medium text-gray-700 mt-0.5">{card.label}</p>
+                  <p className="text-xs text-gray-400">{card.sub}</p>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Updated Group Lists */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Active Groups with Energetic Design */}
+        {/* Group Lists */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Active Groups */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="h-1 bg-emerald-500"></div>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Active Groups
-                </h2>
-                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                  {groups.filter((group) => !group.completed).length}
-                </span>
+            <div className="h-1 bg-emerald-500" />
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-emerald-50 border border-emerald-100 rounded-lg flex items-center justify-center">
+                  <FontAwesomeIcon icon={faUsers} className="text-emerald-500 text-sm" />
+                </div>
+                <h2 className="text-sm font-semibold text-gray-800">Active Groups</h2>
               </div>
-
-              {groups.filter((group) => !group.completed).length === 0 ? (
-                <div className="text-center py-10 bg-green-50/50 rounded-xl">
-                  <p className="text-lg font-medium text-green-700 italic">
-                    No active groups
-                  </p>
-                  <p className="text-sm mt-2 text-green-600">
-                    Start a new group adventure!
-                  </p>
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${groups.filter((g) => !g.completed).length > 0 ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                {groups.filter((g) => !g.completed).length}
+              </span>
+            </div>
+            <div className="p-4">
+              {groups.filter((g) => !g.completed).length === 0 ? (
+                <div className="py-14 flex flex-col items-center text-center">
+                  <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mb-3">
+                    <FontAwesomeIcon icon={faUsers} className="text-xl text-emerald-400" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">No active groups</p>
+                  <p className="text-xs text-gray-400 mb-4">Create a group to start splitting expenses</p>
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className="mt-4 px-5 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
                   >
                     Create a Group
                   </button>
                 </div>
               ) : (
-                groups
-                  .filter((group) => !group.completed)
-                  .map((group) => (
-                    <div
-                      key={group._id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 mb-3 flex items-center hover:border-gray-300 hover:shadow-sm transition-all duration-150"
-                    >
-                      <div className="mr-5">
-                        <Image
-                          src={
-                            avatarMap[group.type] ||
-                            "/friends_group_gradient.png"
-                          }
-                          alt="Group Avatar"
-                          width={60}
-                          height={60}
-                          className="rounded-full border-2 border-gray-100 shadow-sm"
-                        />
-                      </div>
-
-                      <div className="flex-grow">
-                        <div className="flex items-center mb-2">
-                          <h3 className="text-xl font-semibold text-gray-800 mr-3">
-                            {group.name}
-                          </h3>
-                          <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-                            {group.type} Group
-                          </span>
+                <div className="space-y-3">
+                  {groups.filter((g) => !g.completed).map((group) => {
+                    const badgeStyle = typeBadgeMap[group.type] || "bg-gray-50 text-gray-600 border-gray-200";
+                    return (
+                      <div key={group._id} className="rounded-xl border border-gray-200 p-4 hover:border-indigo-200 hover:shadow-sm transition-all duration-150">
+                        <div className="flex items-start gap-3">
+                          <Image
+                            src={avatarMap[group.type] || "/friends_group_gradient.png"}
+                            alt="Group Avatar"
+                            width={48}
+                            height={48}
+                            className="rounded-xl border border-gray-100 flex-shrink-0 object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="text-sm font-semibold text-gray-900">{group.name}</h3>
+                              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${badgeStyle}`}>{group.type}</span>
+                            </div>
+                            {group.description && (
+                              <p className="text-xs text-gray-500 mb-1.5 truncate">{group.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex -space-x-1.5">
+                                {group.members.slice(0, 4).map((member: any, idx: number) => (
+                                  <div
+                                    key={idx}
+                                    className={`w-5 h-5 rounded-full border border-white flex items-center justify-center text-[9px] font-bold ${memberColors[idx % memberColors.length]}`}
+                                    title={member.fullName}
+                                  >
+                                    {member.fullName?.charAt(0).toUpperCase()}
+                                  </div>
+                                ))}
+                                {group.members.length > 4 && (
+                                  <div className="w-5 h-5 rounded-full border border-white bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500">
+                                    +{group.members.length - 4}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-400">{group.members.length} member{group.members.length !== 1 ? "s" : ""}</span>
+                              <span className="text-gray-200 text-xs">·</span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(group.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 mt-0.5">
+                            <button
+                              onClick={() => handleEditGroup(group)}
+                              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors flex items-center gap-1.5"
+                            >
+                              <FontAwesomeIcon icon={faPenAlt} className="text-[10px]" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleViewGroup(group)}
+                              className="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1.5"
+                            >
+                              <FontAwesomeIcon icon={faEye} className="text-[10px]" />
+                              View
+                            </button>
+                          </div>
                         </div>
-
-                        <div className="text-sm text-gray-500 space-y-1">
-                          <p>
-                            <span className="font-medium text-gray-600">
-                              {group.members.length} Members
-                            </span>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <span>
-                              Created by{" "}
-                              {typeof group.createdBy === "object" &&
-                              group.createdBy?.fullName
-                                ? group.createdBy.fullName
-                                : "Unknown"}
-                            </span>
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Created on{" "}
-                            {new Date(group.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
                       </div>
-
-                      <div className="flex space-x-3">
-                        <Button
-                          text="Edit"
-                          onClick={() => handleEditGroup(group)}
-                          variant="secondary"
-                          size="sm"
-                          icon={faPenAlt} // or faTrash if you prefer
-                          className="font-medium"
-                        />
-                        <Button
-                          text="View"
-                          onClick={() => handleViewGroup(group)}
-                          variant="info"
-                          size="sm"
-                          icon={faEye} // or faTrash if you prefer
-                          className="font-medium"
-                        />
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
 
-          {/* Completed Groups with Subdued Design */}
+          {/* Completed Groups */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="h-1 bg-slate-400"></div>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-gray-800">
-                  Completed Groups
-                </h2>
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
-                  {groups.filter((group) => group.completed).length}
-                </span>
+            <div className="h-1 bg-slate-400" />
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-slate-50 border border-slate-100 rounded-lg flex items-center justify-center">
+                  <FontAwesomeIcon icon={faCheckCircle} className="text-slate-500 text-sm" />
+                </div>
+                <h2 className="text-sm font-semibold text-gray-800">Completed Groups</h2>
               </div>
-
-              {groups.filter((group) => group.completed).length === 0 ? (
-                <div className="text-center py-10 bg-gray-50/50 rounded-xl">
-                  <p className="text-lg font-medium text-gray-700 italic">
-                    No completed groups
-                  </p>
-                  <p className="text-sm mt-2 text-gray-600">
-                    Complete an active group to see it here
-                  </p>
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
+                {groups.filter((g) => g.completed).length}
+              </span>
+            </div>
+            <div className="p-4">
+              {groups.filter((g) => g.completed).length === 0 ? (
+                <div className="py-14 flex flex-col items-center text-center">
+                  <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+                    <FontAwesomeIcon icon={faCheckCircle} className="text-xl text-slate-400" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">No completed groups yet</p>
+                  <p className="text-xs text-gray-400 max-w-[200px]">Mark an active group as complete once all expenses are settled</p>
                 </div>
               ) : (
-                groups
-                  .filter((group) => group.completed)
-                  .map((group) => (
-                    <div
-                      key={group._id}
-                      className="bg-white rounded-lg border border-gray-200 p-4 mb-3 flex items-center opacity-60 hover:opacity-100 transition-all duration-150"
-                    >
-                      <div className="mr-5 relative">
-                        <Image
-                          src={
-                            avatarMap[group.type] ||
-                            "/friends_group_gradient.png"
-                          }
-                          alt="Group Avatar"
-                          width={60}
-                          height={60}
-                          className="rounded-full border-2 border-gray-200 grayscale"
-                        />
-                        <div className="absolute bottom-0 right-0 bg-gray-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                          ✓
+                <div className="space-y-3">
+                  {groups.filter((g) => g.completed).map((group) => (
+                    <div key={group._id} className="rounded-xl border border-gray-200 p-4 opacity-70 hover:opacity-100 transition-all duration-150">
+                      <div className="flex items-start gap-3">
+                        <div className="relative flex-shrink-0">
+                          <Image
+                            src={avatarMap[group.type] || "/friends_group_gradient.png"}
+                            alt="Group Avatar"
+                            width={48}
+                            height={48}
+                            className="rounded-xl border border-gray-100 grayscale object-cover"
+                          />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-slate-500 rounded-full flex items-center justify-center border-2 border-white">
+                            <FontAwesomeIcon icon={faCheckCircle} className="text-white text-[8px]" />
+                          </div>
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold text-gray-400 line-through mb-1">{group.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <div className="flex -space-x-1.5">
+                              {group.members.slice(0, 3).map((member: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="w-5 h-5 rounded-full border border-white bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500"
+                                  title={member.fullName}
+                                >
+                                  {member.fullName?.charAt(0).toUpperCase()}
+                                </div>
+                              ))}
+                            </div>
+                            <span className="text-xs text-gray-400">{group.members.length} member{group.members.length !== 1 ? "s" : ""}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteGroup(group)}
+                          className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5 flex-shrink-0 mt-0.5"
+                        >
+                          <FontAwesomeIcon icon={faTrash} className="text-[10px]" />
+                          Delete
+                        </button>
                       </div>
-
-                      <div className="flex-grow">
-                        <div className="flex items-center mb-2">
-                          <h3 className="text-xl font-semibold text-gray-500 mr-3 line-through">
-                            {group.name}
-                          </h3>
-                          {/* <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-                          Completed {group.type} Group
-                        </span> */}
-                        </div>
-
-                        <div className="text-sm text-gray-400 space-y-1">
-                          <p>
-                            <span className="font-medium text-gray-500">
-                              {group.members.length} Members
-                            </span>
-                            <span className="mx-2 text-gray-300">•</span>
-                            <span>
-                              Created by{" "}
-                              {typeof group.createdBy === "object" &&
-                              group.createdBy?.fullName
-                                ? group.createdBy.fullName
-                                : "Unknown"}
-                            </span>
-                          </p>
-                          {/* <p className="text-xs text-gray-400">
-                          Completed on{" "}
-                          {new Date(
-                            group.updatedAt || group.createdAt
-                          ).toLocaleDateString()}
-                        </p> */}
-                        </div>
-                      </div>
-
-                      <Button
-                        text="Delete"
-                        onClick={() => handleDeleteGroup(group)}
-                        variant="danger"
-                        size="sm"
-                        icon={faTrash} // or faTrash if you prefer
-                        className="font-medium"
-                      />
                     </div>
-                  ))
+                  ))}
+                </div>
               )}
             </div>
           </div>
