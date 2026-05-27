@@ -48,7 +48,7 @@ interface Transaction {
 const PaymentsSkeleton = () => (
   <div className="flex min-h-screen bg-gray-50 pt-16">
     <Sidebar activePage="payments" />
-    <div className="flex-1 p-6 md:p-8 animate-pulse">
+    <div className="flex-1 min-w-0 p-6 md:p-8 animate-pulse">
       <div className="flex items-center justify-between mb-8">
         <div className="h-9 w-40 bg-gray-200 rounded-lg" />
         <div className="h-8 w-44 bg-gray-200 rounded-lg hidden md:block" />
@@ -291,7 +291,7 @@ export default function PaymentsPage() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex-1 p-6 md:p-8"
+        className="flex-1 min-w-0 p-6 md:p-8"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-2xl font-semibold text-gray-900">Payments</h1>

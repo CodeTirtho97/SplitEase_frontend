@@ -21,7 +21,7 @@ const navItems = [
 const Sidebar = ({ activePage }: SidebarProps) => {
   return (
     <aside className="w-64 shrink-0">
-      <div className="w-64 bg-gray-900 text-white fixed top-16 left-0 h-[calc(100vh-4rem)] flex flex-col shadow-xl border-r border-gray-800">
+      <div className="w-64 bg-gray-900 text-white fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] flex flex-col shadow-xl border-r border-gray-800">
         {/* Brand header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-800">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">

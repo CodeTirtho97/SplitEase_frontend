@@ -462,7 +462,7 @@ export default function Expenses() {
     return (
       <div className="flex min-h-screen bg-gray-50 pt-16">
         <Sidebar activePage="expenses" />
-        <div className="flex-1 p-4 sm:p-6 md:p-8 animate-pulse">
+        <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8 animate-pulse">
           <div className="flex items-center justify-between mb-6">
             <div className="h-9 w-36 bg-gray-200 rounded-lg" />
             <div className="h-10 w-32 bg-gray-200 rounded-lg" />
@@ -500,7 +500,7 @@ export default function Expenses() {
         <NotificationPanel />
       </div>
       <ConnectionStatus />
-      <div className="flex-1 p-4 sm:p-6 md:p-8">
+      <div className="flex-1 min-w-0 p-4 sm:p-6 md:p-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <h1 className="text-2xl font-semibold text-gray-900">Expenses</h1>
           <Button

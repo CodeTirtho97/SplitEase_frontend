@@ -307,7 +307,7 @@ export default function Groups() {
     return (
       <div className="flex min-h-screen bg-gray-50 pt-16">
         <Sidebar activePage="groups" />
-        <div className="flex-1 p-8 animate-pulse">
+        <div className="flex-1 min-w-0 p-8 animate-pulse">
           <div className="flex items-center justify-between mb-10">
             <div className="h-9 w-32 bg-gray-200 rounded-lg" />
             <div className="h-10 w-32 bg-gray-200 rounded-lg" />
@@ -350,7 +350,7 @@ export default function Groups() {
       </div>
       <ConnectionStatus />
 
-      <div className="flex-1 p-8">
+      <div className="flex-1 min-w-0 p-8">
         {/* Modern Page Header */}
         <div className="flex items-center justify-between mb-10">
           <h1 className="text-2xl font-semibold text-gray-900">Groups</h1>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faXTwitter,
@@ -7,14 +8,17 @@ import {
   faGithub,
 } from "@fortawesome/free-brands-svg-icons";
 
+const SIDEBAR_PAGES = ["/dashboard", "/groups", "/expenses", "/payments"];
+
 const Footer = () => {
-  // State to track if components have mounted - fixes the icon rendering issue
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Set mounted to true on client-side
     setMounted(true);
   }, []);
+
+  if (SIDEBAR_PAGES.some((p) => pathname?.startsWith(p))) return null;
 
   return (
     <footer className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 md:py-3 border-t border-indigo-300/30 shadow-xl">

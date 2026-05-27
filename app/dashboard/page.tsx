@@ -19,7 +19,7 @@ import { formatCurrency } from "@/utils/formatCurrency";
 const DashboardSkeleton = () => (
   <div className="flex min-h-screen bg-gray-50">
     <Sidebar activePage="dashboard" />
-    <main className="flex-1 p-6 md:p-8 mt-16">
+    <main className="flex-1 min-w-0 p-6 md:p-8 mt-16">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <div className="h-10 w-44 bg-gray-200 rounded-lg animate-pulse mb-2" />
@@ -661,7 +661,7 @@ export default function Dashboard() {
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 mt-16">
+      <main className="flex-1 min-w-0 p-6 md:p-8 mt-16">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
