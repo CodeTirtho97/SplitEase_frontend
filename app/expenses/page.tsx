@@ -460,7 +460,7 @@ export default function Expenses() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50 pt-20">
+      <div className="flex min-h-screen bg-gray-50 pt-16">
         <Sidebar activePage="expenses" />
         <div className="flex-1 p-4 sm:p-6 md:p-8 animate-pulse">
           <div className="flex items-center justify-between mb-6">
@@ -494,7 +494,7 @@ export default function Expenses() {
 
   // Main content renders only when loading is complete
   return (
-    <div className="flex min-h-screen bg-gray-50 pt-20">
+    <div className="flex min-h-screen bg-gray-50 pt-16">
       <Sidebar activePage="expenses" />
       <div className="fixed top-5 right-5 z-50">
         <NotificationPanel />

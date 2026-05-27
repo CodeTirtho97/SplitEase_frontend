@@ -529,7 +529,7 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center bg-gray-50 pt-20">
+      <div className="min-h-screen flex flex-col items-center bg-gray-50 pt-16">
         <div className="w-full max-w-6xl px-6 md:px-8 py-6 md:py-8 mt-0 md:mt-8 animate-pulse">
           <div className="bg-indigo-100 rounded-2xl p-8 mb-10 flex flex-col md:flex-row items-center gap-6">
             <div className="w-28 h-28 rounded-full bg-indigo-200 flex-shrink-0" />
@@ -617,7 +617,7 @@ export default function Profile() {
       </div>
 
       {/* Content */}
-      <div className="w-full max-w-6xl px-6 md:px-8 py-6 md:py-8 z-10 mt-20 md:mt-28">
+      <div className="w-full max-w-6xl px-6 md:px-8 py-6 md:py-8 z-10 mt-16">
         {/* Profile Header - Lighter color gradient */}
         <div className="bg-gradient-to-r from-indigo-500/90 to-purple-500/90 text-white p-8 rounded-2xl mb-10 flex flex-col md:flex-row items-center shadow-xl">
           <div className="relative group">

@@ -46,7 +46,7 @@ interface Transaction {
 }
 
 const PaymentsSkeleton = () => (
-  <div className="flex min-h-screen bg-gray-50 pt-20">
+  <div className="flex min-h-screen bg-gray-50 pt-16">
     <Sidebar activePage="payments" />
     <div className="flex-1 p-6 md:p-8 animate-pulse">
       <div className="flex items-center justify-between mb-8">
@@ -98,7 +98,7 @@ const ErrorScreen = ({
   onRetry: () => void;
 }) => {
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-20">
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-16">
       <Sidebar activePage="payments" />
       <div className="flex-1 p-8 flex items-center justify-center">
         <motion.div
@@ -279,7 +279,7 @@ export default function PaymentsPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 pt-20">
+    <div className="flex min-h-screen bg-gray-50 pt-16">
       <Sidebar activePage="payments" />
 
       <div className="fixed top-5 right-5 z-50">
@@ -305,12 +305,13 @@ export default function PaymentsPage() {
 
         {/* Pending Payments */}
         <div className="border border-gray-200 rounded-xl overflow-hidden mb-8">
+          <div className="h-1 bg-amber-400"></div>
           <div className="bg-gray-50 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-amber-50 border border-amber-100 rounded-lg flex items-center justify-center">
                 <FontAwesomeIcon
                   icon={faMoneyBillWave}
-                  className="text-gray-500 text-sm"
+                  className="text-amber-500 text-sm"
                 />
               </div>
               <h2 className="text-sm font-semibold text-gray-800">Pending Payments</h2>
@@ -431,10 +432,11 @@ export default function PaymentsPage() {
 
         {/* Transaction History */}
         <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <div className="h-1 bg-indigo-400"></div>
           <div className="bg-gray-50 border-b border-gray-200 px-5 py-3.5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-white border border-gray-200 rounded-lg flex items-center justify-center">
-                <FontAwesomeIcon icon={faHistory} className="text-gray-500 text-sm" />
+              <div className="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-lg flex items-center justify-center">
+                <FontAwesomeIcon icon={faHistory} className="text-indigo-500 text-sm" />
               </div>
               <h2 className="text-sm font-semibold text-gray-800">
                 Transaction History

@@ -17,9 +17,9 @@ import { useSocket } from "@/context/socketContext";
 import { formatCurrency } from "@/utils/formatCurrency";
 // Skeleton cards that mirror the real dashboard layout
 const DashboardSkeleton = () => (
-  <div className="flex min-h-screen bg-white">
+  <div className="flex min-h-screen bg-gray-50">
     <Sidebar activePage="dashboard" />
-    <main className="flex-1 p-6 md:p-8 mt-20">
+    <main className="flex-1 p-6 md:p-8 mt-16">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <div className="h-10 w-44 bg-gray-200 rounded-lg animate-pulse mb-2" />
@@ -324,7 +324,7 @@ export default function Dashboard() {
 
   if (authError || dashboardError) {
     return (
-      <div className="flex min-h-screen mt-20 justify-center items-center">
+      <div className="flex min-h-screen mt-16 justify-center items-center">
         <div className="relative flex flex-col items-center justify-center p-8 bg-white/90 rounded-xl shadow-lg backdrop-blur-md animate-shake">
           {/* Animated Error SVG */}
           <svg
@@ -513,7 +513,7 @@ export default function Dashboard() {
                   text="Create Groups"
                   onClick={() => router.push("/groups")}
                   icon={faUsers}
-                  variant="danger"
+                  variant="primary"
                   size="md"
                 />
                 <Button
@@ -657,16 +657,15 @@ export default function Dashboard() {
 
   // Modern Enterprise Dashboard
   return (
-    <div className="flex min-h-screen bg-white">
-      {/* Sidebar - kept for reference but not part of this component */}
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 mt-20">
+      <main className="flex-1 p-6 md:p-8 mt-16">
         {/* Header with Dashboard title */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-transparent bg-clip-text font-bold">
+            <h1 className="text-3xl font-bold text-gray-900">
               Dashboard
             </h1>
             <p className="text-gray-500 mt-1">All your stats in one place!</p>

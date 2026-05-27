@@ -11,166 +11,62 @@ interface SidebarProps {
   activePage: string;
 }
 
+const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: faTachometerAlt, page: "dashboard" },
+  { href: "/groups", label: "Groups", icon: faUsers, page: "groups" },
+  { href: "/expenses", label: "Expenses", icon: faCreditCard, page: "expenses" },
+  { href: "/payments", label: "Payments", icon: faMoneyBill, page: "payments" },
+];
+
 const Sidebar = ({ activePage }: SidebarProps) => {
   return (
-    <aside
-      className="flex flex-col w-64 bg-gray-900 text-white shadow-xl top-8"
-      style={{
-        marginTop: "0.25rem",
-        marginBottom: "0.75rem",
-      }}
-    >
-      <div className="w-64 bg-gray-900 text-white fixed top-24 mt-8 mb-8 left-0 flex-col shadow-xl overflow-hidden border-r border-gray-800">
-        {/* App Logo & Name
-        <div className="flex items-center gap-3 py-4 px-6 bg-white/10 border-b border-white/10">
-          <div className="bg-white w-10 h-10 rounded-full flex items-center justify-center shadow-md">
-            <span className="text-indigo-700 font-bold text-xl">S</span>
+    <aside className="w-64 shrink-0">
+      <div className="w-64 bg-gray-900 text-white fixed top-16 left-0 h-[calc(100vh-4rem)] flex flex-col shadow-xl border-r border-gray-800">
+        {/* Brand header */}
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-800">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm flex-shrink-0">
+            <span className="text-white font-bold text-sm">S</span>
           </div>
-          <span className="font-semibold text-xl tracking-wide">SplitEase</span>
-        </div> */}
+          <span className="font-semibold text-sm text-white tracking-wide">SplitEase</span>
+        </div>
 
-        {/* Dashboard Link */}
-        <Link
-          href="/dashboard"
-          className={`flex items-center gap-4 px-6 py-4 transition-colors duration-150 ${
-            activePage === "dashboard"
-              ? "bg-gray-800 border-l-2 border-indigo-400"
-              : "hover:bg-gray-800 border-l-2 border-transparent"
-          }`}
-        >
-          <div
-            className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-              activePage === "dashboard" ? "bg-indigo-500" : "bg-gray-800"
-            }`}
-          >
-            <FontAwesomeIcon
-              icon={faTachometerAlt}
-              className={
-                activePage === "dashboard" ? "text-white" : "text-white/90"
-              }
-            />
-          </div>
-          <span
-            className={
-              activePage === "dashboard" ? "text-white" : "text-white/90"
-            }
-          >
-            Dashboard
-          </span>
-        </Link>
-
-        {/* Sidebar Menu */}
-        <nav className="flex-1 mt-4">
-          <ul className="space-y-3">
-            <li>
-              <Link
-                href="/groups"
-                className={`flex items-center gap-4 px-6 py-4 transition-colors duration-150 text-base font-medium ${
-                  activePage === "groups"
-                    ? "bg-gray-800 border-l-2 border-indigo-400"
-                    : "hover:bg-gray-800 border-l-2 border-transparent"
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                    activePage === "groups" ? "bg-indigo-500" : "bg-gray-800"
-                  }`}
-                >
-                  <FontAwesomeIcon
-                    icon={faUsers}
-                    className={
-                      activePage === "groups" ? "text-white" : "text-white/90"
-                    }
-                  />
-                </div>
-                <span
-                  className={
-                    activePage === "groups" ? "text-white" : "text-white/90"
-                  }
-                >
-                  Groups
-                </span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/expenses"
-                className={`flex items-center gap-4 px-6 py-4 transition-colors duration-150 text-base font-medium ${
-                  activePage === "expenses"
-                    ? "bg-gray-800 border-l-2 border-indigo-400"
-                    : "hover:bg-gray-800 border-l-2 border-transparent"
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                    activePage === "expenses" ? "bg-indigo-500" : "bg-gray-800"
-                  }`}
-                >
-                  <FontAwesomeIcon
-                    icon={faCreditCard}
-                    className={
-                      activePage === "expenses" ? "text-white" : "text-white/90"
-                    }
-                  />
-                </div>
-                <span
-                  className={
-                    activePage === "expenses" ? "text-white" : "text-white/90"
-                  }
-                >
-                  Expenses
-                </span>
-              </Link>
-            </li>
-
-            <li>
-              <Link
-                href="/payments"
-                className={`flex items-center gap-4 px-6 py-4 transition-colors duration-150 text-base font-medium ${
-                  activePage === "payments"
-                    ? "bg-gray-800 border-l-2 border-indigo-400"
-                    : "hover:bg-gray-800 border-l-2 border-transparent"
-                }`}
-              >
-                <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                    activePage === "payments" ? "bg-indigo-500" : "bg-gray-800"
-                  }`}
-                >
-                  <FontAwesomeIcon
-                    icon={faMoneyBill}
-                    className={
-                      activePage === "payments" ? "text-white" : "text-white/90"
-                    }
-                  />
-                </div>
-                <span
-                  className={
-                    activePage === "payments" ? "text-white" : "text-white/90"
-                  }
-                >
-                  Payments
-                </span>
-              </Link>
-            </li>
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto py-4 px-3">
+          <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest px-3 mb-3">
+            Navigation
+          </p>
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = activePage === item.page;
+              return (
+                <li key={item.page}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 ${
+                      isActive
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    }`}
+                  >
+                    <span
+                      className={`w-7 h-7 flex items-center justify-center rounded-md text-xs flex-shrink-0 ${
+                        isActive ? "bg-white/20" : "bg-gray-800"
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={item.icon} />
+                    </span>
+                    <span className="font-medium text-sm">{item.label}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
-        </nav>
+        </div>
 
-        {/* User Profile Link (Optional)
-        <div className="mt-auto">
-          <Link
-            href="/profile"
-            className={`flex items-center gap-4 px-6 py-4 border-t border-white/10 transition-all duration-300 ${
-              activePage === "profile" ? "bg-white/20" : "hover:bg-white/10"
-            }`}
-          >
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <span className="text-white font-medium">U</span>
-            </div>
-            <span className="text-white/90">Profile</span>
-          </Link>
-        </div> */}
+        {/* Footer */}
+        <div className="px-5 py-3 border-t border-gray-800">
+          <p className="text-[11px] text-gray-600 text-center">SplitEase v1.0</p>
+        </div>
       </div>
     </aside>
   );

@@ -305,7 +305,7 @@ export default function Groups() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-50 pt-20">
+      <div className="flex min-h-screen bg-gray-50 pt-16">
         <Sidebar activePage="groups" />
         <div className="flex-1 p-8 animate-pulse">
           <div className="flex items-center justify-between mb-10">
@@ -340,7 +340,7 @@ export default function Groups() {
 
   return (
     <div
-      className="flex min-h-screen bg-gray-50 pt-20"
+      className="flex min-h-screen bg-gray-50 pt-16"
       suppressHydrationWarning
     >
       <Sidebar activePage="groups" />
@@ -365,19 +365,22 @@ export default function Groups() {
           </Button>
         </div>
 
-        {/* Updated Summary Cards */}
+        {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
           {[
-            { label: "Total Groups", value: groups.length },
-            { label: "Active Groups", value: groups.filter((g) => !g.completed).length },
-            { label: "Completed Groups", value: groups.filter((g) => g.completed).length },
+            { label: "Total Groups", value: groups.length, accent: "bg-indigo-500", numColor: "text-indigo-600" },
+            { label: "Active Groups", value: groups.filter((g) => !g.completed).length, accent: "bg-emerald-500", numColor: "text-emerald-600" },
+            { label: "Completed Groups", value: groups.filter((g) => g.completed).length, accent: "bg-slate-400", numColor: "text-slate-600" },
           ].map((card, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col items-center"
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
             >
-              <p className="text-4xl font-semibold text-gray-900 mb-1">{card.value}</p>
-              <p className="text-sm text-gray-500">{card.label}</p>
+              <div className={`h-1 ${card.accent}`}></div>
+              <div className="p-5 flex flex-col items-center">
+                <p className={`text-4xl font-bold ${card.numColor} mb-1`}>{card.value}</p>
+                <p className="text-sm text-gray-500">{card.label}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -386,7 +389,7 @@ export default function Groups() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Active Groups with Energetic Design */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="h-0.5 w-full bg-emerald-500"></div>
+            <div className="h-1 bg-emerald-500"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
@@ -490,7 +493,7 @@ export default function Groups() {
 
           {/* Completed Groups with Subdued Design */}
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="h-0.5 w-full bg-gray-300"></div>
+            <div className="h-1 bg-slate-400"></div>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-gray-800">
