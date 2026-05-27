@@ -30,11 +30,12 @@ const ResetPasswordPage = () => {
   const [token, setToken] = useState<string | null>(null);
   const [form, setForm] = useState({ newPassword: "", confirmPassword: "" });
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
   // Auto redirect functionality - unchanged
   useEffect(() => {
-    if (message.includes("successful")) {
+    if (isSuccess) {
       const interval = setInterval(
         () => setCountdown((prev) => prev - 1),
         1000
@@ -42,7 +43,7 @@ const ResetPasswordPage = () => {
       setTimeout(() => router.push("/login"), 5000);
       return () => clearInterval(interval);
     }
-  }, [message, router]);
+  }, [isSuccess, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -61,9 +62,12 @@ const ResetPasswordPage = () => {
         form.newPassword,
         form.confirmPassword
       );
+      setIsSuccess(true);
       setMessage(res.message);
-    } catch (error: any) {
-      setMessage(error.message);
+    } catch (error: unknown) {
+      const e = error as { message?: string };
+      setIsSuccess(false);
+      setMessage(e.message || "Something went wrong. Please try again.");
     }
   };
 
@@ -149,13 +153,13 @@ const ResetPasswordPage = () => {
                 {message && (
                   <div
                     className={`p-4 rounded-lg ${
-                      message.includes("successful")
+                      isSuccess
                         ? "bg-green-50 text-green-800 border border-green-200"
                         : "bg-red-50 text-red-800 border border-red-200"
                     } text-sm`}
                   >
                     <p className="font-medium flex items-center">
-                      {message.includes("successful") ? (
+                      {isSuccess ? (
                         <svg
                           className="w-5 h-5 mr-2 text-green-500"
                           fill="currentColor"
@@ -182,7 +186,7 @@ const ResetPasswordPage = () => {
                       )}
                       {message}
                     </p>
-                    {message.includes("successful") && (
+                    {isSuccess && (
                       <div className="mt-2 text-center">
                         <div className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium animate-pulse">
                           Redirecting to login in {countdown}s...

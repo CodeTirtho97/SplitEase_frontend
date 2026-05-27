@@ -2,7 +2,7 @@
 
 import React, { useState, useContext, useEffect } from "react";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation"; // Use usePathname for navigation detection
+import { useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGoogle } from "@fortawesome/free-brands-svg-icons";
 import {
@@ -14,23 +14,10 @@ import {
 import { toast } from "react-toastify";
 import { signup } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
-import dynamic from "next/dynamic";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
-import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
-
-// Dynamically import Google OAuth components
-// const GoogleLoginComponent = dynamic(
-//   () => import("@react-oauth/google").then((mod) => mod.GoogleLogin),
-//   { ssr: false }
-// );
-// const GoogleOAuthProvider = dynamic(
-//   () => import("@react-oauth/google").then((mod) => mod.GoogleOAuthProvider),
-//   { ssr: false }
-// );
 
 const Signup = () => {
   const router = useRouter();
-  const pathname = usePathname();
   const { setUser, setToken, user, token, loading, error } =
     useContext(AuthContext) || {}; // Include loading and error
   const [fullName, setFullName] = useState("");
@@ -151,59 +138,6 @@ const Signup = () => {
     }
   };
 
-  // Handle Google Auth Success (Updated to use API-based callback)
-  const handleGoogleSuccess = async (response: any) => {
-    if (typeof window !== "undefined") {
-      try {
-        //console.log("Google OAuth Success Response:", response);
-        const { credential } = response;
-        const redirectUri = window.location.origin + "/auth/google/callback";
-        const { user, token } = await handleGoogleCallback({ redirectUri });
-        if (setToken && setUser) {
-          setToken(token);
-          setUser(user);
-        }
-        toast.success("Signup successful!");
-        setTimeout(() => router.push("/dashboard"), 2000);
-      } catch (error: any) {
-        console.error("Google Signup Error:", error);
-        toast.error(error.message || "Google Signup failed!");
-      }
-    }
-  };
-
-  // Handle Google Auth Error
-  const handleGoogleError = () => {
-    if (typeof window !== "undefined") {
-      console.error("Google Signup Failed");
-      toast.error("Google Signup failed!");
-    }
-  };
-
-  // Stabilize particle animations (defer to client)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const particleElements = document.querySelectorAll(
-        ".animate-float-particle"
-      );
-      particleElements.forEach((element, index) => {
-        const top = `${Math.random() * 100}%`;
-        const left = `${Math.random() * 100}%`;
-        const backgroundColor =
-          index % 3 === 0
-            ? "indigo-300"
-            : index % 3 === 1
-            ? "purple-300"
-            : "gray-300";
-        const animationDelay = `${Math.random() * 5}s`;
-
-        (element as HTMLElement).style.top = top;
-        (element as HTMLElement).style.left = left;
-        (element as HTMLElement).style.backgroundColor = backgroundColor;
-        (element as HTMLElement).style.animationDelay = animationDelay;
-      });
-    }
-  }, []);
 
   return (
     <div
@@ -250,8 +184,7 @@ const Signup = () => {
         <div className="absolute inset-0 bg-gradient-to-tl from-purple-200/20 via-indigo-200/15 to-gray-200/10 animate-gradient-pulse"></div>
 
         {/* Multiple Floating Icons (Client-side only) */}
-        {typeof window !== "undefined" && (
-          <>
+        <>
             <div className="absolute top-20 left-10 animate-float-slow">
               <FontAwesomeIcon
                 icon={faUser}
@@ -294,27 +227,25 @@ const Signup = () => {
                 className="text-purple-400 text-4xl opacity-20"
               />
             </div>
-          </>
-        )}
+        </>
 
         {/* Enhanced Particle Effects (Client-side only) */}
-        {typeof window !== "undefined" &&
-          Array.from({ length: 30 }).map((_, index) => (
+        {Array.from({ length: 30 }).map((_, index) => (
             <span
               key={index}
               className={`absolute w-${index % 2 === 0 ? 2 : 3} h-${
                 index % 2 === 0 ? 2 : 3
               } rounded-full opacity-15 animate-float-particle`}
               style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
+                top: `${(index * 3.33) % 100}%`,
+                left: `${(index * 7.77) % 100}%`,
                 backgroundColor:
                   index % 3 === 0
                     ? "indigo-300"
                     : index % 3 === 1
                     ? "purple-300"
                     : "gray-300",
-                animationDelay: `${Math.random() * 5}s`,
+                animationDelay: `${(index * 0.2) % 5}s`,
               }}
             />
           ))}
@@ -352,7 +283,7 @@ const Signup = () => {
         </svg>
       </div>
 
-      {error && typeof window !== "undefined" && (
+      {error && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
           suppressHydrationWarning
@@ -376,29 +307,11 @@ const Signup = () => {
           Sign up to get started!
         </p>
 
-        {/* Google Sign-In with OAuth Provider (Client-side only) */}
-        {/* <div className="flex justify-center">
-          {typeof window !== "undefined" && (
-            <GoogleOAuthProvider
-              clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-            >
-              <GoogleLoginComponent
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-              />
-            </GoogleOAuthProvider>
-          )}
-        </div> */}
-
         {/* Google Sign-In Button */}
         <div className="flex justify-center w-full">
           <button
             onClick={() => {
-              if (typeof window !== "undefined") {
-                // Remove the duplicate /api segment
                 window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
-              }
             }}
             className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 font-semibold shadow-sm hover:shadow-md hover:border-indigo-300 hover:bg-gray-50 active:scale-98 transition-all duration-300 relative overflow-hidden group"
             disabled={loading}
@@ -424,7 +337,7 @@ const Signup = () => {
         {/* Signup Form */}
         <form
           className="space-y-4"
-          onSubmit={(e) => handleSubmit(e).catch(console.error)}
+          onSubmit={handleSubmit}
         >
           {/* Full Name */}
           <div>
@@ -501,6 +414,22 @@ const Signup = () => {
               }`}
               disabled={loading}
             />
+            {password.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs">
+                {[
+                  { label: "8+ characters", ok: password.length >= 8 },
+                  { label: "Uppercase letter", ok: /[A-Z]/.test(password) },
+                  { label: "Lowercase letter", ok: /[a-z]/.test(password) },
+                  { label: "Number", ok: /\d/.test(password) },
+                  { label: "Special character (@$!%*?&)", ok: /[@$!%*?&]/.test(password) },
+                ].map(({ label, ok }) => (
+                  <li key={label} className={`flex items-center gap-1 ${ok ? "text-green-600" : "text-gray-400"}`}>
+                    <span>{ok ? "✓" : "○"}</span>
+                    <span>{label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -571,7 +500,7 @@ const Signup = () => {
       </div>
 
       {/* Terms & Conditions Modal (Client-side only) */}
-      {isTermsModalOpen && typeof window !== "undefined" && (
+      {isTermsModalOpen && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
           suppressHydrationWarning

@@ -11,14 +11,36 @@ import { useRouter } from "next/navigation"; // Removed usePathname to simplify
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
 import { signup, login, logout as apiLogout } from "../utils/api/auth"; // Only import server-safe functions
 
+export interface SignupData {
+  fullName: string;
+  email: string;
+  gender: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthUser {
+  _id: string;
+  fullName: string;
+  email: string;
+  profilePic?: string;
+  googleId?: string | null;
+  gender?: string;
+}
+
 interface AuthContextType {
-  user: any;
+  user: AuthUser | null;
   token: string | null;
-  signup: (userData: any) => Promise<void>;
-  login: (credentials: any) => Promise<void>;
+  signup: (userData: SignupData) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
   googleAuth: () => void;
-  setUser: (user: any) => void;
+  setUser: (user: AuthUser | null) => void;
   setToken: (token: string | null) => void;
   loading: boolean;
   error: string | null;
@@ -27,7 +49,7 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +100,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, token]);
 
   // Handle signup
-  const handleSignup = async (userData: any) => {
+  const handleSignup = async (userData: SignupData) => {
     setLoading(true);
     setError(null);
     try {
@@ -97,7 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Handle login
-  const handleLogin = async (credentials: any) => {
+  const handleLogin = async (credentials: LoginCredentials) => {
     setLoading(true);
     setError(null);
     try {
@@ -119,9 +141,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
       });
-
-      // Give time for cookie setting
-      await new Promise((resolve) => setTimeout(resolve, 500));
 
       if (typeof window !== "undefined") {
         router.push("/dashboard");

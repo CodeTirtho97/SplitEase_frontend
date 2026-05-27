@@ -53,6 +53,36 @@ interface User {
   updatedAt?: Date; // Optional, from timestamps
 }
 
+const UpdateLoadingOverlay = ({ message = "Updating..." }) => (
+  <div className="fixed inset-0 z-50 bg-indigo-900/30 backdrop-blur-sm flex flex-col items-center justify-center">
+    <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-sm mx-4">
+      <div className="relative">
+        <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg
+            className="w-8 h-8 text-indigo-500"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10"></path>
+            <polyline points="12 12 7 12 10 15"></polyline>
+            <polyline points="12 12 12 8 9 10"></polyline>
+          </svg>
+        </div>
+      </div>
+      <p className="mt-4 text-lg font-medium text-gray-700">{message}</p>
+      <p className="text-sm text-gray-500 text-center mt-1">
+        Please wait while we process your request
+      </p>
+    </div>
+  </div>
+);
+
 export default function Profile() {
   const router = useRouter();
   const { token } = useAuth();
@@ -78,6 +108,7 @@ export default function Profile() {
   const [profileFetchError, setProfileFetchError] = useState(false);
   const [updatingOperation, setUpdatingOperation] = useState<string | null>(null);
   const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+  const [selectedFriendId, setSelectedFriendId] = useState<string | null>(null);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [confirmDeleteFriendId, setConfirmDeleteFriendId] = useState<string | null>(null);
@@ -86,6 +117,7 @@ export default function Profile() {
   const handleFriendSearch = useCallback(
     async (name: string) => {
       setFriendName(name);
+      setSelectedFriendId(null);
 
       if (name.length < 2) {
         setSuggestedFriends([]);
@@ -103,9 +135,6 @@ export default function Profile() {
 
           if (Array.isArray(friends)) {
             setSuggestedFriends(friends);
-            if (friends.length === 0) {
-              toast.error("No friends found");
-            }
           } else {
             setSuggestedFriends([]);
             toast.error("Error searching friends");
@@ -130,6 +159,7 @@ export default function Profile() {
     if (!isAddContactModalOpen) {
       setFriendName("");
       setSuggestedFriends([]);
+      setSelectedFriendId(null);
     }
     if (!isPasswordModalOpen) {
       setOldPassword("");
@@ -249,6 +279,7 @@ export default function Profile() {
       newPassword: string;
       confirmNewPassword: string;
     }) => Promise<void>;
+    searchFriend: (friendName: string) => Promise<User[]>;
     deleteFriend: (friendId: string) => Promise<void>;
     deletePayment: (paymentId: string) => Promise<void>;
   };
@@ -493,36 +524,6 @@ export default function Profile() {
       setLoading(false);
     }
   };
-
-  const UpdateLoadingOverlay = ({ message = "Updating..." }) => (
-    <div className="fixed inset-0 z-50 bg-indigo-900/30 backdrop-blur-sm flex flex-col items-center justify-center">
-      <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center max-w-sm mx-4">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-500 rounded-full animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-indigo-500"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10"></path>
-              <polyline points="12 12 7 12 10 15"></polyline>
-              <polyline points="12 12 12 8 9 10"></polyline>
-            </svg>
-          </div>
-        </div>
-        <p className="mt-4 text-lg font-medium text-gray-700">{message}</p>
-        <p className="text-sm text-gray-500 text-center mt-1">
-          Please wait while we process your request
-        </p>
-      </div>
-    </div>
-  );
 
   const isGoogleUser = !!user?.googleId;
 
@@ -979,23 +980,24 @@ export default function Profile() {
                 </div>
 
                 {/* Friend Suggestions */}
+                {friendName.length >= 2 && !friendSearchLoading && suggestedFriends.length === 0 && (
+                  <p className="mt-3 text-sm text-gray-500 text-center">No results found</p>
+                )}
                 {suggestedFriends.length > 0 && (
                   <div className="mt-4 border rounded-lg overflow-hidden max-h-60 overflow-y-auto">
                     <ul className="divide-y">
                       {suggestedFriends.map((friend: User) => (
                         <li
                           key={friend._id}
-                          className="flex items-center p-3 hover:bg-green-50 cursor-pointer transition-colors"
-                          onClick={() =>
-                            !updatingOperation &&
-                            handleAddFriend(friend._id || "")
-                          }
+                          className={`flex items-center p-3 cursor-pointer transition-colors ${
+                            selectedFriendId === friend._id
+                              ? "bg-green-100 border-l-4 border-green-500"
+                              : "hover:bg-green-50"
+                          }`}
+                          onClick={() => !updatingOperation && setSelectedFriendId(friend._id || null)}
                         >
                           <div className="w-8 h-8 bg-green-100 text-green-600 flex items-center justify-center rounded-full mr-3">
-                            <FontAwesomeIcon
-                              icon={faUser}
-                              className="text-sm"
-                            />
+                            <FontAwesomeIcon icon={faUser} className="text-sm" />
                           </div>
                           <div>
                             <p className="font-medium">{friend.fullName}</p>
@@ -1020,13 +1022,11 @@ export default function Profile() {
                   <button
                     className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:bg-green-300 disabled:cursor-not-allowed"
                     onClick={() =>
+                      selectedFriendId &&
                       !updatingOperation &&
-                      suggestedFriends.length > 0 &&
-                      handleAddFriend(suggestedFriends[0]._id || "")
+                      handleAddFriend(selectedFriendId)
                     }
-                    disabled={
-                      !!updatingOperation || suggestedFriends.length === 0
-                    }
+                    disabled={!!updatingOperation || !selectedFriendId}
                   >
                     {updatingOperation ? "Adding..." : "Add Contact"}
                   </button>

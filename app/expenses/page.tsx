@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import Button from "@/components/Button";
@@ -81,7 +81,7 @@ export default function Expenses() {
   const [showCharts, setShowCharts] = useState(false);
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [loadingCharts, setLoadingCharts] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const recentExpensesAbortRef = useRef<AbortController | null>(null);
   const [summary, setSummary] = useState<
     { [key in Currency]?: Summary } | null
   >(null);
@@ -157,29 +157,26 @@ export default function Expenses() {
       loadingProgress.charts;
 
     if (allLoaded) {
-      // Add a small delay to make loading screen feel natural
-      setTimeout(() => {
-        setIsLoading(false);
-        // Trigger animations after loading is complete
-        setTimeout(() => setAnimate(true), 300);
-      }, 800);
+      setIsLoading(false);
+      setAnimate(true);
     }
   }, [loadingProgress]);
 
   // Fetch recent expenses only on page mount
   const fetchRecentExpenses = useCallback(async () => {
-    if (isFetching) return;
-    setIsFetching(true);
+    recentExpensesAbortRef.current?.abort();
+    recentExpensesAbortRef.current = new AbortController();
+    const { signal } = recentExpensesAbortRef.current;
     try {
-      const response = await expenseApi.getRecentExpenses();
+      const response = await expenseApi.getRecentExpenses(signal);
       setExpenses(response.data.expenses || []);
       setLoadingProgress((prev) => ({ ...prev, expenses: true }));
     } catch (error) {
+      if ((error as { name?: string })?.name === "CanceledError") return;
       console.error("Error fetching recent expenses:", error);
       setLoadingProgress((prev) => ({ ...prev, expenses: true }));
-
-      const errorMessage = (error as any)?.response?.data?.message || "";
-      const errorStatus = (error as any)?.response?.status;
+      const errorMessage = (error as { response?: { data?: { message?: string }; status?: number } })?.response?.data?.message || "";
+      const errorStatus = (error as { response?: { status?: number } })?.response?.status;
       if (
         !errorMessage.includes("No expenses") &&
         !errorMessage.includes("not found") &&
@@ -187,15 +184,13 @@ export default function Expenses() {
       ) {
         toast.error("Failed to load recent expenses");
       }
-    } finally {
-      setIsFetching(false);
     }
-  }, [isFetching]);
+  }, []);
 
-  // Fetch expense summary only on page mount
+  // Fetch expense summary for the selected currency
   const fetchSummary = useCallback(async () => {
     try {
-      const response = await expenseApi.getExpenseSummary();
+      const response = await expenseApi.getExpenseSummary(selectedCurrency);
       if (response.data?.summary) {
         setSummary(response.data.summary);
       } else {
@@ -214,13 +209,13 @@ export default function Expenses() {
         setError("Failed to load summary");
       }
     }
-  }, []);
+  }, [selectedCurrency]);
 
-  // Fetch chart data only on page mount
+  // Fetch chart data for the selected currency
   const fetchExpenseBreakdown = useCallback(async () => {
     setLoadingCharts(true);
     try {
-      const response = await expenseApi.getExpenseBreakdown("INR");
+      const response = await expenseApi.getExpenseBreakdown(selectedCurrency);
       setChartData(
         response.data || {
           breakdown: {},
@@ -351,6 +346,13 @@ export default function Expenses() {
     fetchExpenseBreakdown,
     hasMounted,
   ]);
+
+  // Re-fetch summary and charts when currency selector changes
+  useEffect(() => {
+    if (!hasMounted) return;
+    fetchSummary();
+    fetchExpenseBreakdown();
+  }, [selectedCurrency]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch groups when modal opens
   useEffect(() => {

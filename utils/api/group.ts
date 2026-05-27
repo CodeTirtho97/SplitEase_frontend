@@ -8,7 +8,7 @@ export const fetchUserGroups = async (token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) {
         console.warn("User not authenticated, returning empty groups list.");
         return []; // Return empty array instead of throwing error
@@ -31,7 +31,7 @@ export const fetchGroupDetails = async (groupId: string, token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) throw new Error("User not authenticated!");
     }
 
@@ -53,7 +53,7 @@ export const createNewGroup = async (groupData: any, token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) throw new Error("User not authenticated!");
     }
 
@@ -72,7 +72,7 @@ export const updateGroup = async (groupId: string, updatedData: any, token?: str
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) throw new Error("User not authenticated!");
     }
 
@@ -92,7 +92,7 @@ export const removeGroup = async (groupId: string, token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) throw new Error("User not authenticated!");
     }
 
@@ -111,7 +111,7 @@ export const fetchGroupTransactions = async (groupId: string, token?: string) =>
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) throw new Error("User not authenticated!");
     }
 
@@ -234,7 +234,7 @@ export const fetchUserFriends = async (token?: string) => {
   try {
     // Use provided token or fall back to cookies if not provided
     if (!token) {
-      token = Cookies.get("userToken");
+      token = Cookies.get("token");
       if (!token) {
         console.warn("User not authenticated, returning empty friends list.");
         return []; // Return empty array instead of throwing error

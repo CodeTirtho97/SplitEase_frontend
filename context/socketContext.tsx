@@ -12,10 +12,6 @@ import { io, Socket } from "socket.io-client";
 import { useAuth } from "./authContext";
 import { toast } from "react-toastify";
 
-// This import will be expected from the Redis utilities
-// If validateTokenWithRedis doesn't exist yet, we'll need to create it
-import { validateTokenWithRedis } from "@/utils/redis";
-
 interface SocketContextType {
   isConnected: boolean;
   joinGroupRoom: (groupId: string) => void;
@@ -67,10 +63,10 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [eventHandlers, setEventHandlers] = useState<EventHandlersMap>({
-    expense_update: [],
-    transaction_update: [],
-    group_update: [],
-    notification: [],
+    expense_events: [],
+    transaction_events: [],
+    group_events: [],
+    notification_events: [],
   });
 
   // Setup event handling helper function
@@ -91,13 +87,13 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
         }
 
         // Show toast notification based on event type
-        if (eventName === "expense_update") {
+        if (eventName === "expense_events") {
           if (data.event === "expense_created") {
             toast.info(`New expense added: ${data.expense.description}`);
           } else if (data.event === "expense_deleted") {
             toast.info(`Expense deleted: ${data.expense.description}`);
           }
-        } else if (eventName === "transaction_update") {
+        } else if (eventName === "transaction_events") {
           if (data.event === "transaction_settled") {
             toast.success(
               `Transaction settled: ${data.transaction.currency} ${data.transaction.amount}`
@@ -107,7 +103,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
               `Transaction failed: ${data.transaction.currency} ${data.transaction.amount}`
             );
           }
-        } else if (eventName === "group_update") {
+        } else if (eventName === "group_events") {
           if (data.event === "group_created") {
             toast.info(`New group created: ${data.group.name}`);
           } else if (data.event === "group_updated") {
@@ -125,12 +121,9 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     if (!token || !user) return;
 
-    const socketUrl = "https://splitease-backend-34tz.onrender.com";
+    const socketUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/api$/, "");
 
-    // Log the URL we're connecting to for debugging
-    console.log("Attempting to connect socket to:", socketUrl);
-
-    const socketInstance = io("https://splitease-backend-34tz.onrender.com", {
+    const socketInstance = io(socketUrl, {
       auth: { token },
       transports: ["websocket", "polling"],
       // Do not add any path, namespace, or extra options
@@ -201,20 +194,18 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     });
 
     // Setup event handlers for different event types
-    setupEvent(socketInstance, "expense_update");
-    setupEvent(socketInstance, "transaction_update");
-    setupEvent(socketInstance, "group_update");
+    setupEvent(socketInstance, "expense_events");
+    setupEvent(socketInstance, "transaction_events");
+    setupEvent(socketInstance, "group_events");
 
     // Setup notification handling
-    socketInstance.on("notification", (notification: Notification) => {
-      console.log("Received notification:", notification);
-
+    socketInstance.on("notification_events", (notification: Notification) => {
       // Add to notifications list
-      setNotifications((prev) => [notification, ...prev].slice(0, 50)); // Keep last 50 notifications
+      setNotifications((prev) => [notification, ...prev].slice(0, 50));
 
       // Notify handlers
-      if (eventHandlers.notification) {
-        eventHandlers.notification.forEach((handler) => {
+      if (eventHandlers.notification_events) {
+        eventHandlers.notification_events.forEach((handler) => {
           try {
             handler(notification);
           } catch (error) {
@@ -280,7 +271,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       // Create a new socket connection
-      const socketUrl = "https://splitease-backend-34tz.onrender.com";
+      const socketUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api").replace(/\/api$/, "");
 
       const socketInstance = io(socketUrl, {
         auth: { token },
@@ -294,14 +285,12 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
 
       // Setup event handlers
       socketInstance.on("connect", () => {
-        console.log("Socket reconnected");
         setIsConnected(true);
       });
 
       socketInstance.on("connect_error", (error) => {
         console.error("Socket reconnection error:", error);
         setIsConnected(false);
-        // Don't log out here, just show a toast notification
         toast.error(
           "Connection issue. Some real-time features may be unavailable.",
           {
@@ -311,7 +300,12 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
         );
       });
 
-      // Rest of your socket setup...
+      // Re-register all existing event handlers on the new socket instance
+      Object.entries(eventHandlers).forEach(([eventName, handlers]) => {
+        handlers.forEach((handler) => {
+          socketInstance.on(eventName, handler as (...args: any[]) => void);
+        });
+      });
     } catch (error) {
       console.error("Error during socket reconnection:", error);
       // Don't log out here either

@@ -11,34 +11,21 @@ export default function GoogleCallbackPage() {
   const { setUser, setToken } = useAuth() || {};
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [_success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function processCallback() {
       try {
         setIsLoading(true);
 
-        // Debug logging
-        console.log("Window location:", window.location.href);
-        console.log("Available cookies:", document.cookie);
-        console.log("Search params:", window.location.search);
-
         // Get data from URL parameters
         const params = new URLSearchParams(window.location.search);
         const urlToken = params.get("token");
         const encodedUserData = params.get("userData");
 
-        console.log("Token from URL:", urlToken);
-        console.log("User data from URL:", encodedUserData);
-
         if (urlToken && encodedUserData && setToken && setUser) {
           try {
-            // Decode the base64 encoded user data
             const decodedUserData = atob(encodedUserData);
-            console.log("Decoded user data:", decodedUserData);
-
             const authUser = JSON.parse(decodedUserData);
-            console.log("Parsed user object:", authUser);
 
             // Store in persistent cookies
             Cookies.set("token", urlToken, {
@@ -53,12 +40,8 @@ export default function GoogleCallbackPage() {
               sameSite: "lax",
             });
 
-            // Update auth context
             setToken(urlToken);
             setUser(authUser);
-
-            // Show success message
-            setSuccess(true);
 
             // Redirect to dashboard after a delay
             setTimeout(() => {

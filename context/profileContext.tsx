@@ -101,12 +101,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (token) {
-      console.log("Token available, attempting to fetch profile");
       fetchUserProfile().catch((error) => {
-        console.error(
-          "Failed to load profile on context initialization:",
-          error
-        );
+        console.error("Failed to load profile on context initialization:", error);
       });
     }
   }, [token]);
@@ -118,13 +114,8 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      console.log(
-        "Fetching Profile Data with token:",
-        token ? "Token exists" : "No token"
-      );
-      const data = await apiFetchProfile(token); // Use token from AuthContext
-      console.log("Profile Data Received:", data);
-      setUser(data); // Update state with fetched user data
+      const data = await apiFetchProfile(token);
+      setUser(data);
     } catch (error: any) {
       console.error("Profile fetch error:", error);
       throw new Error(error.message || "Profile Fetch Error!");
@@ -273,19 +264,6 @@ export const ProfileProvider = ({ children }: { children: ReactNode }) => {
       );
     }
   };
-
-  // Initialize profile data whenever token changes
-  useEffect(() => {
-    if (token) {
-      console.log("Token available, attempting to fetch profile");
-      fetchUserProfile().catch((error) => {
-        console.error(
-          "Failed to load profile on context initialization:",
-          error
-        );
-      });
-    }
-  }, [token]);
 
   return (
     <ProfileContext.Provider

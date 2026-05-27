@@ -14,6 +14,7 @@ import axios from "axios"; // Assuming you’re using axios for API calls
 import Cookies from "js-cookie"; // Import Cookies for token persistence
 import { useAuth } from "@/context/authContext"; // Import useAuth
 import { useSocket } from "@/context/socketContext";
+import { formatCurrency } from "@/utils/formatCurrency";
 // Skeleton cards that mirror the real dashboard layout
 const DashboardSkeleton = () => (
   <div className="flex min-h-screen bg-white">
@@ -94,21 +95,13 @@ export default function Dashboard() {
 
   // API base URL (update to match your backend port)
   const API_URL =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"; // Fallback to default
-
-  useEffect(() => {
-    // Immediately redirect if no auth token is found
-    if (!token && !Cookies.get("token")) {
-      router.replace("/login");
-    }
-  }, []);
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"; // Fallback to default
 
   useEffect(() => {
     // Check for auth token
     const hasToken = !!token || !!Cookies.get("token");
 
     if (!hasToken) {
-      // No token means not logged in, redirect to login
       router.replace("/login");
     }
   }, [token, router]);
@@ -267,7 +260,7 @@ export default function Dashboard() {
         const statsResponse = await axios.get(`${API_URL}/stats`, {
           headers: { Authorization: `Bearer ${token}` },
           params: {
-            userId: user._id,
+            userId: user?._id,
             _t: timestamp,
           },
         });
@@ -295,7 +288,7 @@ export default function Dashboard() {
           {
             headers: { Authorization: `Bearer ${token}` },
             params: {
-              userId: user._id,
+              userId: user?._id,
               _t: timestamp,
             },
           }
@@ -727,7 +720,7 @@ export default function Dashboard() {
                   </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
-                  ₹{(totalExpenses ?? 0).toLocaleString()}
+                  {formatCurrency(totalExpenses ?? 0)}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
                   {totalGroups && totalGroups > 0
@@ -776,7 +769,7 @@ export default function Dashboard() {
                   </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
-                  ₹{(pendingPayments ?? 0).toLocaleString()}
+                  {formatCurrency(pendingPayments ?? 0)}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
                   {(pendingPayments ?? 0) + (settledPayments ?? 0) > 0
@@ -825,7 +818,7 @@ export default function Dashboard() {
                   </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
-                  ₹{(settledPayments ?? 0).toLocaleString()}
+                  {formatCurrency(settledPayments ?? 0)}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
                   {(pendingPayments ?? 0) + (settledPayments ?? 0) > 0
@@ -968,7 +961,7 @@ export default function Dashboard() {
                   </svg> */}
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800">
-                  ₹{(groupExpenses ?? 0).toLocaleString()}
+                  {formatCurrency(groupExpenses ?? 0)}
                 </h3>
                 <p className="text-gray-500 text-xs mt-1">
                   {totalMembers && totalMembers > 0
@@ -1019,7 +1012,7 @@ export default function Dashboard() {
                         {txn.receiver?.fullName || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right text-indigo-600">
-                        ₹{txn.amount.toLocaleString()}
+                        {formatCurrency(txn.amount, txn.currency)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {txn.paymentMode === "UPI" ? (

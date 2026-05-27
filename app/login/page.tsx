@@ -16,9 +16,7 @@ import {
 import { toast } from "react-toastify";
 import { login } from "@/utils/api/auth"; // Only import server-safe functions
 import { AuthContext } from "@/context/authContext";
-import dynamic from "next/dynamic";
 import Cookies from "js-cookie"; // Using cookies instead of localStorage
-import { handleGoogleCallback } from "@/utils/api/auth"; // Import API-based Google callback
 
 
 export default function LoginPage() {
@@ -41,16 +39,14 @@ export default function LoginPage() {
   const [resetMessage, setResetMessage] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(false);
 
-  const [Loading, setLoading] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
 
   // Load remembered email from cookies on client-side only
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedEmail = Cookies.get("rememberedEmail");
-      if (storedEmail) {
-        setForm((prev) => ({ ...prev, email: storedEmail }));
-        setRememberMe(true);
-      }
+    const storedEmail = Cookies.get("rememberedEmail");
+    if (storedEmail) {
+      setForm((prev) => ({ ...prev, email: storedEmail }));
+      setRememberMe(true);
     }
   }, []);
 
@@ -88,9 +84,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Set loading state
-    const localLoading = true;
-    setLoading(true);
+    setIsLoginLoading(true);
 
     try {
       const response = await login(form);
@@ -99,62 +93,28 @@ export default function LoginPage() {
         setToken(response.token);
         setUser(response.user);
       }
-      if (rememberMe && typeof window !== "undefined") {
+      if (rememberMe) {
         Cookies.set("rememberedEmail", form.email, {
           expires: 7,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
         });
-      } else if (typeof window !== "undefined") {
+      } else {
         Cookies.remove("rememberedEmail");
       }
 
       toast.success("Login successful!");
-      await new Promise((resolve) => setTimeout(resolve, 1500));
       router.push("/dashboard");
     } catch (error: any) {
       console.error("Login Error:", error);
       toast.error(error.response?.data?.message || "Login failed!");
     } finally {
-      setLoading(false);
+      setIsLoginLoading(false);
     }
   };
 
   const handleGoogleLogin = () => {
-    if (typeof window !== "undefined") {
-      // Redirect to your backend's Google login route
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
-    }
-  };
-
-  // Handle Google Auth Success (Updated to use API-based callback)
-  const handleGoogleSuccess = async (response: any) => {
-    if (typeof window !== "undefined") {
-      try {
-        const { credential } = response;
-        const { user, token } = await handleGoogleCallback();
-
-        if (setToken && setUser) {
-          setToken(token);
-          setUser(user);
-        }
-
-        toast.success("Login successful!");
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        window.location.href = "/dashboard";
-      } catch (error: any) {
-        console.error("Google Login Error:", error);
-        toast.error(error.message || "Google Login failed!");
-      }
-    }
-  };
-
-  // Handle Google Auth Error
-  const handleGoogleError = () => {
-    if (typeof window !== "undefined") {
-      console.error("Google Login Failed");
-      toast.error("Google Login failed!");
-    }
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google/login`;
   };
 
   // Handle logout
@@ -174,80 +134,21 @@ export default function LoginPage() {
   };
 
   const handlePasswordReset = async () => {
-    if (typeof window !== "undefined") {
-      setLoading(true);
-      setResetMessage("");
+    setIsLoginLoading(true);
+    setResetMessage("");
 
-      try {
-        await import("@/utils/api/auth").then((module) =>
-          module.forgotPassword(resetEmail)
-        );
-        setTimeout(() => {
-          setResetMessage("✅ Reset Link sent. Check your email!");
-          setLoading(false);
-        }, 2000);
-      } catch (error) {
-        console.error("Forgot Password Error:", error); // Debug log
-        setTimeout(() => {
-          setResetMessage("❌ Email Not Registered!");
-          setLoading(false);
-        }, 2000);
-      }
+    try {
+      await import("@/utils/api/auth").then((module) =>
+        module.forgotPassword(resetEmail)
+      );
+      setResetMessage("✅ Reset Link sent. Check your email!");
+    } catch (error) {
+      setResetMessage("If this email is registered, a reset link has been sent.");
+    } finally {
+      setIsLoginLoading(false);
     }
   };
 
-  // Stabilize animations and dynamic content (client-side only)
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Floating Icons (Client-side only, deterministic positions)
-      const floatingIcons = [
-        { top: "20%", left: "10%", icon: faUser, color: "indigo-400" },
-        { top: "40%", left: "60%", icon: faLock, color: "purple-400" },
-        { top: "60%", left: "80%", icon: faGoogle, color: "purple-400" },
-        { top: "20%", left: "20%", icon: faEnvelope, color: "green-400" },
-        {
-          top: "40%",
-          left: "40%",
-          icon: faExclamationCircle,
-          color: "red-400",
-        },
-        { top: "10%", left: "60%", icon: faUser, color: "indigo-400" },
-        { top: "10%", left: "60%", icon: faLock, color: "purple-400" },
-      ];
-
-      floatingIcons.forEach(({ top, left, icon, color }, index) => {
-        const element = document.createElement("div");
-        element.className = `absolute animate-float-${
-          index % 3 === 0 ? "slow" : index % 3 === 1 ? "" : "fast"
-        }`;
-        element.innerHTML = `<FontAwesomeIcon icon="${icon.iconName}" className="text-${color} text-4xl opacity-20" />`;
-        element.style.top = top;
-        element.style.left = left;
-        document.querySelector(".absolute.inset-0.z-0")?.appendChild(element);
-      });
-
-      // Particle Effects (Client-side only, deterministic positions)
-      const particleContainer = document.querySelector(".absolute.inset-0.z-0");
-      if (particleContainer) {
-        Array.from({ length: 30 }).forEach((_, index) => {
-          const particle = document.createElement("span");
-          particle.className = `absolute w-${index % 2 === 0 ? 2 : 3} h-${
-            index % 2 === 0 ? 2 : 3
-          } rounded-full opacity-15 animate-float-particle`;
-          particle.style.top = `${(index * 3.33) % 100}%`; // Deterministic top
-          particle.style.left = `${(index * 3.33) % 100}%`; // Deterministic left
-          particle.style.backgroundColor =
-            index % 3 === 0
-              ? "indigo-300"
-              : index % 3 === 1
-              ? "purple-300"
-              : "gray-300";
-          particle.style.animationDelay = `${(index * 0.2) % 5}s`; // Deterministic delay
-          particleContainer.appendChild(particle);
-        });
-      }
-    }
-  }, []);
 
   useEffect(() => {
     // Check if user is authenticated and should be redirected
@@ -335,8 +236,7 @@ export default function LoginPage() {
             d="M0,160L48,176C96,192,192,224,288,208C384,192,480,128,576,117.3C672,107,768,149,864,160C960,171,1056,149,1152,138.7C1248,128,1344,128,1392,128L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           />
         </svg>
-        {typeof window !== "undefined" && (
-          <>
+        <>
             <div className="absolute top-20 left-10 animate-float-slow">
               <FontAwesomeIcon
                 icon={faUser}
@@ -379,11 +279,10 @@ export default function LoginPage() {
                 className="text-purple-400 text-4xl opacity-20"
               />
             </div>
-          </>
-        )}
+        </>
       </div>
 
-      {error && typeof window !== "undefined" && (
+      {error && (
         <div
           className="fixed top-24 right-6 px-6 py-2 rounded-md text-white text-md font-semibold shadow-lg bg-red-500 transition-all duration-300"
           suppressHydrationWarning
@@ -409,11 +308,7 @@ export default function LoginPage() {
 
         {/* Google Sign-In with OAuth Provider (Client-side only) */}
         <div className="flex justify-center w-full">
-          {typeof window !== "undefined" && (
-            // <GoogleOAuthProvider
-            //   clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}
-            // >
-            <button
+          <button
               onClick={handleGoogleLogin}
               className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-xl py-3 px-4 text-gray-700 font-semibold shadow-sm hover:shadow-md hover:border-indigo-300 hover:bg-gray-50 active:scale-98 transition-all duration-300 relative overflow-hidden group"
               disabled={loading}
@@ -427,8 +322,6 @@ export default function LoginPage() {
                 Continue with Google
               </span>
             </button>
-            // </GoogleOAuthProvider>
-          )}
         </div>
 
         {/* Divider */}
@@ -519,7 +412,7 @@ export default function LoginPage() {
       </div>
 
       {/* Forgot Password Modal (Client-side only) */}
-      {isForgotPasswordOpen && typeof window !== "undefined" && (
+      {isForgotPasswordOpen && (
         <div
           className="fixed inset-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center z-50"
           onClick={() => setIsForgotPasswordOpen(false)}
@@ -540,20 +433,20 @@ export default function LoginPage() {
               value={resetEmail}
               onChange={handleEmailChange}
               className="w-full p-2 border rounded-lg mt-4"
-              disabled={loading || Loading}
+              disabled={loading || isLoginLoading}
             />
 
             {/* Reset Password Button */}
             <button
               onClick={handlePasswordReset}
-              disabled={!isEmailValid || Loading || loading}
+              disabled={!isEmailValid || isLoginLoading || loading}
               className={`w-full py-2 mt-6 text-white rounded-lg transition-all ${
-                !isEmailValid || Loading || loading
+                !isEmailValid || isLoginLoading || loading
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
               }`}
             >
-              {Loading ? (
+              {isLoginLoading ? (
                 <div className="flex items-center justify-center">
                   <svg
                     className="animate-spin h-5 w-5 mr-2 text-white"

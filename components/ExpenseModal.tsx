@@ -232,15 +232,14 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
     }
 
     setSelectedParticipants((prev) => [...prev, userId]);
-    setSplitValues((prev) => [
-      ...prev,
-      { userId, value: splitMethod === "Equal" ? 100 / (prev.length + 1) : 0 },
-    ]);
     if (splitMethod === "Equal") {
       const equalValue = 100 / (selectedParticipants.length + 1);
-      setSplitValues((prev) =>
-        prev.map((item) => ({ ...item, value: equalValue }))
-      );
+      setSplitValues((prev) => [
+        ...prev.map((item) => ({ ...item, value: equalValue })),
+        { userId, value: equalValue },
+      ]);
+    } else {
+      setSplitValues((prev) => [...prev, { userId, value: 0 }]);
     }
 
     // Clear validation errors when participants are added
@@ -258,12 +257,15 @@ const ExpenseModal: React.FC<ExpenseModalProps> = ({
   const removeParticipant = (userId: string) => {
     if (userId === payee) return;
     setSelectedParticipants((prev) => prev.filter((id) => id !== userId));
-    setSplitValues((prev) => prev.filter((item) => item.userId !== userId));
     if (splitMethod === "Equal" && selectedParticipants.length > 1) {
-      const equalValue = 100 / (selectedParticipants.length - 1);
+      const newCount = selectedParticipants.length - 1;
       setSplitValues((prev) =>
-        prev.map((item) => ({ ...item, value: equalValue }))
+        prev
+          .filter((item) => item.userId !== userId)
+          .map((item) => ({ ...item, value: 100 / newCount }))
       );
+    } else {
+      setSplitValues((prev) => prev.filter((item) => item.userId !== userId));
     }
   };
 

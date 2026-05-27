@@ -24,6 +24,7 @@ import {
 } from "@/utils/api/group";
 import { useAuth } from "@/context/authContext";
 import { useSocket } from "@/context/socketContext";
+import { formatCurrency } from "@/utils/formatCurrency";
 import NotificationPanel from "@/components/NotificationPanel";
 import ConnectionStatus from "@/components/ConnectionStatus";
 
@@ -74,22 +75,6 @@ export default function Groups() {
     }
   }, [token, authLoading, router]);
 
-  // Fetch Who Owes Whom Data (Client-side only)
-  useEffect(() => {
-    const fetchOwesData = async () => {
-      if (selectedGroup && typeof window !== "undefined" && token) {
-        try {
-          const owesData = await calculateOwes(selectedGroup._id, token); // Use token from AuthContext
-          setOwesList(owesData);
-        } catch (error) {
-          console.error("Error calculating owes:", error);
-        }
-      }
-    };
-
-    fetchOwesData();
-  }, [selectedGroup, token]);
-
   // Add this useEffect for real-time group updates
   useEffect(() => {
     // Handler for group updates
@@ -128,7 +113,7 @@ export default function Groups() {
 
   // Sync selected group data (Client-side only)
   useEffect(() => {
-    if (selectedGroup && typeof window !== "undefined") {
+    if (selectedGroup) {
       if (!selectedGroup.members || !Array.isArray(selectedGroup.members)) {
         console.warn(
           "Members array is missing or invalid!",
@@ -149,14 +134,14 @@ export default function Groups() {
 
   // Fetch friends when modal opens (Client-side only)
   useEffect(() => {
-    if (isModalOpen && typeof window !== "undefined" && token) {
+    if (isModalOpen && token) {
       refreshFriends(); // Calls the API only when modal opens, using token from groupContext
     }
   }, [isModalOpen, refreshFriends, token]);
 
   // Fetch groups on page load (Client-side only)
   useEffect(() => {
-    if (typeof window !== "undefined" && token) {
+    if (token) {
       refreshGroups(); // Use token from AuthContext via groupContext
     }
   }, [refreshGroups, token]);
@@ -179,7 +164,7 @@ export default function Groups() {
 
   // ✅ Create New Group (Client-side only)
   const handleAddGroup = async () => {
-    if (typeof window !== "undefined" && token) {
+    if (token) {
       if (!newGroup.name.trim() || newGroup.members.length === 0) {
         toast.error("Group name & members required!");
         return;
@@ -188,13 +173,8 @@ export default function Groups() {
       try {
         setIsUpdating(true);
 
-        // Wait properly for creation to complete
         await createNewGroup(newGroup, token);
 
-        // Explicitly wait before closing modal
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Close modal first before anything else happens
         setIsModalOpen(false);
 
         // Reset form fields
@@ -218,17 +198,15 @@ export default function Groups() {
 
   // ✅ Edit Group Details (Client-side only)
   const handleEditGroup = (group: any) => {
-    if (typeof window !== "undefined") {
-      setSelectedGroup(group);
-      setGroupDescription(group.description || "");
-      setCompletedStatus(group.completed || false);
-      setNewMembers([...group.members]);
-      setIsEditModalOpen(true);
-    }
+    setSelectedGroup(group);
+    setGroupDescription(group.description || "");
+    setCompletedStatus(group.completed || false);
+    setNewMembers([...group.members]);
+    setIsEditModalOpen(true);
   };
 
   const handleSaveGroup = async () => {
-    if (typeof window !== "undefined" && token) {
+    if (token) {
       if (newMembers.length < 1) {
         toast.error("A group must have at least 2 members (including the creator)!");
         return;
@@ -254,14 +232,12 @@ export default function Groups() {
 
   // ✅ Delete Group (Client-side only)
   const handleDeleteGroup = (group: any) => {
-    if (typeof window !== "undefined") {
-      setSelectedGroup(group);
-      setIsDeleteModalOpen(true);
-    }
+    setSelectedGroup(group);
+    setIsDeleteModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (typeof window !== "undefined" && selectedGroup && token) {
+    if (selectedGroup && token) {
       try {
         await removeGroup(selectedGroup._id, token); // Use token from AuthContext
         setIsDeleteModalOpen(false);
@@ -275,7 +251,7 @@ export default function Groups() {
 
   // ✅ Fetch Group Transactions and "Who Owes Whom" when viewing a group (Client-side only)
   const handleViewGroup = async (group: any) => {
-    if (typeof window !== "undefined" && token) {
+    if (token) {
       if (!group || !group._id) {
         console.error("Invalid group selected:", group);
         toast.error("Invalid group selected!");
@@ -601,7 +577,7 @@ export default function Groups() {
                             </span>
                             <span className="mx-2 text-gray-300">•</span>
                             <span>
-                              Completed by{" "}
+                              Created by{" "}
                               {typeof group.createdBy === "object" &&
                               group.createdBy?.fullName
                                 ? group.createdBy.fullName
@@ -633,8 +609,7 @@ export default function Groups() {
         </div>
 
         {isDeleteModalOpen &&
-          selectedGroup &&
-          typeof window !== "undefined" && (
+          selectedGroup && (
             <div
               className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 z-50"
               suppressHydrationWarning
@@ -707,7 +682,7 @@ export default function Groups() {
             </div>
           )}
 
-        {isModalOpen && typeof window !== "undefined" && (
+        {isModalOpen && (
           <div
             className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 z-50"
             suppressHydrationWarning
@@ -1085,7 +1060,7 @@ export default function Groups() {
           </div>
         )}
 
-        {isViewModalOpen && selectedGroup && typeof window !== "undefined" && (
+        {isViewModalOpen && selectedGroup && (
           <div
             className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 z-50"
             suppressHydrationWarning
@@ -1357,7 +1332,7 @@ export default function Groups() {
                                 </p>
                               </div>
                               <span className="font-bold text-yellow-700">
-                                ₹{txn.amount.toLocaleString()}
+                                {formatCurrency(txn.amount, txn.currency)}
                               </span>
                             </div>
                           )
@@ -1414,7 +1389,7 @@ export default function Groups() {
                               </p>
                             </div>
                             <span className="font-bold text-red-600">
-                              ₹{entry.amount.toLocaleString()}
+                              {formatCurrency(entry.amount, selectedGroup?.currency)}
                             </span>
                           </div>
                         ))}
@@ -1482,7 +1457,7 @@ export default function Groups() {
                                     <span className="text-gray-700">{s.to.fullName}</span>
                                   </p>
                                 </div>
-                                <span className="font-bold text-indigo-700">₹{s.amount.toLocaleString()}</span>
+                                <span className="font-bold text-indigo-700">{formatCurrency(s.amount, selectedGroup?.currency)}</span>
                               </div>
                             ))}
                           </div>

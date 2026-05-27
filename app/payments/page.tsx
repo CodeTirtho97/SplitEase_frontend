@@ -12,7 +12,6 @@ import {
   faHistory,
   faMoneyBillWave,
   faShieldAlt,
-  faLock,
   faChevronRight,
   faExclamationTriangle,
   faSpinner,
@@ -28,6 +27,7 @@ import { useSocket } from "@/context/socketContext";
 import NotificationPanel from "@/components/NotificationPanel";
 import ConnectionStatus from "@/components/ConnectionStatus";
 import { motion, AnimatePresence } from "framer-motion"; // For animations
+import { formatCurrency } from "@/utils/formatCurrency";
 
 // Updated TypeScript Interface for Transaction Data
 interface Transaction {
@@ -150,8 +150,6 @@ export default function PaymentsPage() {
   const [selectedMode, setSelectedMode] = useState<
     "UPI" | "PayPal" | "Stripe" | null
   >(null);
-  const [pin, setPin] = useState<string>("");
-  const [userPin, setUserPin] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const { refreshExpenses } = useTransactionContext();
 
@@ -166,7 +164,6 @@ export default function PaymentsPage() {
       ]);
       setPendingPayments(pendingResponse.data.transactions || []);
       setTransactionHistory(historyResponse.data.transactions || []);
-      setUserPin("1234");
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
       console.error("Error fetching payments:", err);
@@ -191,14 +188,8 @@ export default function PaymentsPage() {
   };
 
   const handleSettle = async () => {
-    if (!selectedTransaction || !selectedMode || !pin) {
+    if (!selectedTransaction || !selectedMode) {
       setError("Required payment information is missing.");
-      return;
-    }
-
-    // Client-side PIN validation
-    if (!userPin || pin !== userPin) {
-      setError("Invalid security PIN. Please try again.");
       return;
     }
 
@@ -217,7 +208,6 @@ export default function PaymentsPage() {
       setIsConfirmModalOpen(false);
       setSelectedTransaction(null);
       setSelectedMode(null);
-      setPin("");
       setError(null);
       refreshExpenses();
       fetchPayments();
@@ -238,7 +228,6 @@ export default function PaymentsPage() {
     setIsConfirmModalOpen(false);
     setSelectedTransaction(null);
     setSelectedMode(null);
-    setPin("");
     setError(null);
   };
 
@@ -270,31 +259,15 @@ export default function PaymentsPage() {
     };
 
     // Register event listeners
-    addEventListener("transaction_update", handleTransactionUpdate);
-    addEventListener("expense_update", handleExpenseUpdate);
+    addEventListener("transaction_events", handleTransactionUpdate);
+    addEventListener("expense_events", handleExpenseUpdate);
 
     // Cleanup on unmount
     return () => {
-      removeEventListener("transaction_update", handleTransactionUpdate);
-      removeEventListener("expense_update", handleExpenseUpdate);
+      removeEventListener("transaction_events", handleTransactionUpdate);
+      removeEventListener("expense_events", handleExpenseUpdate);
     };
   }, [addEventListener, removeEventListener, fetchPayments]);
-
-  // Format currency display
-  const formatCurrency = (currency: string, amount: number) => {
-    const symbol =
-      currency === "INR"
-        ? "₹"
-        : currency === "EUR"
-        ? "€"
-        : currency === "USD"
-        ? "$"
-        : currency === "GBP"
-        ? "£"
-        : "¥";
-
-    return `${symbol}${amount.toLocaleString()}`;
-  };
 
   if (loading) {
     return <PaymentsSkeleton />;
@@ -362,7 +335,7 @@ export default function PaymentsPage() {
                         <p className="text-xs text-gray-500 mt-0.5">{payment.date}</p>
                       </div>
                       <span className="font-bold text-red-500 text-lg">
-                        {formatCurrency(payment.currency, payment.amount)}
+                        {formatCurrency(payment.amount, payment.currency)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 mb-3">
@@ -416,7 +389,7 @@ export default function PaymentsPage() {
                           </div>
                         </td>
                         <td className="py-4 px-4 text-right font-bold text-red-500">
-                          {formatCurrency(payment.currency, payment.amount)}
+                          {formatCurrency(payment.amount, payment.currency)}
                         </td>
                         <td className="py-4 px-4 text-center">
                           <button
@@ -488,7 +461,7 @@ export default function PaymentsPage() {
                         <p className="text-xs text-gray-400 mt-0.5">{payment.paymentDate}</p>
                       </div>
                       <span className="font-bold text-green-600 text-lg">
-                        {formatCurrency(payment.currency, payment.amount)}
+                        {formatCurrency(payment.amount, payment.currency)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -528,8 +501,8 @@ export default function PaymentsPage() {
                     {transactionHistory.map((payment, index) => (
                       <tr key={index} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                         <td className="py-4 px-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                            {payment.transactionId.substring(0, 10)}...
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 font-mono">
+                            {payment.transactionId}
                           </span>
                         </td>
                         <td className="py-4 px-4 text-gray-600">{payment.paymentDate}</td>
@@ -542,7 +515,7 @@ export default function PaymentsPage() {
                           </div>
                         </td>
                         <td className="py-4 px-4 text-right font-bold text-green-600">
-                          {formatCurrency(payment.currency, payment.amount)}
+                          {formatCurrency(payment.amount, payment.currency)}
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center">
@@ -631,9 +604,8 @@ export default function PaymentsPage() {
         </div>
 
         {/* Payment Options Modal */}
-        {typeof window !== "undefined" && (
-          <>
-            <AnimatePresence>
+        <>
+          <AnimatePresence>
               {isModalOpen && selectedTransaction && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                   <motion.div
@@ -677,8 +649,8 @@ export default function PaymentsPage() {
                           <div className="text-white/80">Amount:</div>
                           <div className="font-bold text-right text-white">
                             {formatCurrency(
-                              selectedTransaction.currency,
-                              selectedTransaction.amount
+                              selectedTransaction.amount,
+                              selectedTransaction.currency
                             )}
                           </div>
 
@@ -841,7 +813,7 @@ export default function PaymentsPage() {
                         </h2>
                         <div className="text-white/80 text-sm">
                           Transaction ID:{" "}
-                          {selectedTransaction.transactionId.substring(0, 8)}...
+                          {selectedTransaction.transactionId}
                         </div>
                       </div>
                     </div>
@@ -871,8 +843,8 @@ export default function PaymentsPage() {
                           <div className="text-gray-500">Amount:</div>
                           <div className="text-right font-bold text-green-600">
                             {formatCurrency(
-                              selectedTransaction.currency,
-                              selectedTransaction.amount
+                              selectedTransaction.amount,
+                              selectedTransaction.currency
                             )}
                           </div>
 
@@ -888,67 +860,19 @@ export default function PaymentsPage() {
                         </div>
                       </div>
 
-                      <div className="mb-6">
-                        <label className="block text-gray-700 font-medium mb-3">
-                          Enter your 4-digit secure PIN:
-                        </label>
-                        <div className="flex justify-center space-x-3 mb-2">
-                          {[...Array(4)].map((_, i) => (
-                            <input
-                              key={i}
-                              type="password"
-                              maxLength={1}
-                              value={pin[i] || ""}
-                              onChange={(e) => {
-                                const newPin = pin.split("");
-                                newPin[i] = e.target.value;
-                                setPin(newPin.join(""));
-
-                                if (e.target.value && i < 3) {
-                                  const nextInput = document.getElementById(
-                                    `pin-${i + 1}`
-                                  );
-                                  if (nextInput) nextInput.focus();
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === "Backspace" && !pin[i] && i > 0) {
-                                  const prevInput = document.getElementById(
-                                    `pin-${i - 1}`
-                                  );
-                                  if (prevInput) prevInput.focus();
-                                }
-                              }}
-                              id={`pin-${i}`}
-                              className="w-14 h-14 border-2 border-gray-300 rounded-xl text-center text-xl font-bold focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm transition-all"
-                            />
-                          ))}
-                        </div>
-
-                        {error && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-red-500 text-center text-sm mt-2 bg-red-50 p-2 rounded-lg"
-                          >
-                            <FontAwesomeIcon
-                              icon={faExclamationTriangle}
-                              className="mr-1"
-                            />
-                            {error}
-                          </motion.div>
-                        )}
-
-                        <div className="flex items-center justify-center mt-2">
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-500 text-center text-sm mb-4 bg-red-50 p-2 rounded-lg"
+                        >
                           <FontAwesomeIcon
-                            icon={faLock}
-                            className="text-gray-400 mr-2 text-xs"
+                            icon={faExclamationTriangle}
+                            className="mr-1"
                           />
-                          <span className="text-gray-400 text-xs">
-                            Your PIN is never stored or shared
-                          </span>
-                        </div>
-                      </div>
+                          {error}
+                        </motion.div>
+                      )}
 
                       <div className="flex space-x-3">
                         <button
@@ -961,9 +885,9 @@ export default function PaymentsPage() {
 
                         <button
                           onClick={handleSettle}
-                          disabled={!pin || pin.length < 4 || processingPayment}
+                          disabled={processingPayment}
                           className={`flex-1 py-3 px-4 rounded-xl text-white font-medium transition-colors duration-200 flex items-center justify-center ${
-                            !pin || pin.length < 4 || processingPayment
+                            processingPayment
                               ? "bg-gray-400 cursor-not-allowed"
                               : selectedMode === "UPI"
                               ? "bg-orange-500 hover:bg-orange-600"
@@ -980,13 +904,8 @@ export default function PaymentsPage() {
                               />
                               Processing...
                             </>
-                          ) : !pin || pin.length < 4 ? (
-                            "Enter PIN"
                           ) : (
-                            <>
-                              <FontAwesomeIcon icon={faLock} className="mr-2" />
-                              Confirm Payment
-                            </>
+                            "Confirm Payment"
                           )}
                         </button>
                       </div>
@@ -995,8 +914,7 @@ export default function PaymentsPage() {
                 </div>
               )}
             </AnimatePresence>
-          </>
-        )}
+        </>
       </motion.div>
     </div>
   );

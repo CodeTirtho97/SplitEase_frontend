@@ -15,15 +15,16 @@ const createExpense = async (payload: any) => {
 };
 
 const getExpenseSummary = async (currency?: string) => {
-  const params = currency || "";
   return await axios.get(`${API_URL}/expenses/summary`, {
     headers: { Authorization: `Bearer ${getToken()}` },
+    params: currency ? { currency } : undefined,
   });
 };
 
-const getRecentExpenses = async () => {
+const getRecentExpenses = async (signal?: AbortSignal) => {
   return await axios.get(`${API_URL}/expenses/recent`, {
     headers: { Authorization: `Bearer ${getToken()}` },
+    signal,
   });
 };
 
